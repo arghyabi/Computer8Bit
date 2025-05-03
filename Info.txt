@@ -1,0 +1,67 @@
+8 Bit Computer
+--------------
+
+No of Res: A, B, C, D
+    [A:00, B:01, C: 10, D:11]
+
+Format: [SRC | DST | 0001]
+        [2b]  [2b]   opcode
+
+Opcode | Mnemonic | Description
+-------|----------|--------------------------
+0000   | ADD      | Add register to ALU
+0001   | MOV      | Register-to-register move
+0100   | SUB      | Subtract register from ALU
+1000   | INC      | Increment register
+1100   | DEC      | Decrement register
+0101   | LOD      | Load from memory (planned)
+0110   | LDI      | Load immediate (planned)
+0111   | SAV      | Save to memory (planned)
+
+
+Instructions set
+--------------------------
+            XXXX_XXXX
+1. ADD          _0000   // Add the number with ALU value; Save in ALU
+    ADD A   0000_0000
+    ADD B   0001_0000
+    ADD C   0010_0000
+    ADD D   0011_0000
+2. SUB          _0100   // Substact the number from ALU value; Save in ALU
+    SUB A   0100_0100
+    SUB B   0101_0100
+    SUB C   0110_0100
+    SUB D   0111_0100
+4. INC          _1000   // Increase Register Value by 1
+    INC A   1000_1000
+    INC B   1001_1000
+    INC C   1010_1000
+    INC D   1011_1000
+5. DEC          _1100   // Decrise Register Value by 1
+    DEC A   1100_1100
+    DEC B   1101_1100
+    DEC C   1110_1100
+    DEC D   1111_1100
+
+3. MOV          _0001   // Move value from Register to Register
+    MOV A   0000_0001
+    MOV A B 0001_0001
+    MOV A C 0010_0001
+    MOV A D 0011_0001
+    MOV B   0101_0001
+    MOV B A 0100_0001
+    MOV B C 0110_0001
+    MOV B D 0111_0001
+    MOV C   1010_0001
+    MOV C A 1000_0001
+    MOV C B 1001_0001
+    MOV C D 1011_0001
+    MOV D   1111_0001
+    MOV D A 1100_0001
+    MOV D B 1101_0001
+    MOV D C 1110_0001
+
+// Not done [WIP] !!
+6. LOD          _0101   //
+7. LDI          _0110   // Load a value imediatly to Register
+8. SAV          _0111   // Save a value in memory

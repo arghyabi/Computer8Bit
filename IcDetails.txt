@@ -1,0 +1,24 @@
+74LS173
+---------------
+4-bit D-type Registers with 3-State Output
+Rs: 39  : https://electronicscomp.com/74ls173-4-bit-d-type-register-ic-india
+
+
+74LS245
+---------------
+3-State Octal Bus Transceiver
+Rs: 38  : https://electronicscomp.com/74ls245-3-state-octal-bus-transceiver-ic-dip-20-package
+Rs: 21  : https://techdelivers.com/74LS245-Octal-Bus-TransmitterReceiver-74F245
+
+
+74LS283 / 74LS83
+---------------
+4-bit Adder
+Rs: 34  : https://inkocean.in/products/74ls283-sn74ls283n-hd74ls283p-dm74ls283n-dip16
+RS: 19  : https://gssuperstore.in/shop/adders/74ls83-4-bit-full-adder-ic-dip-package-2/
+
+
+74LS189
+----------------
+64-Bit RAM with 3-State Output
+Rs: 130 : https://www.electronicscomp.com/74ls189-64-bit-ram-with-3-state-output-ic-india
