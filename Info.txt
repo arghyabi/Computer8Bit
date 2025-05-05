@@ -28,20 +28,20 @@ Instructions set
     ADD C   0010_0000
     ADD D   0011_0000
 2. SUB          _0100   // Substact the number from ALU value; Save in ALU
-    SUB A   0100_0100
-    SUB B   0101_0100
-    SUB C   0110_0100
-    SUB D   0111_0100
+    SUB A   0000_0100
+    SUB B   0001_0100
+    SUB C   0010_0100
+    SUB D   0011_0100
 4. INC          _1000   // Increase Register Value by 1
-    INC A   1000_1000
-    INC B   1001_1000
-    INC C   1010_1000
-    INC D   1011_1000
+    INC A   0000_1000
+    INC B   0001_1000
+    INC C   0010_1000
+    INC D   0011_1000
 5. DEC          _1100   // Decrise Register Value by 1
-    DEC A   1100_1100
-    DEC B   1101_1100
-    DEC C   1110_1100
-    DEC D   1111_1100
+    DEC A   0000_1100
+    DEC B   0001_1100
+    DEC C   0010_1100
+    DEC D   0011_1100
 
 3. MOV          _0001   // Move value from Register to Register
     MOV A   0000_0001

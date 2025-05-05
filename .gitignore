@@ -1,0 +1,3 @@
+Compiler/*.i
+Compiler/*.s
+Compiler/*.bin
