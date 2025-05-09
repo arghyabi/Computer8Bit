@@ -18,6 +18,8 @@ class Compiler:
         self.assemblyMain = assembly
         self.outFile      = outFile
         self.silent       = silent
+        self.tagDict      = dict()
+        self.addressIndex = 0
         self.registerList = ['A', 'B', 'C', 'D']
         self.registerDict = {
             'A': 0b00,
@@ -59,13 +61,25 @@ class Compiler:
 
 
     def compile(self):
+        LINE_TYPE_OPCODE = 0
+        LINE_TYPE_TAG    = 1
+        # get mex size of lines
+        maxLength = 0
+        for line in self.assemblyLine:
+            length = len(line)
+            if length > maxLength:
+                maxLength = length
+
+
         def errorPrint(index):
             errorLine = self.assemblyMain[index]
             raise Exception(f"'{errorLine}' at line no {index + 1} is not able to compile!!!")
 
+
         def printCompiledLine(line, value):
             binary = f"{value:08b}"
-            print(f"Ins: '{line}'; Code: {binary[:4]}_{binary[4:]} : {hex(value)}")
+            print(f"0x{self.addressIndex:08X}: '{line:{maxLength}}'; Code: {binary[:4]}_{binary[4:]} : 0x{value:02X}")
+
 
         binArr = bytearray()
 
@@ -78,6 +92,7 @@ class Compiler:
             payloadList = splitData[1:]
             payloadLen  = len(payloadList)
             bitVal      = 0
+            lineType    = LINE_TYPE_OPCODE
 
             if opcode == "MOV":
                 for payload in payloadList:
@@ -114,10 +129,23 @@ class Compiler:
 
                 if not self.silent:
                     printCompiledLine(line, bitVal)
+
+            # Looks like a TAG
+            elif opcode[-1] == ":":
+                tag = opcode[:-1].upper()
+                self.tagDict[tag] = self.addressIndex
+                lineType = LINE_TYPE_TAG
             else:
                 errorPrint(index)
 
-            binArr.append(bitVal)
+            if lineType == LINE_TYPE_OPCODE:
+                binArr.append(bitVal)
+                self.addressIndex += 1
+
+        if not self.silent:
+            print("\nTAGs")
+            for key, value in self.tagDict.items():
+                print(f"0x{value:08X}: {key}")
 
         f = open(self.outFile, 'wb')
         f.write(binArr)
