@@ -5,7 +5,7 @@ class Compiler:
     def __init__(self, assemblyFile, outFile, silent):
         if not os.path.exists(assemblyFile):
             raise Exception(f"{assemblyFile} not found!!!")
-        
+
         try:
             f = open(assemblyFile, 'r')
             assembly = f.read()
@@ -20,15 +20,15 @@ class Compiler:
         self.silent       = silent
         self.registerList = ['A', 'B', 'C', 'D']
         self.registerDict = {
-            'A': 0b00, 
-            'B': 0b01, 
-            'C': 0b10, 
+            'A': 0b00,
+            'B': 0b01,
+            'C': 0b10,
             'D': 0b11
         }
         self.instructionDict = {
-            'ADD': 0b0000, 
-            'MOV': 0b0001, 
-            'SUB': 0b0100, 
+            'ADD': 0b0000,
+            'MOV': 0b0001,
+            'SUB': 0b0100,
             'INC': 0b1000,
             'DEC': 0b1100
         }
@@ -62,11 +62,11 @@ class Compiler:
         def errorPrint(index):
             errorLine = self.assemblyMain[index]
             raise Exception(f"'{errorLine}' at line no {index + 1} is not able to compile!!!")
-        
+
         def printCompiledLine(line, value):
             binary = f"{value:08b}"
             print(f"Ins: '{line}'; Code: {binary[:4]}_{binary[4:]} : {hex(value)}")
-        
+
         binArr = bytearray()
 
         for index, line in enumerate(self.assemblyLine):
@@ -88,11 +88,11 @@ class Compiler:
                     continue
                 if payloadLen != 2:
                     errorPrint(index)
-                
+
                 for payload in payloadList:
                     bitVal = bitVal << 2
                     bitVal = bitVal | self.registerDict[payload]
-                
+
                 bitVal = bitVal << 4
                 bitVal = bitVal | self.instructionDict[opcode]
 
@@ -105,10 +105,10 @@ class Compiler:
                         errorPrint(index)
                 if payloadLen != 1:
                     errorPrint(index)
-                
+
                 payload = payloadList[0]
                 bitVal = bitVal | self.registerDict[payload]
-                
+
                 bitVal = bitVal << 4
                 bitVal = bitVal | self.instructionDict[opcode]
 
@@ -118,7 +118,7 @@ class Compiler:
                 errorPrint(index)
 
             binArr.append(bitVal)
-        
+
         f = open(self.outFile, 'wb')
         f.write(binArr)
         f.close()
