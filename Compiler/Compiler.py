@@ -1,6 +1,22 @@
 import argparse
 import os
 
+def isInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def isHex(s):
+    try:
+        int(s, 16)
+        return True
+    except ValueError:
+        return False
+
+
 class Compiler:
     def __init__(self, assemblyFile, outFile, silent):
         if not os.path.exists(assemblyFile):
@@ -19,7 +35,9 @@ class Compiler:
         self.outFile      = outFile
         self.silent       = silent
         self.tagDict      = dict()
+        self.maxLength    = 0
         self.addressIndex = 0
+        self.logBuffer    = []
         self.registerList = ['A', 'B', 'C', 'D']
         self.registerDict = {
             'A': 0b00,
@@ -32,11 +50,29 @@ class Compiler:
             'MOV': 0b0001,
             'SUB': 0b0100,
             'INC': 0b1000,
-            'DEC': 0b1100
+            'DEC': 0b1100,
+            'JMP': 0b1101
+        }
+
+        self.instructionSizeDict = {
+            'ADD': 1,
+            'MOV': 1,
+            'SUB': 1,
+            'INC': 1,
+            'DEC': 1,
+            'JMP': 2
         }
 
         self.preProcess()
         self.compile()
+
+        if not self.silent:
+            for item in self.logBuffer:
+                print(item)
+
+            print("\nTAGs")
+            for key, value in self.tagDict.items():
+                print(f"0x{value:08X}: {key}")
 
 
     def preProcess(self):
@@ -50,6 +86,12 @@ class Compiler:
         # make all upper case
         self.assemblyLine = [line.upper() for line in self.assemblyLine]
 
+        # get mex size of lines
+        for line in self.assemblyLine:
+            length = len(line)
+            if length > self.maxLength:
+                self.maxLength = length
+
         # write intermediate file for debug
         if not self.silent:
             tempName = ".".join((self.assemblyFile).split(".")[:-1])
@@ -60,29 +102,40 @@ class Compiler:
             f.close()
 
 
+    def printCompiledLine(self, line, value, value2 = None):
+        binary  = f"{value:08b}"
+        if value2 != None:
+            binary2 = f"{value2:08b}"
+            self.logBuffer.append(f"0x{self.addressIndex:08X}: '{line:{self.maxLength}}'; Code: {binary[:4]}_{binary[4:]} {binary2[:4]}_{binary2[4:]} : 0x{value:02X} 0x{value2:02X}")
+        else:
+            self.logBuffer.append(f"0x{self.addressIndex:08X}: '{line:{self.maxLength}}'; Code: {binary[:4]}_{binary[4:]}           : 0x{value:02X}")
+
+
     def compile(self):
-        LINE_TYPE_OPCODE = 0
-        LINE_TYPE_TAG    = 1
-        # get mex size of lines
-        maxLength = 0
-        for line in self.assemblyLine:
-            length = len(line)
-            if length > maxLength:
-                maxLength = length
-
-
         def errorPrint(index):
             errorLine = self.assemblyMain[index]
             raise Exception(f"'{errorLine}' at line no {index + 1} is not able to compile!!!")
 
+        ## Parsing logic the tags first
+        self.addressIndex = 0
+        for index, line in enumerate(self.assemblyLine):
+            if not line:
+                continue
 
-        def printCompiledLine(line, value):
-            binary = f"{value:08b}"
-            print(f"0x{self.addressIndex:08X}: '{line:{maxLength}}'; Code: {binary[:4]}_{binary[4:]} : 0x{value:02X}")
+            splitData         = line.split()
+            opcode            = splitData[0]
+
+            if len(splitData) == 1 and line[-1] == ":":
+                tag = line[:-1].upper()
+                self.tagDict[tag] = self.addressIndex
+                continue
+
+            self.addressIndex += self.instructionSizeDict[opcode]
 
 
+        ## Parsing for each line
         binArr = bytearray()
-
+        self.addressIndex = 0
         for index, line in enumerate(self.assemblyLine):
             if not line:
                 continue
@@ -92,28 +145,34 @@ class Compiler:
             payloadList = splitData[1:]
             payloadLen  = len(payloadList)
             bitVal      = 0
-            lineType    = LINE_TYPE_OPCODE
 
+            ## Parse MOV command
             if opcode == "MOV":
                 for payload in payloadList:
                     if payload not in self.registerList:
                         errorPrint(index)
-                # Ignore the instruction like 'mov a' or 'mov b' ..
-                if payloadLen == 1:
-                    continue
-                if payloadLen != 2:
+
+                if payloadLen == 1: # Ignore the instruction like 'mov a' or 'mov b'; its NOP ..
+                    pass
+                elif payloadLen == 2:
+                    for payload in payloadList:
+                        bitVal = bitVal << 2
+                        bitVal = bitVal | self.registerDict[payload]
+
+                    bitVal = bitVal << 4
+                    bitVal = bitVal | self.instructionDict[opcode]
+
+                else:
                     errorPrint(index)
 
-                for payload in payloadList:
-                    bitVal = bitVal << 2
-                    bitVal = bitVal | self.registerDict[payload]
-
-                bitVal = bitVal << 4
-                bitVal = bitVal | self.instructionDict[opcode]
-
                 if not self.silent:
-                    printCompiledLine(line, bitVal)
+                    self.printCompiledLine(line, bitVal)
 
+                binArr.append(bitVal)
+                self.addressIndex += 1
+
+
+            ## Parse ADD, SUB, INC, DEC commands
             elif opcode == "ADD" or opcode == "SUB" or opcode == "INC" or opcode == "DEC":
                 for payload in payloadList:
                     if payload not in self.registerList:
@@ -128,24 +187,45 @@ class Compiler:
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
-                    printCompiledLine(line, bitVal)
+                    self.printCompiledLine(line, bitVal)
 
-            # Looks like a TAG
-            elif opcode[-1] == ":":
-                tag = opcode[:-1].upper()
-                self.tagDict[tag] = self.addressIndex
-                lineType = LINE_TYPE_TAG
-            else:
-                errorPrint(index)
-
-            if lineType == LINE_TYPE_OPCODE:
                 binArr.append(bitVal)
                 self.addressIndex += 1
 
-        if not self.silent:
-            print("\nTAGs")
-            for key, value in self.tagDict.items():
-                print(f"0x{value:08X}: {key}")
+
+            ## Parse JMP command
+            elif opcode == "JMP":
+                if payloadLen != 1:
+                    errorPrint(index)
+
+                payload = payloadList[0]
+                address = 0xFF # Default value
+                if isInt(payload):
+                    address = int(payload)
+                elif isHex(payload):
+                    address = int(payload, 16)
+                elif payload in self.tagDict:
+                    address = self.tagDict[payload]
+                else:
+                    errorPrint(index)
+
+                bitVal = bitVal << 4
+                bitVal = bitVal | self.instructionDict[opcode]
+
+                if not self.silent:
+                    self.printCompiledLine(line, bitVal, address)
+
+                binArr.append(bitVal)
+                self.addressIndex += 1
+
+                binArr.append(address)
+                self.addressIndex += 1
+
+            # Looks like a TAG
+            elif opcode[-1] == ":":
+                pass
+            else:
+                errorPrint(index)
 
         f = open(self.outFile, 'wb')
         f.write(binArr)
