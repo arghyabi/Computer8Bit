@@ -4,58 +4,74 @@
 No of Res: A, B, C, D
     [A:00, B:01, C: 10, D:11]
 
-Format: [SRC | DST | 0001]
-        [2b]  [2b]   opcode
-
-Opcode | Mnemonic | Description
--------|----------|--------------------------
-0000   | NOP      | No Operation
-0001   | ADD      | Add register to ALU
-0010   | SUB      | Subtract register from ALU
-0011   | INC      | Increment register
-0100   | DEC      | Decrement register
-0101   | MOV      | Register-to-register move
-0110   | LDI      | Load immediate
-0111   | LDM      | Load from memory
-1000   | SAV      | Save to memory
-1001   | JMP      | Jump to a address
-1010   | JMZ      | Jump to a address when Zero flag set
-1011   | JNZ      | Jump to a address when Zero flag Not set
-1110   | OUT      | Display a value in 7-Seg
-1111   | HLT      | Halt the platform
+---------------------------------------------------------------------------------------------
+| Instruction Format | Binary Opcode | Instruction | Operation Description                  |
+|--------------------|---------------|-------------|----------------------------------------|
+| 00TT_0000          | 0000_0000     | NOP         | No Operation                           |
+| T: Type            | 0001_0000     | OUT         | Display a value in 7-Segment           |
+|                    | 0010_0000     | HLT         | Halt the platform                      |
+|--------------------|---------------|-------------|----------------------------------------|
+| RRTT_0001          | RR00_0001     | ADD R       | Add register to ALU                    |
+| T: Type            | RR01_0001     | SUB R       | Subtract register from ALU             |
+| R: Register        | RR10_0001     | INC R       | Increment register                     |
+|                    | RR11_0001     | DEC R       | Decrement register                     |
+|--------------------|---------------|-------------|----------------------------------------|
+| RRTT_0010          | RR00_0010     | LDI R VV    | Load immediate                         |
+| T: Type            | RR01_0010     | LDM R AA    | Load from memory                       |
+| R: Register        | RR10_0010     | SAV R AA    | Save to memory                         |
+|--------------------|---------------|-------------|----------------------------------------|
+| 00TT_0011          | 0000_0011     | JMP AA      | Jump to a specific address             |
+| T: Type            | 0001_0011     | JMZ AA      | Jump to address when Zero flag set     |
+|                    | 0010_0011     | JNZ AA      | Jump to address when Zero flag not set |
+|--------------------|---------------|-------------|----------------------------------------|
+| SSDD_0101          | SSDD_0101     | MOV S D     | Register-to-register move              |
+| S: Source Register |               |             |                                        |
+| D: Dest. Register  |               |             |                                        |
+---------------------------------------------------------------------------------------------
 
 
 Instructions set
 --------------------------
                 XXXX_XXXX
-0.  NOP             _0000           // No Operation
+0.  NOP         0000_0000           // No Operation
+    ---------------------
     NOP         0000_0000
 
-1.  ADD             _0001           // Add the number with ALU value; Save in ALU
+
+1.  ADD         RR00_0001           // Add the number with ALU value; Save in ALU
+    ---------------------
     ADD A       0000_0001
-    ADD B       0001_0001
-    ADD C       0010_0001
-    ADD D       0011_0001
+    ADD B       0100_0001
+    ADD C       1000_0001
+    ADD D       1100_0001
 
-2.  SUB             _0010           // Substact the number from ALU value; Save in ALU
-    SUB A       0000_0010
-    SUB B       0001_0010
-    SUB C       0010_0010
-    SUB D       0011_0010
 
-3.  INC             _0011           // Increase Register Value by 1
-    INC A       0000_0011
-    INC B       0001_0011
-    INC C       0010_0011
-    INC D       0011_0011
+2.  SUB         RR01_0001           // Substact the number from ALU value; Save in ALU
+    ---------------------
+    SUB A       0001_0001
+    SUB B       0101_0001
+    SUB C       1001_0001
+    SUB D       1101_0001
 
-4.  DEC             _0100           // Decrise Register Value by 1
-    DEC A       0000_0100
-    DEC B       0001_0100
-    DEC C       0010_0100
-    DEC D       0011_0100
 
-5.  MOV             _0101           // Move value from Register to Register
+3.  INC         RR10_0001           // Increase Register Value by 1
+    ---------------------
+    INC A       0010_0001
+    INC B       0110_0001
+    INC C       1010_0001
+    INC D       1110_0001
+
+
+4.  DEC         RR11_0001           // Decrise Register Value by 1
+    ---------------------
+    DEC A       0011_0001
+    DEC B       0111_0001
+    DEC C       1011_0001
+    DEC D       1111_0001
+
+
+5.  MOV         SSDD_0101           // Move value from Register to Register
+    ---------------------
     MOV A       0000_0101           -> NOP
     MOV A B     0001_0101
     MOV A C     0010_0101
@@ -73,34 +89,51 @@ Instructions set
     MOV D B     1101_0101
     MOV D C     1110_0101
 
-6.  LDI             _0110           // Load a value imediatly to Register
-    LDI A 0xXX  0000_0110 xxxx_xxxx
-    LDI B 0xXX  0001_0110 xxxx_xxxx
-    LDI C 0xXX  0010_0110 xxxx_xxxx
-    LDI D 0xXX  0011_0110 xxxx_xxxx
 
-7.  LDM             _0111           // Load a value from Memory to Register
-    LDM A 0xXX  0000_0111 xxxx_xxxx
-    LDM B 0xXX  0001_0111 xxxx_xxxx
-    LDM C 0xXX  0010_0111 xxxx_xxxx
-    LDM D 0xXX  0011_0111 xxxx_xxxx
+6.  LDI         RR00_0010           // Load a value imediatly to Register
+    ---------------------
+    LDI A 0xXX  0000_0010 xxxx_xxxx
+    LDI B 0xXX  0100_0010 xxxx_xxxx
+    LDI C 0xXX  1000_0010 xxxx_xxxx
+    LDI D 0xXX  1100_0010 xxxx_xxxx
 
-8.  SAV             _1000           // Save to value from register to Memory
-    SAV A 0xXX  0000_1000 xxxx_xxxx
-    SAV B 0xXX  0001_1000 xxxx_xxxx
-    SAV C 0xXX  0010_1000 xxxx_xxxx
-    SAV D 0xXX  0011_1000 xxxx_xxxx
 
-9.  JMP             _1001           // Jump to an address
-    JMP 0xXX    0000_1001 xxxx_xxxx
+7.  LDM         RR01_0010           // Load a value from Memory to Register
+    ---------------------
+    LDM A 0xXX  0001_0110 xxxx_xxxx
+    LDM B 0xXX  0101_0110 xxxx_xxxx
+    LDM C 0xXX  1001_0110 xxxx_xxxx
+    LDM D 0xXX  1101_0110 xxxx_xxxx
 
-10. JMZ             _1010           // Jump to an address when Zero flag set
-    JMZ 0xXX    0000_1010 xxxx_xxxx
 
-11. JNZ             _1011           // Jump to an address when Zero flag Not set
-    JNZ 0xXX    0000_1011 xxxx_xxxx
+8.  SAV         RR10_0010           // Save to value from register to Memory
+    ---------------------
+    SAV A 0xXX  0010_0010 xxxx_xxxx
+    SAV B 0xXX  0110_0010 xxxx_xxxx
+    SAV C 0xXX  1010_0010 xxxx_xxxx
+    SAV D 0xXX  1110_0010 xxxx_xxxx
 
-14. OUT             _1110           //  Display a value in 7-Seg
-    OUT         0000_1110
 
-15. HLT             _1111           // Halt the system
+9.  JMP         0000_0011           // Jump to an address
+    ---------------------
+    JMP 0xXX    0000_0011 xxxx_xxxx
+
+
+10. JMZ         0001_0011           // Jump to an address when Zero flag set
+    ---------------------
+    JMZ 0xXX    0001_0011 xxxx_xxxx
+
+
+11. JNZ         0010_0011           // Jump to an address when Zero flag Not set
+    ---------------------
+    JNZ 0xXX    0010_0011 xxxx_xxxx
+
+
+14. OUT         0001_0000           //  Display a value in 7-Seg
+    ---------------------
+    OUT         0001_0000
+
+
+15. HLT         0010_0000           // Halt the system
+    ---------------------
+    HLT         0010_0000

@@ -52,20 +52,20 @@ class Compiler:
             'D': 0b11
         }
         self.instructionDict = {
-            'NOP': 0b0000,
-            'ADD': 0b0001,
-            'SUB': 0b0010,
-            'INC': 0b0011,
-            'DEC': 0b0100,
-            'MOV': 0b0101,
-            'LDI': 0b0110,
-            'LDM': 0b0111,
-            'SAV': 0b1000,
-            'JMP': 0b1001,
-            'JMZ': 0b1010,
-            'JNZ': 0b1011,
-            'OUT': 0b1110,
-            'HLT': 0b1111
+            'NOP': 0b0000_0000,
+            'ADD':   0b00_0001,
+            'SUB':   0b01_0001,
+            'INC':   0b10_0001,
+            'DEC':   0b11_0001,
+            'MOV':      0b0101,
+            'LDI':   0b00_0010,
+            'LDM':   0b01_0010,
+            'SAV':   0b10_0010,
+            'JMP': 0b0000_0011,
+            'JMZ': 0b0001_0011,
+            'JNZ': 0b0010_0011,
+            'OUT': 0b0001_0000,
+            'HLT': 0b0010_0000
         }
 
         self.instructionSizeDict = {
@@ -190,7 +190,7 @@ class Compiler:
             payloadLen  = len(payloadList)
             bitVal      = 0
 
-            ## Parse MOV command
+            ## Parse MOV command | Format: SSDD_0101
             if opcode == "MOV":
                 for payload in payloadList:
                     if payload not in self.registerList:
@@ -216,7 +216,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse ADD, SUB, INC, DEC commands
+            ## Parse ADD, SUB, INC, DEC commands  | Format: RRTT_0001
             elif opcode == "ADD" or opcode == "SUB" or opcode == "INC" or opcode == "DEC":
                 for payload in payloadList:
                     if payload not in self.registerList:
@@ -227,7 +227,7 @@ class Compiler:
                 payload = payloadList[0]
                 bitVal = bitVal | self.registerDict[payload]
 
-                bitVal = bitVal << 4
+                bitVal = bitVal << 6 # ADD, SUB, INC, DEC are 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
@@ -237,7 +237,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse JMP, JMZ, JNZ command
+            ## Parse JMP, JMZ, JNZ command | Format: 00TT_0011
             elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ":
                 if payloadLen != 1:
                     errorPrint(index)
@@ -253,8 +253,7 @@ class Compiler:
                 else:
                     errorPrint(index)
 
-                bitVal = bitVal << 4
-                bitVal = bitVal | self.instructionDict[opcode]
+                bitVal = self.instructionDict[opcode] # JMP, JMZ, JNZ are 8 bit
 
                 if not self.silent:
                     self.printCompiledLine(line, bitVal, address)
@@ -266,7 +265,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse LDI command
+            ## Parse LDI command | Format: RRTT_0010
             elif opcode == "LDI":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
@@ -288,7 +287,7 @@ class Compiler:
 
                 bitVal = bitVal | self.registerDict[destReg]
 
-                bitVal = bitVal << 4
+                bitVal = bitVal << 6 # LDI is 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
@@ -301,7 +300,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse LDM, SAV command
+            ## Parse LDM, SAV command | Format: RRTT_0010
             elif opcode == "LDM" or opcode == "SAV":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!! but found {payloadLen}")
@@ -323,7 +322,7 @@ class Compiler:
 
                 bitVal = bitVal | self.registerDict[destReg]
 
-                bitVal = bitVal << 4
+                bitVal = bitVal << 6 # LDM, SAV are 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
@@ -336,13 +335,12 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse HLT, NOP commands
+            ## Parse HLT, NOP, OUT commands | Format: 00TT_0000
             elif opcode == "HLT" or opcode == "NOP" or opcode == "OUT":
                 if payloadLen != 0:
                     errorPrint(index, f"No payload expected!! but found {payloadLen}")
 
-                bitVal = bitVal << 4
-                bitVal = bitVal | self.instructionDict[opcode]
+                bitVal = self.instructionDict[opcode] # HLT, NOP, OUT are 8 bit
 
                 if not self.silent:
                     self.printCompiledLine(line, bitVal)
