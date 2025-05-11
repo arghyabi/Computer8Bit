@@ -17,8 +17,11 @@ Opcode | Mnemonic | Description
 0101   | MOV      | Register-to-register move
 0110   | LDI      | Load immediate
 0111   | LDM      | Load from memory
-1000   | JMP      | Jump to a address
-1001   | SAV      | Save to memory
+1000   | SAV      | Save to memory
+1001   | JMP      | Jump to a address
+1010   | JMZ      | Jump to a address when Zero flag set
+1011   | JNZ      | Jump to a address when Zero flag Not set
+1110   | OUT      | Display a value in 7-Seg
 1111   | HLT      | Halt the platform
 
 
@@ -82,13 +85,22 @@ Instructions set
     LDM C 0xXX  0010_0111 xxxx_xxxx
     LDM D 0xXX  0011_0111 xxxx_xxxx
 
-8.  JMP             _1000           // Jump to an address
-    JMP 0xXX    0000_1000 xxxx_xxxx
+8.  SAV             _1000           // Save to value from register to Memory
+    SAV A 0xXX  0000_1000 xxxx_xxxx
+    SAV B 0xXX  0001_1000 xxxx_xxxx
+    SAV C 0xXX  0010_1000 xxxx_xxxx
+    SAV D 0xXX  0011_1000 xxxx_xxxx
 
-9.  SAV             _1001           // Save to value from register to Memory
-    SAV A 0xXX  0000_1001 xxxx_xxxx
-    SAV B 0xXX  0001_1001 xxxx_xxxx
-    SAV C 0xXX  0010_1001 xxxx_xxxx
-    SAV D 0xXX  0011_1001 xxxx_xxxx
+9.  JMP             _1001           // Jump to an address
+    JMP 0xXX    0000_1001 xxxx_xxxx
+
+10. JMZ             _1010           // Jump to an address when Zero flag set
+    JMZ 0xXX    0000_1010 xxxx_xxxx
+
+11. JNZ             _1011           // Jump to an address when Zero flag Not set
+    JNZ 0xXX    0000_1011 xxxx_xxxx
+
+14. OUT             _1110           //  Display a value in 7-Seg
+    OUT         0000_1110
 
 15. HLT             _1111           // Halt the system
