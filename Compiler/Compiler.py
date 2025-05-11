@@ -60,8 +60,11 @@ class Compiler:
             'MOV': 0b0101,
             'LDI': 0b0110,
             'LDM': 0b0111,
-            'JMP': 0b1000,
-            'SAV': 0b1001,
+            'SAV': 0b1000,
+            'JMP': 0b1001,
+            'JMZ': 0b1010,
+            'JNZ': 0b1011,
+            'OUT': 0b1110,
             'HLT': 0b1111
         }
 
@@ -74,8 +77,11 @@ class Compiler:
             'MOV': 1,
             'LDI': 2,
             'LDM': 2,
-            'JMP': 2,
             'SAV': 2,
+            'JMP': 2,
+            'JMZ': 2,
+            'JNZ': 2,
+            'OUT': 1,
             'HLT': 1
         }
 
@@ -231,8 +237,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse JMP command
-            elif opcode == "JMP":
+            ## Parse JMP, JMZ, JNZ command
+            elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ":
                 if payloadLen != 1:
                     errorPrint(index)
 
@@ -330,8 +336,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse HLT commands
-            elif opcode == "HLT":
+            ## Parse HLT, NOP commands
+            elif opcode == "HLT" or opcode == "NOP" or opcode == "OUT":
                 if payloadLen != 0:
                     errorPrint(index, f"No payload expected!! but found {payloadLen}")
 
