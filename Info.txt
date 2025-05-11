@@ -9,59 +9,86 @@ Format: [SRC | DST | 0001]
 
 Opcode | Mnemonic | Description
 -------|----------|--------------------------
-0000   | ADD      | Add register to ALU
-0001   | MOV      | Register-to-register move
-0100   | SUB      | Subtract register from ALU
-1000   | INC      | Increment register
-1100   | DEC      | Decrement register
-0101   | LOD      | Load from memory (planned)
-0110   | LDI      | Load immediate (planned)
-0111   | SAV      | Save to memory (planned)
+0000   | NOP      | No Operation
+0001   | ADD      | Add register to ALU
+0010   | SUB      | Subtract register from ALU
+0011   | INC      | Increment register
+0100   | DEC      | Decrement register
+0101   | MOV      | Register-to-register move
+0110   | LDI      | Load immediate
+0111   | LDM      | Load from memory
+1000   | JMP      | Jump to a address
+1001   | SAV      | Save to memory
+1111   | HLT      | Halt the platform
 
 
 Instructions set
 --------------------------
-            XXXX_XXXX
-1. ADD          _0000   // Add the number with ALU value; Save in ALU
-    ADD A   0000_0000
-    ADD B   0001_0000
-    ADD C   0010_0000
-    ADD D   0011_0000
-2. SUB          _0100   // Substact the number from ALU value; Save in ALU
-    SUB A   0000_0100
-    SUB B   0001_0100
-    SUB C   0010_0100
-    SUB D   0011_0100
-4. INC          _1000   // Increase Register Value by 1
-    INC A   0000_1000
-    INC B   0001_1000
-    INC C   0010_1000
-    INC D   0011_1000
-5. DEC          _1100   // Decrise Register Value by 1
-    DEC A   0000_1100
-    DEC B   0001_1100
-    DEC C   0010_1100
-    DEC D   0011_1100
+                XXXX_XXXX
+0.  NOP             _0000           // No Operation
+    NOP         0000_0000
 
-3. MOV          _0001   // Move value from Register to Register
-    MOV A   0000_0001
-    MOV A B 0001_0001
-    MOV A C 0010_0001
-    MOV A D 0011_0001
-    MOV B   0101_0001
-    MOV B A 0100_0001
-    MOV B C 0110_0001
-    MOV B D 0111_0001
-    MOV C   1010_0001
-    MOV C A 1000_0001
-    MOV C B 1001_0001
-    MOV C D 1011_0001
-    MOV D   1111_0001
-    MOV D A 1100_0001
-    MOV D B 1101_0001
-    MOV D C 1110_0001
+1.  ADD             _0001           // Add the number with ALU value; Save in ALU
+    ADD A       0000_0001
+    ADD B       0001_0001
+    ADD C       0010_0001
+    ADD D       0011_0001
 
-// Not done [WIP] !!
-6. LOD          _0101   //
-7. LDI          _0110   // Load a value imediatly to Register
-8. SAV          _0111   // Save a value in memory
+2.  SUB             _0010           // Substact the number from ALU value; Save in ALU
+    SUB A       0000_0010
+    SUB B       0001_0010
+    SUB C       0010_0010
+    SUB D       0011_0010
+
+3.  INC             _0011           // Increase Register Value by 1
+    INC A       0000_0011
+    INC B       0001_0011
+    INC C       0010_0011
+    INC D       0011_0011
+
+4.  DEC             _0100           // Decrise Register Value by 1
+    DEC A       0000_0100
+    DEC B       0001_0100
+    DEC C       0010_0100
+    DEC D       0011_0100
+
+5.  MOV             _0101           // Move value from Register to Register
+    MOV A       0000_0101           -> NOP
+    MOV A B     0001_0101
+    MOV A C     0010_0101
+    MOV A D     0011_0101
+    MOV B       0101_0101           -> NOP
+    MOV B A     0100_0101
+    MOV B C     0110_0101
+    MOV B D     0111_0101
+    MOV C       1010_0101           -> NOP
+    MOV C A     1000_0101
+    MOV C B     1001_0101
+    MOV C D     1011_0101
+    MOV D       1111_0101           -> NOP
+    MOV D A     1100_0101
+    MOV D B     1101_0101
+    MOV D C     1110_0101
+
+6.  LDI             _0110           // Load a value imediatly to Register
+    LDI A 0xXX  0000_0110 xxxx_xxxx
+    LDI B 0xXX  0001_0110 xxxx_xxxx
+    LDI C 0xXX  0010_0110 xxxx_xxxx
+    LDI D 0xXX  0011_0110 xxxx_xxxx
+
+7.  LDM             _0111           // Load a value from Memory to Register
+    LDM A 0xXX  0000_0111 xxxx_xxxx
+    LDM B 0xXX  0001_0111 xxxx_xxxx
+    LDM C 0xXX  0010_0111 xxxx_xxxx
+    LDM D 0xXX  0011_0111 xxxx_xxxx
+
+8.  JMP             _1000           // Jump to an address
+    JMP 0xXX    0000_1000 xxxx_xxxx
+
+9.  SAV             _1001           // Save to value from register to Memory
+    SAV A 0xXX  0000_1001 xxxx_xxxx
+    SAV B 0xXX  0001_1001 xxxx_xxxx
+    SAV C 0xXX  0010_1001 xxxx_xxxx
+    SAV D 0xXX  0011_1001 xxxx_xxxx
+
+15. HLT             _1111           // Halt the system
