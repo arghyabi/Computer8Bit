@@ -57,7 +57,7 @@ class Compiler:
             'SUB':   0b01_0001,
             'INC':   0b10_0001,
             'DEC':   0b11_0001,
-            'MOV':      0b0101,
+            'MOV':     0b_0101,
             'LDI':   0b00_0010,
             'LDM':   0b01_0010,
             'SAV':   0b10_0010,
@@ -137,17 +137,25 @@ class Compiler:
 
     def printCompiledLine(self, line, value, value2 = None):
         binary  = f"{value:08b}"
-        tag = next((key for key, value in self.tagDict.items() if value == self.addressIndex), None)
+        tag     = next((key for key, value in self.tagDict.items() if value == self.addressIndex), None)
         if tag == None:
             tag = " "*self.tagMaxLength
         else:
             tag = f"{tag:{self.tagMaxLength}}"
 
+        printLine = ""
+        printLine += f"{tag} 0x{self.addressIndex:04X}: "
+        printLine += f"{line:{self.sourceMaxLength}} | Code: "
+        printLine += f"{binary[:4]}_{binary[4:]} "
+
         if value2 != None:
             binary2 = f"{value2:08b}"
-            self.logBuffer.append(f"{tag} 0x{self.addressIndex:04X}: {line:{self.sourceMaxLength}} | Code: {binary[:4]}_{binary[4:]} {binary2[:4]}_{binary2[4:]} // 0x{value:02X} 0x{value2:02X}")
+            printLine += f" {binary2[:4]}_{binary2[4:]} "
+            printLine += f"// 0x{value:02X} 0x{value2:02X}"
         else:
-            self.logBuffer.append(f"{tag} 0x{self.addressIndex:04X}: {line:{self.sourceMaxLength}} | Code: {binary[:4]}_{binary[4:]}           // 0x{value:02X}")
+            printLine += f"           // 0x{value:02X}"
+
+        self.logBuffer.append(printLine)
 
 
     def compile(self):
