@@ -53,20 +53,37 @@ class Compiler:
             'D': 0b11
         }
         self.instructionDict = {
+            # 0000
             'NOP': 0b0000_0000,
-            'ADD':   0b00_0001,
-            'SUB':   0b01_0001,
-            'INC':   0b10_0001,
-            'DEC':   0b11_0001,
-            'MOV':     0b_0101,
-            'LDI':   0b00_0010,
-            'LDM':   0b01_0010,
-            'SAV':   0b10_0010,
-            'JMP': 0b0000_0011,
-            'JMZ': 0b0001_0011,
-            'JNZ': 0b0010_0011,
             'OUT': 0b0001_0000,
-            'HLT': 0b0010_0000
+            'HLT': 0b0010_0000,
+            # 0001
+            'ADD':     0b_0001,
+            # 0010
+            'SUB':     0b_0010,
+            # 0011
+            'INC':   0b10_0011,
+            'DEC':   0b11_0011,
+            # 0100
+            'LDI':   0b00_0100,
+            'LDM':   0b01_0100,
+            'SAV':   0b10_0100,
+            # 0101
+            'JMP': 0b0000_0101,
+            'JMZ': 0b0001_0101,
+            'JNZ': 0b0010_0101,
+            # 0110
+            'MOV':     0b_0110,
+            # 0111
+            'AND':     0b_0111,
+            # 1000
+            'OR' :     0b_1000,
+            # 1001
+            'XOR':     0b_1001,
+            # 1010
+            'NOT':   0b00_1010,
+            # 1011
+            'CMP':     0b_1011,
         }
 
         self.instructionSizeDict = {
@@ -82,6 +99,11 @@ class Compiler:
             'JMP': 2,
             'JMZ': 2,
             'JNZ': 2,
+            'AND': 1,
+            'OR' : 1,
+            'XOR': 1,
+            'NOT': 1,
+            'CMP': 1,
             'OUT': 1,
             'HLT': 1
         }
@@ -204,16 +226,16 @@ class Compiler:
             payloadLen  = len(payloadList)
             bitVal      = 0
 
-            ## Parse MOV command | Format: SSDD_0101
-            if opcode == "MOV":
-                if payloadLen > 2:
+            ## Parse ADD, SUB, MOV command | Format: SSDD_0001, SSDD_0010, SSDD_0110
+            if opcode == "ADD" or opcode == "SUB" or opcode == "MOV":
+                if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
 
                 for payload in payloadList:
                     if payload not in self.registerList:
                         errorPrint(index, f"'{payload}' is not a register!!")
 
-                if payloadLen == 1 or payloadList[0] == payloadList[1]: # Ignore the 'mov a' or 'mov b' or 'mov c c'; its NOP ..
+                if payloadList[0] == payloadList[1]: # Ignore the 'mov a a' or 'mov b b'; its NOP ..
                     pass
                 
                 if payloadLen == 2:
@@ -231,8 +253,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse ADD, SUB, INC, DEC commands  | Format: RRTT_0001
-            elif opcode == "ADD" or opcode == "SUB" or opcode == "INC" or opcode == "DEC":
+            ## Parse INC, DEC, NOT commands  | Format: RRTT_0011, RRTT_0011, RR00_1010
+            elif opcode == "INC" or opcode == "DEC" or opcode == "NOT":
                 if payloadLen != 1:
                     errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 
@@ -243,7 +265,7 @@ class Compiler:
                 payload = payloadList[0]
                 bitVal = bitVal | self.registerDict[payload]
 
-                bitVal = bitVal << 6 # ADD, SUB, INC, DEC are 6 bit
+                bitVal = bitVal << 6 # INC, DEC are 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
@@ -253,7 +275,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse JMP, JMZ, JNZ command | Format: 00TT_0011
+            ## Parse JMP, JMZ, JNZ command | Format: 00TT_0101
             elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ":
                 if payloadLen != 1:
                     errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
@@ -284,7 +306,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse LDI command | Format: RRTT_0010
+            ## Parse LDI command | Format: RRTT_0100
             elif opcode == "LDI":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
@@ -319,7 +341,7 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse LDM, SAV command | Format: RRTT_0010
+            ## Parse LDM, SAV command | Format: RRTT_0100
             elif opcode == "LDM" or opcode == "SAV":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!! but found {payloadLen}")
@@ -360,6 +382,29 @@ class Compiler:
                     errorPrint(index, f"No payload expected!! but found {payloadLen}")
 
                 bitVal = self.instructionDict[opcode] # HLT, NOP, OUT are 8 bit
+
+                if not self.silent:
+                    self.printCompiledLine(line, bitVal)
+
+                self.binArr.append(bitVal)
+                self.addressIndex += 1
+
+
+            ## Parse AND, OR, XOR, CMP command | Format: SSDD_0111, SSDD_1000, SSDD_1001, SSDD_1011
+            elif opcode == "AND" or opcode == "OR" or opcode == "XOR" or opcode == "CMP":
+                if payloadLen != 2:
+                    errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
+
+                for payload in payloadList:
+                    if payload not in self.registerList:
+                        errorPrint(index, f"'{payload}' is not a register!!")
+
+                for payload in payloadList:
+                    bitVal = bitVal << 2
+                    bitVal = bitVal | self.registerDict[payload]
+
+                bitVal = bitVal << 4
+                bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
                     self.printCompiledLine(line, bitVal)
