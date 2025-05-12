@@ -24,7 +24,8 @@ def isHex(s):
 class Compiler:
     def __init__(self, assemblyFile, outFile, silent):
         if not os.path.exists(assemblyFile):
-            raise Exception(f"{assemblyFile} not found!!!")
+            print(f"{assemblyFile} not found!!!")
+            exit(-1)
 
         try:
             f = open(assemblyFile, 'r')
@@ -162,9 +163,12 @@ class Compiler:
         def errorPrint(index, error = None):
             errorLine = self.assemblyMain[index]
             if error != None:
-                raise Exception(f"'{errorLine}' at line no {index + 1} is not able to compile!!!\nERRROR: {error}")
+                errorString = f"'{errorLine}' at line no {index + 1} is not able to compile!!!\nERROR: {error}"
             else:
-                raise Exception(f"'{errorLine}' at line no {index + 1} is not able to compile!!!")
+                errorString = f"'{errorLine}' at line no {index + 1} is not able to compile!!!"
+            
+            print(errorString)
+            exit(-1)
 
 
         ## Parsing logic the tags first
@@ -182,8 +186,10 @@ class Compiler:
                 if len(tag) > self.tagMaxLength:
                     self.tagMaxLength = len(tag)
                 continue
-
-            self.addressIndex += self.instructionSizeDict[opcode]
+            if opcode in self.instructionSizeDict:
+                self.addressIndex += self.instructionSizeDict[opcode]
+            else:
+                errorPrint(index, f"'{opcode}' is not supported instruction!!")
 
 
         ## Parsing for each line
@@ -200,22 +206,23 @@ class Compiler:
 
             ## Parse MOV command | Format: SSDD_0101
             if opcode == "MOV":
+                if payloadLen > 2:
+                    errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
+
                 for payload in payloadList:
                     if payload not in self.registerList:
-                        errorPrint(index)
+                        errorPrint(index, f"'{payload}' is not a register!!")
 
-                if payloadLen == 1: # Ignore the instruction like 'mov a' or 'mov b'; its NOP ..
+                if payloadLen == 1 or payloadList[0] == payloadList[1]: # Ignore the 'mov a' or 'mov b' or 'mov c c'; its NOP ..
                     pass
-                elif payloadLen == 2:
+                
+                if payloadLen == 2:
                     for payload in payloadList:
                         bitVal = bitVal << 2
                         bitVal = bitVal | self.registerDict[payload]
 
                     bitVal = bitVal << 4
                     bitVal = bitVal | self.instructionDict[opcode]
-
-                else:
-                    errorPrint(index)
 
                 if not self.silent:
                     self.printCompiledLine(line, bitVal)
@@ -226,11 +233,12 @@ class Compiler:
 
             ## Parse ADD, SUB, INC, DEC commands  | Format: RRTT_0001
             elif opcode == "ADD" or opcode == "SUB" or opcode == "INC" or opcode == "DEC":
+                if payloadLen != 1:
+                    errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
+
                 for payload in payloadList:
                     if payload not in self.registerList:
-                        errorPrint(index)
-                if payloadLen != 1:
-                    errorPrint(index)
+                        errorPrint(index, f"'{payload}' is not a register!!")
 
                 payload = payloadList[0]
                 bitVal = bitVal | self.registerDict[payload]
@@ -248,7 +256,7 @@ class Compiler:
             ## Parse JMP, JMZ, JNZ command | Format: 00TT_0011
             elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ":
                 if payloadLen != 1:
-                    errorPrint(index)
+                    errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 
                 payload = payloadList[0]
                 address = 0xFF # Default value
@@ -259,7 +267,10 @@ class Compiler:
                 elif payload in self.tagDict:
                     address = self.tagDict[payload]
                 else:
-                    errorPrint(index)
+                    errorPrint(index, f"'{payload}' is not a proper address")
+                
+                if address > MAX_ADDRESS_8_BIT:
+                    errorPrint(index, "Max address limit cross!!")
 
                 bitVal = self.instructionDict[opcode] # JMP, JMZ, JNZ are 8 bit
 
@@ -361,7 +372,7 @@ class Compiler:
             elif opcode[-1] == ":":
                 pass
             else:
-                errorPrint(index)
+                errorPrint(index, "No supported instruction found!!")
 
         f = open(self.outFile, 'wb')
         f.write(self.binArr)
