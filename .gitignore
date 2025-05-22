@@ -1,3 +1,6 @@
 Compiler/*.i
 Compiler/*.s
 Compiler/*.bin
+GenMicroCode/build-*
+GenMicroCode/Microcode_*.*
+__pycache__

@@ -188,7 +188,7 @@ class Compiler:
                 errorString = f"'{errorLine}' at line no {index + 1} is not able to compile!!!\nERROR: {error}"
             else:
                 errorString = f"'{errorLine}' at line no {index + 1} is not able to compile!!!"
-            
+
             print(errorString)
             exit(-1)
 
@@ -237,7 +237,7 @@ class Compiler:
 
                 if payloadList[0] == payloadList[1]: # Ignore the 'mov a a' or 'mov b b'; its NOP ..
                     pass
-                
+
                 if payloadLen == 2:
                     for payload in payloadList:
                         bitVal = bitVal << 2
@@ -290,7 +290,7 @@ class Compiler:
                     address = self.tagDict[payload]
                 else:
                     errorPrint(index, f"'{payload}' is not a proper address")
-                
+
                 if address > MAX_ADDRESS_8_BIT:
                     errorPrint(index, "Max address limit cross!!")
 
