@@ -18,15 +18,7 @@ commentHeader = """\
 
 dataBlock = [0]*2048
 
-def genMicrocode(chipNumer, data):
-    inputPatterns = ["InsR5", "InsR4", "InsR3", "InsR2", "InsR1", "InsR0", "Carry", "ZeroF", "Seqn2", "Seqn1", "Seqn0"]
-    if chipNumer == 0:
-        outputPatterns = ["RRI", "RRO", "RLI", "RLO", "PCI", "PCE", "PCC", "MeO"]
-    elif chipNumer == 1:
-        outputPatterns = ["MeI", "IRI", "SqR", "AdSuO", "AdSu", "CmpO", "AndO", "T1I"]
-    elif chipNumer == 2:
-        outputPatterns = ["T2I", "OrO", "XorO", "NtO", "Seg7E", " - ", " - ", " - "]
-
+def genMicrocode(chipNumer, data, inputPatterns, outputPatterns):
     upDatedHeader = commentHeader.format(chipNumber = chipNumer, inputPatterns = inputPatterns, outputPatterns = outputPatterns)
 
     with open(f"Microcode_{chipNumer}.h", "w") as f:
@@ -63,19 +55,19 @@ def randomizeMicrocode(chipNumber):
     import random
     for i in range(len(dataBlock)):
         dataBlock[i] = random.randint(0, 255)
-    genMicrocode(chipNumber, dataBlock)
+    genMicrocode(chipNumber, dataBlock, None, None)
 
 
 def main():
     insParser = ParseInstruction.ParseInstructions()
     insParser.parseEachInstruction()
     # print("=====================================")
-    microcodeBank = insParser.generateAddressDataMap()
+    microcodeBank, microInsMatrix = insParser.generateAddressDataMap()
     for chip in microcodeBank:
         # print(f"Chip {chip}:")
         eachChipMicrocode = microcodeBank[chip]
         # print(f"{eachChipMicrocode}")
-        genMicrocode(int(chip), eachChipMicrocode)
+        genMicrocode(int(chip), eachChipMicrocode, microInsMatrix["in"], microInsMatrix["out"][chip])
 
 if __name__ == "__main__":
     # randomizeMicrocode(1)

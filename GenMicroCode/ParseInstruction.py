@@ -6,8 +6,10 @@ from Instructions import InsJMP as JMP
 from Instructions import InsJMZ as JMZ
 from Instructions import InsJNZ as JNZ
 from Instructions import InsOUT as OUT
+from Instructions import InsDEC as DEC
+from Instructions import InsINC as INC
 
-insObjects = [ADD, SUB, JMP, JMZ, JNZ, OUT]
+insObjects = [ADD, SUB, JMP, JMZ, JNZ, OUT, DEC, INC]
 
 
 class ParseInstructions:
@@ -26,8 +28,9 @@ class ParseInstructions:
                     # print(f"Instruction Name: {instructionName}")
                     break
 
-            addressMatrix = []
-            outputMatrix = {"0":[],"1":[],"2":[]}
+            addressMatrix  = []
+            outputMatrix   = {"0":[],"1":[],"2":[]}
+            microInsMatrix = {"in":[],"out":{"0":[],"1":[],"2":[]}}
             outCount = 0
             chipCount = 0
             for line in lines:
@@ -38,14 +41,18 @@ class ParseInstructions:
                 if lineSplit[0] == "I":
                     # print(f"address: {lineSplit[2:]}")
                     addressMatrix.append(lineSplit[2:])
+                    microInsMatrix["in"].append(lineSplit[1])
                 elif lineSplit[0] == "O":
                     # print(f"Output: {lineSplit[2:]}")
                     if chipCount == 0:
                         outputMatrix["0"].append(lineSplit[2:])
+                        microInsMatrix["out"]["0"].append(lineSplit[1])
                     elif chipCount == 1:
                         outputMatrix["1"].append(lineSplit[2:])
+                        microInsMatrix["out"]["1"].append(lineSplit[1])
                     elif chipCount == 2:
                         outputMatrix["2"].append(lineSplit[2:])
+                        microInsMatrix["out"]["2"].append(lineSplit[1])
                     outCount += 1
                     if outCount == 8:
                         chipCount += 1
@@ -56,6 +63,7 @@ class ParseInstructions:
             # print(f"Output Matrix: {outputMatrix}")
 
             self.InstructionParsedData[instructionName] = {
+                "microInsMatrix": microInsMatrix,
                 "addressMatrix": addressMatrix,
                 "outputMatrix": outputMatrix
             }
@@ -100,9 +108,10 @@ class ParseInstructions:
         for chip in microcodeMatrix:
             for i in range(2048):
                 microcodeMatrix[chip].append(0)
-
+        microInsMatrix = None
         for instruction in self.InstructionParsedData:
             addressMatrix = self.InstructionParsedData[instruction]["addressMatrix"]
+            microInsMatrix = self.InstructionParsedData[instruction]["microInsMatrix"]
             addressDataMap = []
             for i in range(len(addressMatrix[0])):
                 temp = []
@@ -151,7 +160,7 @@ class ParseInstructions:
         #         f.write(f"0x{i:04x} ({i:011b}) => 0x{microcodeMatrix[chip][i]:02x} // {microcodeMatrix[chip][i]:08b} // {microcodeMatrix[chip][i]}\n")
         # f.close()
 
-        return microcodeMatrix
+        return microcodeMatrix, microInsMatrix
 
 
 
