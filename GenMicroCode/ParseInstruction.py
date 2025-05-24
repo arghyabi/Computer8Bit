@@ -1,15 +1,17 @@
-import json
-
+from Instructions import InsOUT as OUT
 from Instructions import InsADD as ADD
 from Instructions import InsSUB as SUB
+from Instructions import InsINC as INC
+from Instructions import InsDEC as DEC
+from Instructions import InsLDI as LDI
+from Instructions import InsLDM as LDM
+from Instructions import InsSAV as SAV
 from Instructions import InsJMP as JMP
 from Instructions import InsJMZ as JMZ
 from Instructions import InsJNZ as JNZ
-from Instructions import InsOUT as OUT
-from Instructions import InsDEC as DEC
-from Instructions import InsINC as INC
+from Instructions import InsJMC as JMC
 
-insObjects = [ADD, SUB, JMP, JMZ, JNZ, OUT, DEC, INC]
+insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
 
 
 class ParseInstructions:
