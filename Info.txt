@@ -4,7 +4,7 @@
 No of Res: A, B, C, D
     [A:00, B:01, C: 10, D:11]
 
-** for Comments use ';' 
+** for Comments use ';'
 
 --------------------------------------------------------------------------------------------------------
 | Instruction Format | Binary Opcode | Instruction | Ins Size | Operation Description                  |
@@ -32,6 +32,7 @@ No of Res: A, B, C, D
 | 00TT_0101          | 0000_0101     | JMP AA      | 2 Byte   | Jump to a specific address             |
 | T: Type            | 0001_0101     | JMZ AA      | 2 Byte   | Jump to address when Zero flag set     |
 |                    | 0010_0101     | JNZ AA      | 2 Byte   | Jump to address when Zero flag not set |
+|                    | 0011_0101     | JMC AA      | 2 Byte   | Jump to address when Carry flag set    |
 |--------------------|---------------|-------------|----------|----------------------------------------|
 | SSDD_0110          | SSDD_0110     | MOV S D     | 1 Byte   | Register-to-register move              |
 | S: Source Register |               |             |          |                                        |
@@ -153,7 +154,12 @@ Instructions set
     JNZ 0xXX    0010_0101 xxxx_xxxx
 
 
-5.  MOV         SSDD_0110           // Move value from Register to Register
+12. JMC         0011_0101           // Jump to an address when carry flag is set
+    ---------------------
+    JMC 0xXX    0011_0101 xxxx_xxxx
+
+
+13. MOV         SSDD_0110           // Move value from Register to Register
     ---------------------
     MOV A B     0001_0110
     MOV A C     0010_0110
@@ -169,7 +175,7 @@ Instructions set
     MOV D C     1110_0110
 
 
-12. AND         SSDD_0111           // Logical AND operation 
+14. AND         SSDD_0111           // Logical AND operation
     ---------------------
     AND A B     0001_0111
     AND A C     0010_0111
@@ -185,7 +191,7 @@ Instructions set
     AND D C     1110_0111
 
 
-13. OR          SSDD_1000           //Logical OR operation
+15. OR          SSDD_1000           //Logical OR operation
     ---------------------
     OR A B      0001_1000
     OR A C      0010_1000
@@ -201,7 +207,7 @@ Instructions set
     OR D C      1110_1000
 
 
-12. XOR         SSDD_1001           // Logical XOR operation 
+16. XOR         SSDD_1001           // Logical XOR operation
     ---------------------
     XOR A B     0001_1001
     XOR A C     0010_1001
@@ -217,7 +223,7 @@ Instructions set
     XOR D C     1110_1001
 
 
-13. NOT         RR00_1010           // Logical NOT operation
+17. NOT         RR00_1010           // Logical NOT operation
     ---------------------
     NOT A       0000_1010
     NOT B       0100_1010
@@ -225,7 +231,7 @@ Instructions set
     NOT D       1100_1010
 
 
-14. CMP         SSDD_1011           // Compare value with Register to Register
+18. CMP         SSDD_1011           // Compare value with Register to Register
     ---------------------
     CMP A B     0001_1011
     CMP A C     0010_1011
@@ -241,11 +247,11 @@ Instructions set
     CMP D C     1110_1011
 
 
-15. OUT         0001_0000           //  Display a value in 7-Seg
+19. OUT         0001_0000           //  Display a value in 7-Seg
     ---------------------
     OUT         0001_0000
 
 
-16. HLT         0010_0000           // Halt the system
+20. HLT         0010_0000           // Halt the system
     ---------------------
     HLT         0010_0000
