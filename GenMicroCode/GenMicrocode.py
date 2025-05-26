@@ -1,3 +1,5 @@
+import os
+
 import ParseInstruction
 
 commentHeader = """\
@@ -21,7 +23,7 @@ dataBlock = [0]*2048
 def genMicrocode(chipNumer, data, inputPatterns, outputPatterns):
     upDatedHeader = commentHeader.format(chipNumber = chipNumer, inputPatterns = inputPatterns, outputPatterns = outputPatterns)
 
-    with open(f"Microcode_{chipNumer}.h", "w") as f:
+    with open(os.path.join("out", f"Microcode_{chipNumer}.h"), "w") as f:
         f.write(f"#ifndef _COMPUTER_8_BIT_MICROCODE_CHIP_{chipNumer}_H_\n")
         f.write(f"#define _COMPUTER_8_BIT_MICROCODE_CHIP_{chipNumer}_H_\n\n")
         f.write(upDatedHeader)
@@ -39,7 +41,7 @@ def genMicrocode(chipNumer, data, inputPatterns, outputPatterns):
         f.write(" };\n\n")
         f.write(f"#endif // _COMPUTER_8_BIT_MICROCODE_CHIP_{chipNumer}_H_\n")
 
-    with open(f"Microcode_{chipNumer}.bin", "wb") as f:
+    with open(os.path.join("out", f"Microcode_{chipNumer}.bin"), "wb") as f:
         # write the binary data to a file
         f.write(bytes(data))
 
