@@ -1,3 +1,5 @@
+import os
+
 from Instructions import InsOUT as OUT
 from Instructions import InsADD as ADD
 from Instructions import InsSUB as SUB
@@ -14,6 +16,8 @@ from Instructions import InsJMC as JMC
 insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
 
 
+microCodeMapFile = os.path.join("out", "microCodeMap.txt")
+
 class ParseInstructions:
     def __init__(self):
         self.InstructionParsedData = {}
@@ -24,6 +28,7 @@ class ParseInstructions:
             textIns :str = ins.INS
             lines = textIns.split("\n")
 
+            instructionName = None
             for line in lines:
                 if "INSTRUCTION:" in line:
                     instructionName = line.split(":")[-1].strip()
@@ -111,6 +116,15 @@ class ParseInstructions:
             for i in range(2048):
                 microcodeMatrix[chip].append(0)
         microInsMatrix = None
+
+        if os.path.exists(microCodeMapFile):
+            os.remove(microCodeMapFile)
+
+        if not os.path.exists("out"):
+            os.mkdir("out")
+
+        mapFilePointer = open(microCodeMapFile, "w")
+
         for instruction in self.InstructionParsedData:
             addressMatrix = self.InstructionParsedData[instruction]["addressMatrix"]
             microInsMatrix = self.InstructionParsedData[instruction]["microInsMatrix"]
@@ -135,7 +149,8 @@ class ParseInstructions:
                     dataDataMap.append(temp)
                 # print(f"......................val {instruction} chip {chip}.......................")
                 # print(dataDataMap)
-
+                mapFilePointer.write(f"\n\nInstruction: {instruction}; Chip: {chip}\n")
+                mapIndex = 1
                 for index in range(len(addressDataMap)):
                     addresses = self.getPossiableValueCombinations(addressDataMap[index])
                     # print(f"chip:{chip} | AddressMap: {addressDataMap[index]}")
@@ -149,6 +164,12 @@ class ParseInstructions:
                         # else:
                         #     raise Exception(f"Address: 0x{address:04x} already exists!!!")
                     # print(f"Address: {address:08b}, Value: {value:08b
+                        mapFilePointer.write(f"{mapIndex:4d}: 0x{address:04x} => 0x{value:02x} //")
+                        mapFilePointer.write(f" {address:011b}: {value:08b}\n")
+                        mapIndex += 1
+
+        mapFilePointer.close()
+
 
             # break
         # print("=====================================")
