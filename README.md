@@ -53,7 +53,7 @@ This project is about understanding and constructing the fundamental building bl
 
 ## 🧾 Instruction Set
 
-Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the `info.txt` file.
+Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the [ISA.md](ISA.md) file.
 
 Each instruction is defined with:
 - Opcode
