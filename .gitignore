@@ -3,4 +3,5 @@ Compiler/*.s
 Compiler/*.bin
 GenMicroCode/build-*
 GenMicroCode/out/
+Gen7segDriver/*.bin
 __pycache__
