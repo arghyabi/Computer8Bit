@@ -35,10 +35,11 @@ This project is about understanding and constructing the fundamental building bl
 .
 ├── Compiler/                        # Basic assembler for the custom ISA
 ├── GenMicroCode/                    # Microcode definitions and sequencing logic
+├── Gen7segDriver/                   # 7 Segment display driver EEPROM logic
 ├── images/
 │   └── top_level_architecture.png   # High-level block diagram of the computer
 ├── Datasheets/                      # Datasheets for different ICs
-├── info.txt                         # Details and documentation of supported instructions
+├── ISA.md                           # Details and documentation of supported instructions
 └── README.md
 ```
 
