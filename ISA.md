@@ -33,60 +33,104 @@ SUB B C ; Subtract C from B and keep in B
 > - Full binary encodings
 > - Descriptions for each instruction
 
-```
---------------------------------------------------------------------------------------------------------
-| Instruction Format | Binary Opcode | Instruction | Ins Size | Operation Description                  |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| 00TT_0000          | 0000_0000     | NOP         | 1 Byte   | No Operation                           |
-| T: Type            | 0001_0000     | OUT         | 1 Byte   | Display a value in 7-Segment           |
-|                    | 0010_0000     | HLT         | 1 Byte   | Halt the platform                      |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_0001          | SSDD_0001     | ADD S D     | 1 Byte   | Add 2 register and update to source    |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_0010          | SSDD_0010     | SUB S D     | 1 Byte   | Substract 2 regs. & update to source   |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| RRTT_0011          | RR10_0011     | INC R       | 1 Byte   | Increment register                     |
-| R: Register        | RR11_0011     | DEC R       | 1 Byte   | Decrement register                     |
-| T: Type            |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| RRTT_0100          | RR00_0100     | LDI R VV    | 2 Byte   | Load immediate                         |
-| T: Type            | RR01_0100     | LDM R AA    | 2 Byte   | Load from memory                       |
-| R: Register        | RR10_0100     | SAV R AA    | 2 Byte   | Save to memory                         |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| 00TT_0101          | 0000_0101     | JMP AA      | 2 Byte   | Jump to a specific address             |
-| T: Type            | 0001_0101     | JMZ AA      | 2 Byte   | Jump to address when Zero flag set     |
-|                    | 0010_0101     | JNZ AA      | 2 Byte   | Jump to address when Zero flag not set |
-|                    | 0011_0101     | JMC AA      | 2 Byte   | Jump to address when Carry flag set    |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_0110          | SSDD_0110     | MOV S D     | 1 Byte   | Register-to-register move              |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_0111          | SSDD_0111     | AND S D     | 1 Byte   | Logical AND operation                  |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_1000          | SSDD_1000     | OR S D      | 1 Byte   | Logical OR operation                   |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_1001          | SSDD_1001     | XOR S D     | 1 Byte   | Logical XOR operation                  |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| RR00_1010          | RR00_1010     | NOT R       | 1 Byte   | Logical XOR operation                  |
-| R: Register        |               |             |          |                                        |
-|--------------------|---------------|-------------|----------|----------------------------------------|
-| SSDD_1011          | SSDD_1011     | CMP S D     | 1 Byte   | Compare two register value             |
-| S: Source Register |               |             |          |                                        |
-| D: Dest. Register  |               |             |          |                                        |
---------------------------------------------------------------------------------------------------------
-```
 
+<table>
+    <thead>
+        <tr>
+            <th>Instruction Format</th>
+            <th>Binary Opcode</th>
+            <th>Instruction</th>
+            <th>Size</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td valign="top"><strong>00TT_0000</strong><br>T: Type</td>
+            <td valign="top">0000_0000<br>0001_0000<br>0010_0000</td>
+            <td valign="top">NOP<br>OUT<br>HLT</td>
+            <td valign="top">1 Byte<br>1 Byte<br>1 Byte</td>
+            <td valign="top">No Operation<br>Display a value in 7-Segment<br>Halt the platform</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_0001</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_0001</td>
+            <td valign="top">ADD S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Add 2 registers and update to source</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_0010</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_0010</td>
+            <td valign="top">SUB S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Subtract 2 registers & update to source</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>RRTT_0011</strong><br>R: Register<br>T: Type</td>
+            <td valign="top">RR10_0011<br>RR11_0011</td>
+            <td valign="top">INC R<br>DEC R</td>
+            <td valign="top">1 Byte<br>1 Byte</td>
+            <td valign="top">Increment register<br>Decrement register</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>RRTT_0100</strong><br>R: Register<br>T: Type</td>
+            <td valign="top">RR00_0100<br>RR01_0100<br>RR10_0100</td>
+            <td valign="top">LDI R VV<br>LDM R AA<br>SAV R AA</td>
+            <td valign="top">2 Byte<br>2 Byte<br>2 Byte</td>
+            <td valign="top">Load immediate<br>Load from memory<br>Save to memory</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>00TT_0101</strong><br>T: Type</td>
+            <td valign="top">0000_0101<br>0001_0101<br>0010_0101<br>0011_0101</td>
+            <td valign="top">JMP AA<br>JMZ AA<br>JNZ AA<br>JMC AA</td>
+            <td valign="top">2 Byte<br>2 Byte<br>2 Byte<br>2 Byte</td>
+            <td valign="top">Jump to address<br>Jump if Zero flag set<br>Jump if Zero flag not set<br>Jump if Carry flag set</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_0110</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_0110</td>
+            <td valign="top">MOV S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Register-to-register move</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_0111</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_0111</td>
+            <td valign="top">AND S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Logical AND operation</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_1000</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_1000</td>
+            <td valign="top">OR S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Logical OR operation</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_1001</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_1001</td>
+            <td valign="top">XOR S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Logical XOR operation</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>RR00_1010</strong><br>R: Register</td>
+            <td valign="top">RR00_1010</td>
+            <td valign="top">NOT R</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Bitwise NOT operation</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SSDD_1011</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top">SSDD_1011</td>
+            <td valign="top">CMP S D</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Compare two register values</td>
+        </tr>
+    </tbody>
+</table>
 
 ## Instructions set
 
