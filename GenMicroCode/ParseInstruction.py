@@ -1,19 +1,38 @@
 import os
 
-from Instructions import InsOUT as OUT
-from Instructions import InsADD as ADD
-from Instructions import InsSUB as SUB
-from Instructions import InsINC as INC
-from Instructions import InsDEC as DEC
-from Instructions import InsLDI as LDI
-from Instructions import InsLDM as LDM
-from Instructions import InsSAV as SAV
-from Instructions import InsJMP as JMP
-from Instructions import InsJMZ as JMZ
-from Instructions import InsJNZ as JNZ
-from Instructions import InsJMC as JMC
+INPUT_SIZE = 11
 
-insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
+if INPUT_SIZE == 11:
+    from Instructions.Input_11_bit import InsOUT as OUT
+    from Instructions.Input_11_bit import InsADD as ADD
+    from Instructions.Input_11_bit import InsSUB as SUB
+    from Instructions.Input_11_bit import InsINC as INC
+    from Instructions.Input_11_bit import InsDEC as DEC
+    from Instructions.Input_11_bit import InsLDI as LDI
+    from Instructions.Input_11_bit import InsLDM as LDM
+    from Instructions.Input_11_bit import InsSAV as SAV
+    from Instructions.Input_11_bit import InsJMP as JMP
+    from Instructions.Input_11_bit import InsJMZ as JMZ
+    from Instructions.Input_11_bit import InsJNZ as JNZ
+    from Instructions.Input_11_bit import InsJMC as JMC
+    
+    insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
+
+if INPUT_SIZE == 15:
+    from Instructions.Input_15_bit import InsOUT as OUT
+    from Instructions.Input_15_bit import InsADD as ADD
+    from Instructions.Input_15_bit import InsSUB as SUB
+    from Instructions.Input_15_bit import InsINC as INC
+    from Instructions.Input_15_bit import InsDEC as DEC
+    from Instructions.Input_15_bit import InsLDI as LDI
+    from Instructions.Input_15_bit import InsLDM as LDM
+    from Instructions.Input_15_bit import InsSAV as SAV
+    from Instructions.Input_15_bit import InsJMP as JMP
+    from Instructions.Input_15_bit import InsJMZ as JMZ
+    from Instructions.Input_15_bit import InsJNZ as JNZ
+    from Instructions.Input_15_bit import InsJMC as JMC
+
+    insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
 
 
 microCodeMapFile = os.path.join("out", "microCodeMap.txt")
