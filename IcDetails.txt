@@ -22,3 +22,7 @@ RS: 19  : https://gssuperstore.in/shop/adders/74ls83-4-bit-full-adder-ic-dip-pac
 ----------------
 64-Bit RAM with 3-State Output
 Rs: 130 : https://www.electronicscomp.com/74ls189-64-bit-ram-with-3-state-output-ic-india
+
+
+https://www.tanotis.com/products/stmicroelectronics-m48z12-150pc1-nvram-sram-16-kbit-2k-x-8bit-parallel-150-ns-dip
+https://in.rsdelivers.com/product/renesas-electronics/6116la25sogi/renesas-electronics-sram-6116la25sogi-16kb/2628970
