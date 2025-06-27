@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import ParseInstruction
 
@@ -63,6 +64,8 @@ def randomizeMicrocode(chipNumber):
 def main():
     insParser = ParseInstruction.ParseInstructions()
     insParser.parseEachInstruction()
+    if os.path.exists("out"):
+        shutil.rmtree("out")
     # print("=====================================")
     microcodeBank, microInsMatrix = insParser.generateAddressDataMap()
     for chip in microcodeBank:
