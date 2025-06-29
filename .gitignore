@@ -1,7 +1,7 @@
 Compiler/*.i
 Compiler/*.s
 Compiler/*.bin
-GenMicroCode/build-*
-GenMicroCode/out/
+Microcode/FlashMicrocode/build-*
+Microcode/GenMicrocode/out/
 Gen7segDriver/*.bin
 __pycache__
