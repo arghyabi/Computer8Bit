@@ -1,22 +1,23 @@
 // Address shift register (74LS595)
-const int addDataPin  = 7;
-const int addClockPin = 8;
-const int addLatchPin = 9;
+const int addDataPin  = 2;
+const int addClockPin = 3;
+const int addLatchPin = 4;
 
 // EEPROM control pins (active low)
-const int writeEnbPin = A0;
-const int readEnbPin  = A1;
+const int writeEnbPin = A1;
+const int readEnbPin  = A2;
+const int chipEnbPin  = A3;
 
-const int inOut0      = 12;
-const int inOut1      = 11;
-const int inOut2      = 10;
-const int inOut3      = 6;
-const int inOut4      = 5;
-const int inOut5      = 4;
-const int inOut6      = 3;
-const int inOut7      = 2;
+const int inOut0      = 5;
+const int inOut1      = 6;
+const int inOut2      = 7;
+const int inOut3      = 8;
+const int inOut4      = 9;
+const int inOut5      = 10;
+const int inOut6      = 11;
+const int inOut7      = 12;
 
-const int ledPin      = A2;
+const int ledPin      = 13;
 
 const int inOutPins[] = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6, inOut7};
 
@@ -42,12 +43,14 @@ void setup() {
   // EEPROM control signals
   pinMode(writeEnbPin, OUTPUT);
   pinMode(readEnbPin, OUTPUT);
+  pinMode(chipEnbPin, OUTPUT);
 
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
   digitalWrite(writeEnbPin, HIGH);  // Disable write
   digitalWrite(readEnbPin, HIGH);   // Disable read
+  digitalWrite(chipEnbPin, LOW);   // Disable read
 
   Serial.begin(9600);
 }

@@ -6,7 +6,7 @@ import time
 import os
 
 # Constants
-EEPROM_SIZE = 2048  # for AT28C16
+EEPROM_SIZE = 32768  # for AT28C16
 selected_file = None
 selected_port = None
 
