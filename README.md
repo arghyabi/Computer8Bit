@@ -54,13 +54,17 @@ This project is about understanding and constructing the fundamental building bl
 
 ## 🧾 Instruction Set
 
-Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the [ISA.md](ISA.md) file.
+Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the **[`ISA.md`](Docs/ISA.md)** file.
 
 Each instruction is defined with:
 - Opcode
 - Control signal sequences
 - Clock cycles
 - Examples
+
+
+## 🛠 Control Signals
+Documentation about all the control signal is available in the **[`SignalInfo.md`](Docs/SignalInfo.md)** file.
 
 
 ## 📸 Visuals
