@@ -1,49 +1,49 @@
 import os
 
-INPUT_SIZE = 15
-
-if INPUT_SIZE == 11:
-    from Instructions.Input_11_bit import InsOUT as OUT
-    from Instructions.Input_11_bit import InsADD as ADD
-    from Instructions.Input_11_bit import InsSUB as SUB
-    from Instructions.Input_11_bit import InsINC as INC
-    from Instructions.Input_11_bit import InsDEC as DEC
-    from Instructions.Input_11_bit import InsLDI as LDI
-    from Instructions.Input_11_bit import InsLDM as LDM
-    from Instructions.Input_11_bit import InsSAV as SAV
-    from Instructions.Input_11_bit import InsJMP as JMP
-    from Instructions.Input_11_bit import InsJMZ as JMZ
-    from Instructions.Input_11_bit import InsJNZ as JNZ
-    from Instructions.Input_11_bit import InsJMC as JMC
-    
-    insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
-
-if INPUT_SIZE == 15:
-    from Instructions.Input_15_bit import InsOUT as OUT
-    from Instructions.Input_15_bit import InsADD as ADD
-    # from Instructions.Input_15_bit import InsSUB as SUB
-    # from Instructions.Input_15_bit import InsINC as INC
-    # from Instructions.Input_15_bit import InsDEC as DEC
-    # from Instructions.Input_15_bit import InsLDI as LDI
-    # from Instructions.Input_15_bit import InsLDM as LDM
-    # from Instructions.Input_15_bit import InsSAV as SAV
-    # from Instructions.Input_15_bit import InsJMP as JMP
-    # from Instructions.Input_15_bit import InsJMZ as JMZ
-    # from Instructions.Input_15_bit import InsJNZ as JNZ
-    # from Instructions.Input_15_bit import InsJMC as JMC
-
-    insObjects = [OUT, ADD]#, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
-
-
 microCodeMapFile = os.path.join("out", "microCodeMap.txt")
 
 class ParseInstructions:
-    def __init__(self):
+    def __init__(self, inputSize):
+        self.inputSize = inputSize
+        
+        if self.inputSize == 11:
+            from Instructions.Input_11_bit import InsOUT as OUT
+            from Instructions.Input_11_bit import InsADD as ADD
+            from Instructions.Input_11_bit import InsSUB as SUB
+            from Instructions.Input_11_bit import InsINC as INC
+            from Instructions.Input_11_bit import InsDEC as DEC
+            from Instructions.Input_11_bit import InsLDI as LDI
+            from Instructions.Input_11_bit import InsLDM as LDM
+            from Instructions.Input_11_bit import InsSAV as SAV
+            from Instructions.Input_11_bit import InsJMP as JMP
+            from Instructions.Input_11_bit import InsJMZ as JMZ
+            from Instructions.Input_11_bit import InsJNZ as JNZ
+            from Instructions.Input_11_bit import InsJMC as JMC
+            
+            self.insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
+
+        if self.inputSize == 15:
+            from Instructions.Input_15_bit import InsOUT as OUT
+            from Instructions.Input_15_bit import InsADD as ADD
+            from Instructions.Input_15_bit import InsMOV as MOV
+            # from Instructions.Input_15_bit import InsSUB as SUB
+            # from Instructions.Input_15_bit import InsINC as INC
+            # from Instructions.Input_15_bit import InsDEC as DEC
+            # from Instructions.Input_15_bit import InsLDI as LDI
+            # from Instructions.Input_15_bit import InsLDM as LDM
+            # from Instructions.Input_15_bit import InsSAV as SAV
+            # from Instructions.Input_15_bit import InsJMP as JMP
+            # from Instructions.Input_15_bit import InsJMZ as JMZ
+            # from Instructions.Input_15_bit import InsJNZ as JNZ
+            # from Instructions.Input_15_bit import InsJMC as JMC
+
+            self.insObjects = [OUT, ADD, MOV]#, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
         self.InstructionParsedData = {}
 
 
     def parseEachInstruction(self):
-        for ins in insObjects:
+        for ins in self.insObjects:
+            print("Reading File:", "/".join((ins.__file__).split(os.path.sep)[-2:]))
             textIns :str = ins.INS
             lines = textIns.split("\n")
 
@@ -55,10 +55,10 @@ class ParseInstructions:
                     break
 
             addressMatrix  = []
-            if INPUT_SIZE == 11:
+            if self.inputSize == 11:
                 outputMatrix   = {"0":[],"1":[],"2":[]}
                 microInsMatrix = {"in":[],"out":{"0":[],"1":[],"2":[]}}
-            if INPUT_SIZE == 15:
+            if self.inputSize == 15:
                 outputMatrix   = {"0":[],"1":[],"2":[], "3":[]}
                 microInsMatrix = {"in":[],"out":{"0":[],"1":[],"2":[], "3":[]}}
             outCount = 0
@@ -83,7 +83,7 @@ class ParseInstructions:
                     elif chipCount == 2:
                         outputMatrix["2"].append(lineSplit[2:])
                         microInsMatrix["out"]["2"].append(lineSplit[1])
-                    if INPUT_SIZE == 15:
+                    if self.inputSize == 15:
                         if chipCount == 3:
                             outputMatrix["3"].append(lineSplit[2:])
                             microInsMatrix["out"]["3"].append(lineSplit[1])
@@ -138,10 +138,10 @@ class ParseInstructions:
 
     def generateAddressDataMap(self):
         # AllAddress = []
-        if INPUT_SIZE == 11:
+        if self.inputSize == 11:
             microcodeMatrix = {"0":[],"1":[],"2":[]}
             microcodeSize = 2048
-        if INPUT_SIZE == 15:
+        if self.inputSize == 15:
             microcodeMatrix = {"0":[],"1":[],"2":[], "3":[]}
             microcodeSize = 32768
         for chip in microcodeMatrix:
@@ -158,6 +158,7 @@ class ParseInstructions:
         mapFilePointer = open(microCodeMapFile, "w")
 
         for instruction in self.InstructionParsedData:
+            print("Processing Instruction:", instruction)
             addressMatrix = self.InstructionParsedData[instruction]["addressMatrix"]
             microInsMatrix = self.InstructionParsedData[instruction]["microInsMatrix"]
             addressDataMap = []
@@ -197,8 +198,9 @@ class ParseInstructions:
                         #     raise Exception(f"Address: 0x{address:04x} already exists!!!")
                     # print(f"Address: {address:08b}, Value: {value:08b
                         mapFilePointer.write(f"{mapIndex:4d}: 0x{address:04x} => 0x{value:02x} //")
-                        mapFilePointer.write(f" {address:011b}: {value:08b}\n")
+                        mapFilePointer.write(f" {address:014b}: {value:08b}\n")
                         mapIndex += 1
+            print("Process done.")
 
         mapFilePointer.close()
 
