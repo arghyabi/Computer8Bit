@@ -1,12 +1,15 @@
 import os
 
+CHIP_AT28C16  = "AT28C16"
+CHIP_AT28C256 = "AT28C256"
+
 microCodeMapFile = os.path.join("out", "microCodeMap.txt")
 
 class ParseInstructions:
-    def __init__(self, inputSize):
-        self.inputSize = inputSize
-        
-        if self.inputSize == 11:
+    def __init__(self, chipName):
+        self.chipName = chipName
+
+        if self.chipName == CHIP_AT28C16:
             from Instructions.Input_11_bit import InsOUT as OUT
             from Instructions.Input_11_bit import InsADD as ADD
             from Instructions.Input_11_bit import InsSUB as SUB
@@ -19,10 +22,10 @@ class ParseInstructions:
             from Instructions.Input_11_bit import InsJMZ as JMZ
             from Instructions.Input_11_bit import InsJNZ as JNZ
             from Instructions.Input_11_bit import InsJMC as JMC
-            
+
             self.insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
 
-        if self.inputSize == 15:
+        if self.chipName == CHIP_AT28C256:
             from Instructions.Input_15_bit import InsOUT as OUT
             from Instructions.Input_15_bit import InsADD as ADD
             from Instructions.Input_15_bit import InsMOV as MOV
@@ -55,10 +58,10 @@ class ParseInstructions:
                     break
 
             addressMatrix  = []
-            if self.inputSize == 11:
+            if self.chipName == CHIP_AT28C16:
                 outputMatrix   = {"0":[],"1":[],"2":[]}
                 microInsMatrix = {"in":[],"out":{"0":[],"1":[],"2":[]}}
-            if self.inputSize == 15:
+            if self.chipName == CHIP_AT28C256:
                 outputMatrix   = {"0":[],"1":[],"2":[], "3":[]}
                 microInsMatrix = {"in":[],"out":{"0":[],"1":[],"2":[], "3":[]}}
             outCount = 0
@@ -83,7 +86,7 @@ class ParseInstructions:
                     elif chipCount == 2:
                         outputMatrix["2"].append(lineSplit[2:])
                         microInsMatrix["out"]["2"].append(lineSplit[1])
-                    if self.inputSize == 15:
+                    if self.chipName == CHIP_AT28C256:
                         if chipCount == 3:
                             outputMatrix["3"].append(lineSplit[2:])
                             microInsMatrix["out"]["3"].append(lineSplit[1])
@@ -138,10 +141,10 @@ class ParseInstructions:
 
     def generateAddressDataMap(self):
         # AllAddress = []
-        if self.inputSize == 11:
+        if self.chipName == CHIP_AT28C16:
             microcodeMatrix = {"0":[],"1":[],"2":[]}
             microcodeSize = 2048
-        if self.inputSize == 15:
+        if self.chipName == CHIP_AT28C256:
             microcodeMatrix = {"0":[],"1":[],"2":[], "3":[]}
             microcodeSize = 32768
         for chip in microcodeMatrix:
