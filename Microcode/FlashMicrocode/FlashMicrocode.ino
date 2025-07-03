@@ -1,187 +1,220 @@
+typedef enum {
+    OPERATION_READ,
+    OPERATION_WRITE,
+    OPERATION_UNKNOWN
+} opMode_t;
+
+typedef enum {
+    CMD_MODE_SET  = 0xAA,
+    CMD_DATA_SEND = 0x55
+} cmd_t;
+
+typedef enum {
+    ACK_OK = 0xAA,
+    ACK_NO = 0x55
+} ack_t;
+
 // Address shift register (74LS595)
-const int addDataPin  = 2;
-const int addClockPin = 3;
-const int addLatchPin = 4;
+const int addDataPin   = 2;
+const int addClockPin  = 3;
+const int addLatchPin  = 4;
 
 // EEPROM control pins (active low)
-const int writeEnbPin = A1;
-const int readEnbPin  = A2;
-const int chipEnbPin  = A3;
+const int writeEnbPin  = A0;
+const int outputEnbPin = A1;
+const int chipEnbPin   = A2;
 
-const int inOut0      = 5;
-const int inOut1      = 6;
-const int inOut2      = 7;
-const int inOut3      = 8;
-const int inOut4      = 9;
-const int inOut5      = 10;
-const int inOut6      = 11;
-const int inOut7      = 12;
+// Input/Output pins for EEPROM (8 bits)
+const int inOut0       = 5;
+const int inOut1       = 6;
+const int inOut2       = 7;
+const int inOut3       = 8;
+const int inOut4       = 9;
+const int inOut5       = 10;
+const int inOut6       = 11;
+const int inOut7       = 12;
 
-const int ledPin      = 13;
+// LED pins for status indication
+const int greenLedPin  = A3;
+const int redLedPin    = A4;
+const int blueLedPin   = A5;
 
-const int inOutPins[] = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6, inOut7};
+const int inOutPins[]  = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6, inOut7};
 
-uint16_t led_counter = 0;
-bool led_state = false;
+uint16_t led_counter   = 0;
+bool led_state         = false;
+opMode_t operationMode = OPERATION_UNKNOWN;
 
 
-void    setAddress(uint16_t address);
+void    setAddress(uint16_t address, bool reverse = true);
 uint8_t readEEPROM(uint16_t address);
 void    writeEEPROM(uint16_t address, uint8_t data);
-void    dumpEEPROM(int startAddress = 0, int endAddress = 255);
-void    writeMicrocodeToEEPROM(const uint8_t* microcode, size_t size);
 void    initializeInputPort();
 void    initializeOutputPort();
 
 
 void setup() {
-  // Address shift register pins
-  pinMode(addDataPin, OUTPUT);
-  pinMode(addClockPin, OUTPUT);
-  pinMode(addLatchPin, OUTPUT);
+    // Address shift register pins
+    pinMode(addDataPin,  OUTPUT);
+    pinMode(addClockPin, OUTPUT);
+    pinMode(addLatchPin, OUTPUT);
 
-  // EEPROM control signals
-  pinMode(writeEnbPin, OUTPUT);
-  pinMode(readEnbPin, OUTPUT);
-  pinMode(chipEnbPin, OUTPUT);
+    // EEPROM control signals
+    pinMode(writeEnbPin,  OUTPUT);
+    pinMode(outputEnbPin, OUTPUT);
+    pinMode(chipEnbPin,   OUTPUT);
 
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+    pinMode(redLedPin,   OUTPUT);
+    pinMode(greenLedPin, OUTPUT);
+    pinMode(blueLedPin,  OUTPUT);
 
-  digitalWrite(writeEnbPin, HIGH);  // Disable write
-  digitalWrite(readEnbPin, HIGH);   // Disable read
-  digitalWrite(chipEnbPin, LOW);   // Disable read
+    digitalWrite(redLedPin,   LOW);
+    digitalWrite(greenLedPin, LOW);
+    digitalWrite(blueLedPin,  LOW);
 
-  Serial.begin(9600);
+    digitalWrite(writeEnbPin,  HIGH);  // Disable write
+    digitalWrite(outputEnbPin, LOW);   // Disable read
+    digitalWrite(chipEnbPin,   LOW);   // Enable chip
+
+    Serial.begin(115200);
 }
 
 
 void loop() {
-  if (Serial.available() >= 3) {
-    uint16_t addr = Serial.read() << 8;
-    addr |= Serial.read();
-    uint8_t data = Serial.read();
-
-    writeEEPROM(addr, data);
-    Serial.write(0xAA);  // ACK
-
-    // Toggle LED every 256 bytes
-    led_counter++;
-    if (led_counter >= 2) {
-      led_state = !led_state;
-      digitalWrite(ledPin, led_state ? HIGH : LOW);
-      led_counter = 0;
+    // Read operation instructions
+    if (operationMode == OPERATION_UNKNOWN) {
+        if (Serial.available() >= 2) {
+            if ((cmd_t)Serial.read() != CMD_MODE_SET)
+                return;
+            opMode_t tmp = (opMode_t)Serial.read();
+            if(tmp == OPERATION_READ) {
+                operationMode = tmp;
+                initializeInputPort();
+                Serial.write(ACK_OK);
+            }
+            else if (tmp == OPERATION_WRITE) {
+                operationMode = tmp;
+                initializeOutputPort();
+                Serial.write(ACK_OK);
+            }
+            else {
+                Serial.write(ACK_NO);
+            }
+        }
+        return;
     }
-  }
-}
 
+    // Write data to eeprom
+    else if (operationMode == OPERATION_WRITE) {
+        if (Serial.available() >= 3) {
+            uint16_t addr = Serial.read() << 8;
+            addr |= Serial.read();
+            uint8_t data = Serial.read();
 
-void writeMicrocodeToEEPROM(const uint8_t* microcode, size_t size) {
-  Serial.println("Writing microcode to EEPROM...");
+            writeEEPROM(addr, data);
+            Serial.write(ACK_OK);  // ACK
 
-  // Initialize output port
-  initializeOutputPort();
-
-  // Write microcode to EEPROM
-  for (uint16_t address = 0; address < size; address++) {
-    writeEEPROM(address, microcode[address]);
-    // delay(1); // Small delay to allow EEPROM write
-  }
-
-  Serial.println("Microcode write complete.");
-}
-
-
-void dumpEEPROM(int startAddress, int endAddress) {
-  Serial.print("EEPROM Dump:");
-  Serial.print("\nStart Address: 0x");
-  if (startAddress < 0x10) Serial.print("0");
-  Serial.print(startAddress, HEX);
-  Serial.print("\nEnd Address: 0x");
-  if (endAddress < 0x10) Serial.print("0");
-  Serial.print(endAddress, HEX);
-  Serial.print("\n\n");
-
-  for (int addr = startAddress; addr < endAddress; addr++) {
-    uint8_t val = readEEPROM(addr);
-    if (addr % 16 == 0) {
-      Serial.print("\n0x");
-      if (addr < 0x10) Serial.print("0");
-      Serial.print(addr, HEX);
-      Serial.print(": ");
+            // Toggle LED every 256 bytes
+            led_counter++;
+            if (led_counter >= 2) {
+                led_state = !led_state;
+                digitalWrite(redLedPin, led_state ? HIGH : LOW);
+                led_counter = 0;
+            }
+        }
     }
-    if (val < 0x10) Serial.print("0");
-    Serial.print(val, HEX);
-    Serial.print(" ");
-  }
 
-  Serial.println("\n\nDump Complete.");
+    // Read data from eeprom
+    else if (operationMode == OPERATION_READ) {
+        if (Serial.available() >= 2) {
+            uint16_t addr = Serial.read() << 8;
+            addr |= Serial.read();
+            uint8_t data = readEEPROM(addr);
+            Serial.write(data);
+
+            Serial.write(ACK_OK);  // ACK
+
+            // Toggle LED every 256 bytes
+            led_counter++;
+            if (led_counter >= 2) {
+                led_state = !led_state;
+                digitalWrite(redLedPin, led_state ? HIGH : LOW);
+                led_counter = 0;
+            }
+        }
+    }
 }
 
 
 void initializeInputPort() {
-  // Set all inOut pins to INPUT
-  for (int i = 0; i < 8; i++) {
-    pinMode(inOutPins[i], INPUT);
-  }
+    // Set all inOut pins to INPUT
+    for (int i = 0; i < 8; i++) {
+        digitalWrite(inOutPins[i], LOW);  // Optional: disable pull-ups
+        pinMode(inOutPins[i], INPUT);
+    }
 }
 
 
 void initializeOutputPort() {
-  // Set all inOut pins to OUTPUT
-  for (int i = 0; i < 8; i++) {
-    pinMode(inOutPins[i], OUTPUT);
-  }
+    // Set all inOut pins to OUTPUT
+    for (int i = 0; i < 8; i++) {
+        pinMode(inOutPins[i], OUTPUT);
+    }
 }
 
 
 // ========== Set 16-bit address via 2x 74LS595 ==========
-void setAddress(uint16_t address) {
-  digitalWrite(addLatchPin, LOW);
-  for (int i = 15; i >= 0; i--) {
-    digitalWrite(addClockPin, LOW);
-    digitalWrite(addDataPin, (address & (1 << i)) ? HIGH : LOW);
-    digitalWrite(addClockPin, HIGH);
-  }
-  digitalWrite(addLatchPin, HIGH);
+void setAddress(uint16_t address, bool reverse) {
+    for (int i = 0; i <= 16; i++) {
+        digitalWrite(addLatchPin, LOW);
+        digitalWrite(addClockPin, LOW);
+        if(reverse)
+            digitalWrite(addDataPin, (address & (1 << (15 - i))) ? HIGH : LOW);
+        else
+            digitalWrite(addDataPin, (address & (1 << i)) ? HIGH : LOW);
+        digitalWrite(addClockPin, HIGH);
+        digitalWrite(addLatchPin, HIGH);
+    }
 }
 
 
 // ========== Read 8-bit data from EEPROM ==========
 uint8_t readEEPROM(uint16_t address) {
-  setAddress(address);
+    setAddress(address);
 
-  // Enable EEPROM output by setting readEnbPin LOW
-  digitalWrite(readEnbPin, LOW);
-  digitalWrite(writeEnbPin, HIGH); // Ensure write is disabled
+    digitalWrite(writeEnbPin, HIGH);   // Ensure write is disabled
+    digitalWrite(outputEnbPin, LOW);   // EEPROM drives the data bus
+    delayMicroseconds(1);              // Allow bus to settle
 
-  uint8_t value = 0;
-  for (int i = 0; i < 8; i++) {
-    if (digitalRead(inOutPins[i]) == HIGH) {
-      value |= (1 << i);
+    uint8_t value = 0;
+    for (int i = 0; i < 8; i++) {
+        if (digitalRead(inOutPins[i]) == HIGH) {
+            value |= (1 << i);
+        }
     }
-  }
 
-  // Disable EEPROM output by setting readEnbPin HIGH
-  digitalWrite(readEnbPin, HIGH);
+    digitalWrite(outputEnbPin, HIGH);  // Stop EEPROM driving the bus
 
-  return value;
+    return value;
 }
 
 
-// ========== Function to write to EEPROM ==========
+// ========== Write 8-bit data to EEPROM ==========
 void writeEEPROM(uint16_t address, uint8_t data) {
-  setAddress(address);
+    setAddress(address);
 
-  // Set data bus pins as OUTPUT
-  for (int i = 0; i < 8; i++) {
-    digitalWrite(inOutPins[i], (data & (1 << i)) ? HIGH : LOW);
-  }
+    digitalWrite(outputEnbPin, HIGH);  // Ensure EEPROM is not driving the bus
 
-  // Enable write operation
-  digitalWrite(readEnbPin, HIGH);   // Disable read
-  digitalWrite(writeEnbPin, LOW);   // Enable write
-  delay(5);                         // Short pulse for write operation
-  digitalWrite(writeEnbPin, HIGH);  // Disable write
-  delay(1);
+    // Drive data onto the bus (pinMode already OUTPUT)
+    for (int i = 0; i < 8; i++) {
+        digitalWrite(inOutPins[i], (data & (1 << i)) ? HIGH : LOW);
+    }
+
+    delayMicroseconds(1);              // Setup time before WE
+
+    digitalWrite(writeEnbPin, LOW);    // Begin write
+    delay(1);                          // tWP (write pulse ≥ 200 ns)
+    digitalWrite(writeEnbPin, HIGH);   // End write
+
+    delay(10);                         // Wait for write cycle to finish (tWC ≤ 10 ms)
 }
