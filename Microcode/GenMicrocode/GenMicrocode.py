@@ -83,7 +83,10 @@ def main():
     for chipNumber in microcodeBank:
         print(f"Creating Microcode for Chip: {chipNumber}")
         eachChipMicrocode = microcodeBank[chipNumber]
-        genMicrocode(chipName, int(chipNumber), eachChipMicrocode, microInsMatrix["in"], microInsMatrix["out"][chipNumber])
+        if microInsMatrix:
+            genMicrocode(chipName, int(chipNumber), eachChipMicrocode, microInsMatrix["in"], microInsMatrix["out"][chipNumber])
+        else:
+            print("Microcode index is null!!")
     print("Done!")
 
 

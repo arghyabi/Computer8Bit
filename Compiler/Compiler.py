@@ -133,7 +133,7 @@ class Compiler:
 
     def preProcess(self):
         # split each line
-        self.assemblyMain = self.assemblyMain.split("\n")
+        self.assemblyMain = str(self.assemblyMain).split("\n")
         self.assemblyLine = [line.strip() for line in self.assemblyMain]
 
         # remove comments
@@ -322,6 +322,7 @@ class Compiler:
                     immediateVal = int(immediateVal, 16)
                 else:
                     errorPrint(index, f"{immediateVal} is not a int or hex value!!")
+                    immediateVal = 0
 
                 if immediateVal > MAX_VAL_8_BIT:
                     errorPrint(index, "Max value limit cross!!")
@@ -357,6 +358,7 @@ class Compiler:
                     memAddress = int(memAddress, 16)
                 else:
                     errorPrint(index, f"{memAddress} is not a int or hex value!!")
+                    memAddress = 0
 
                 if memAddress > MAX_ADDRESS_8_BIT:
                     errorPrint(index, "Max address limit cross!!")
@@ -426,9 +428,9 @@ class Compiler:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("assemblyFile", help="Assembly File")
-    parser.add_argument("-o", "--out", default="out.bin", help="output Bin File")
-    parser.add_argument("-s", "--silent", action ='store_true', help="Do not generate intermediate files")
+    parser.add_argument("assemblyFile", help = "Assembly File")
+    parser.add_argument("-o", "--out", default = "out.bin", help = "output Bin File")
+    parser.add_argument("-s", "--silent", action = 'store_true', help = "Do not generate intermediate files")
 
     args = parser.parse_args()
     assemblyFile = args.assemblyFile
