@@ -29,18 +29,21 @@ class ParseInstructions:
             from Instructions.Input_15_bit import InsOUT as OUT
             from Instructions.Input_15_bit import InsADD as ADD
             from Instructions.Input_15_bit import InsMOV as MOV
-            # from Instructions.Input_15_bit import InsSUB as SUB
-            # from Instructions.Input_15_bit import InsINC as INC
-            # from Instructions.Input_15_bit import InsDEC as DEC
-            # from Instructions.Input_15_bit import InsLDI as LDI
-            # from Instructions.Input_15_bit import InsLDM as LDM
-            # from Instructions.Input_15_bit import InsSAV as SAV
-            # from Instructions.Input_15_bit import InsJMP as JMP
-            # from Instructions.Input_15_bit import InsJMZ as JMZ
-            # from Instructions.Input_15_bit import InsJNZ as JNZ
-            # from Instructions.Input_15_bit import InsJMC as JMC
+            from Instructions.Input_15_bit import InsSUB as SUB
+            from Instructions.Input_15_bit import InsINC as INC
+            from Instructions.Input_15_bit import InsDEC as DEC
+            from Instructions.Input_15_bit import InsLDI as LDI
+            from Instructions.Input_15_bit import InsLDM as LDM
+            from Instructions.Input_15_bit import InsSAV as SAV
+            from Instructions.Input_15_bit import InsJMP as JMP
+            from Instructions.Input_15_bit import InsJMZ as JMZ
+            from Instructions.Input_15_bit import InsJNZ as JNZ
+            from Instructions.Input_15_bit import InsJMC as JMC
+            from Instructions.Input_15_bit import InsAND as AND
+            from Instructions.Input_15_bit import InsOR  as OR
+            from Instructions.Input_15_bit import InsXOR as XOR
 
-            self.insObjects = [OUT, ADD, MOV]#, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
+            self.insObjects = [OUT, ADD, MOV, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC, AND, OR, XOR]
         self.InstructionParsedData = {}
 
 
