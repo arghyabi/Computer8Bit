@@ -46,7 +46,10 @@ class ParseInstructions:
 
     def parseEachInstruction(self):
         for ins in self.insObjects:
-            print("Reading File:", "/".join((ins.__file__).split(os.path.sep)[-2:]))
+            insFile = ins.__file__
+            if insFile:
+                print("Reading File:", "/".join((insFile).split(os.path.sep)[-2:]))
+
             textIns :str = ins.INS
             lines = textIns.split("\n")
 
@@ -225,7 +228,7 @@ class ParseInstructions:
 
 
 if __name__ == "__main__":
-    parser = ParseInstructions()
+    parser = ParseInstructions("AT28C256")
     parser.parseEachInstruction()
     # print("=====================================")
     parser.generateAddressDataMap()

@@ -571,14 +571,17 @@ class MicrocodeFlasher:
         self.updateGuiForStartWriting()
 
         try:
-            with open(self.finalWriteFile, "rb") as f:
-                data = f.read()
-                if len(data) != self.finalChipSize:
-                    self.labelWriteStatus.config(
-                        text = f"[ERROR] Expected {self.finalChipSize} bytes, got {len(data)} bytes."
-                    )
-                    self.updateGuiForAbortWriting()
-                    return
+            if self.finalWriteFile:
+                with open(self.finalWriteFile, "rb") as f:
+                    data = f.read()
+                    if len(data) != self.finalChipSize:
+                        self.labelWriteStatus.config(
+                            text = f"[ERROR] Expected {self.finalChipSize} bytes, got {len(data)} bytes."
+                        )
+                        self.updateGuiForAbortWriting()
+                        return
+            else:
+                raise Exception("Write file path is not valid!!")
         except Exception as e:
             self.labelWriteStatus.config(
                 text = f"[ERROR] File read error: {e}"
@@ -788,8 +791,11 @@ class MicrocodeFlasher:
         self.updateGuiForAbortReading()
 
         try:
-            with open(self.finalReadFile, "wb") as f:
-                f.write(bytes(data))
+            if self.finalReadFile:
+                with open(self.finalReadFile, "wb") as f:
+                    f.write(bytes(data))
+            else:
+                raise Exception("Read file path is not valid!!")
         except Exception as e:
             self.labelReadStatus.config(
                 text = f"[ERROR] File write error: {e}"
