@@ -129,6 +129,13 @@ SUB B C ; Subtract C from B and keep in B
             <td valign="top">1 Byte</td>
             <td valign="top">Compare two register values</td>
         </tr>
+        <tr>
+            <td valign="top"><strong>RR00_1100</strong><br>R: Register<br>V: value</td>
+            <td valign="top">RR00_1100</td>
+            <td valign="top">CMI R VV</td>
+            <td valign="top">2 Byte</td>
+            <td valign="top">Compare register with a immediate values</td>
+        </tr>
     </tbody>
 </table>
 
@@ -425,6 +432,21 @@ This `CMP` instruction is used to do a comparison and set/reset the `Zero` flag
 | CMP D A      | 1100_1011    |
 | CMP D B      | 1101_1011    |
 | CMP D C      | 1110_1011    |
+
+---------------
+
+### ✅ Instruction: CMI
+This `CMI` instruction is used to do a comparison and set/reset the `Zero` flag
+
+#### `Format: RR00_1100`
+
+| Instruction  |     Binary Value      |
+| :---         |        :---:          |
+| CMI A 0xXX   | 0000_1100 xxxx_xxxx   |
+| CMI B 0xXX   | 0100_1100 xxxx_xxxx   |
+| CMI C 0xXX   | 1000_1100 xxxx_xxxx   |
+| CMI D 0xXX   | 1100_1100 xxxx_xxxx   |
+
 
 ---------------
 
