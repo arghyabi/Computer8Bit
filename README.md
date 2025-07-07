@@ -36,6 +36,7 @@ This project is about understanding and constructing the fundamental building bl
 ├── Compiler/                        # Basic assembler for the custom ISA
 ├── Datasheets/                      # Datasheets for different ICs
 ├── Docs/
+|   ├── HwDesign.md                  # Details about hardware design
 |   ├── ISA.md                       # Details and documentation of supported instructions
 │   └── SignalInfo.md                # Information about all the control signals
 ├── Gen7segDriver/                   # 7 Segment display driver EEPROM logic
@@ -69,6 +70,8 @@ Each instruction is defined with:
 
 ## 🛠 Control Signals
 Documentation about all the control signal is available in the **[`SignalInfo.md`](Docs/SignalInfo.md)** file.
+
+In the **[`HwDesign.md`](Docs/HwDesign.md)** file, placement of the signals ins the bus is shown visually.
 
 
 ## 📸 Visuals
