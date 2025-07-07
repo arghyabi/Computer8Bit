@@ -84,6 +84,8 @@ class Compiler:
             'NOT':   0b00_1010,
             # 1011
             'CMP':     0b_1011,
+            # 1100
+            'CMI':   0b00_1100,
         }
 
         self.instructionSizeDict = {
@@ -104,6 +106,7 @@ class Compiler:
             'XOR': 1,
             'NOT': 1,
             'CMP': 1,
+            'CMI': 2,
             'OUT': 1,
             'HLT': 1
         }
@@ -226,6 +229,9 @@ class Compiler:
             payloadLen  = len(payloadList)
             bitVal      = 0
 
+            # remove if any ',' in the instruction
+            payloadList = [part.replace(",", "") for part in payloadList]
+
             ## Parse ADD, SUB, MOV command | Format: SSDD_0001, SSDD_0010, SSDD_0110
             if opcode == "ADD" or opcode == "SUB" or opcode == "MOV":
                 if payloadLen != 2:
@@ -306,8 +312,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse LDI command | Format: RRTT_0100
-            elif opcode == "LDI":
+            ## Parse LDI, CMI command | Format: RRTT_0100, RR00_1100
+            elif opcode == "LDI" or opcode == "CMI":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
 
@@ -329,7 +335,7 @@ class Compiler:
 
                 bitVal = bitVal | self.registerDict[destReg]
 
-                bitVal = bitVal << 6 # LDI is 6 bit
+                bitVal = bitVal << 6 # LDI, CMI is 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
