@@ -26,9 +26,10 @@ class ParseInstructions:
             self.insObjects = [OUT, ADD, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC]
 
         if self.chipName == CHIP_AT28C256:
+            from Instructions.Input_15_bit import InsNOP as NOP
             from Instructions.Input_15_bit import InsOUT as OUT
+            from Instructions.Input_15_bit import InsHLT as HLT
             from Instructions.Input_15_bit import InsADD as ADD
-            from Instructions.Input_15_bit import InsMOV as MOV
             from Instructions.Input_15_bit import InsSUB as SUB
             from Instructions.Input_15_bit import InsINC as INC
             from Instructions.Input_15_bit import InsDEC as DEC
@@ -39,11 +40,33 @@ class ParseInstructions:
             from Instructions.Input_15_bit import InsJMZ as JMZ
             from Instructions.Input_15_bit import InsJNZ as JNZ
             from Instructions.Input_15_bit import InsJMC as JMC
+            from Instructions.Input_15_bit import InsMOV as MOV
             from Instructions.Input_15_bit import InsAND as AND
-            from Instructions.Input_15_bit import InsOR  as OR
+            from Instructions.Input_15_bit import InsOR  as  OR
             from Instructions.Input_15_bit import InsXOR as XOR
+            from Instructions.Input_15_bit import InsNOT as NOT
 
-            self.insObjects = [OUT, ADD, MOV, SUB, INC, DEC, LDI, LDM, SAV, JMP, JMZ, JNZ, JMC, AND, OR, XOR]
+            self.insObjects = [
+                NOP,
+                OUT,
+                HLT,
+                ADD,
+                SUB,
+                INC,
+                DEC,
+                LDI,
+                LDM,
+                SAV,
+                JMP,
+                JMZ,
+                JNZ,
+                JMC,
+                MOV,
+                AND,
+                OR,
+                XOR,
+                NOT,
+            ]
         self.InstructionParsedData = {}
 
 
