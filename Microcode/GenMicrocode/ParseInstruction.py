@@ -229,8 +229,10 @@ class ParseInstructions:
                         # else:
                         #     raise Exception(f"Address: 0x{address:04x} already exists!!!")
                     # print(f"Address: {address:08b}, Value: {value:08b
-                        mapFilePointer.write(f"{mapIndex:4d}: 0x{address:04x} => 0x{value:02x} //")
-                        mapFilePointer.write(f" {address:014b}: {value:08b}\n")
+                        mapFilePointer.write(f"chip_{chip}_ins_{instruction.lower()}_{mapIndex:04d} :: 0x{address:04x} => 0x{value:02x} //")
+                        strAdd = str(f"{address:015b}")
+                        strVal = str(f"{value:08b}")
+                        mapFilePointer.write(f" {strAdd[:1]}_{strAdd[1:3]}_{strAdd[3:7]}_{strAdd[7:11]}.{strAdd[11:15]} :: {strAdd[:4]}.{strAdd[4:8]}\n")
                         mapIndex += 1
             print("Process done.")
 
