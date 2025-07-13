@@ -57,10 +57,14 @@
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    41   |  CLK   |
-|    42   |  CLK~  |
-|    43   |  V+    |
-|    44   |  GND   |
+|    41   |        |
+|    42   |        |
+|    43   |        |
+|    44   |        |
+|    45   |  CLK   |
+|    46   |  CLK~  |
+|    47   |  V+    |
+|    48   |  GND   |
 
 
 **\* Those are NOT output from Microcode IC; They are input to the uCode IC.**
