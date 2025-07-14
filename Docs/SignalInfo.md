@@ -46,9 +46,11 @@ Our 8-bit computer has 30 control signals. All these signals are controlled by t
 ## Memory Related Signals
 * `PCC`: The PCC signal enables the Program Counter to count. If PCC is high, the counter increments on each clock cycle.
 
-* `PCI`: The PCI signal (Program Counter Input) is used to load a specific value into the Program Counter. This signal is typically used for executing branch instructions.
+* `PCI`: The PCI signal (Program Counter Register Input) is used to load a specific value into the Program Counter Register.
+This signal is typically used for executing branch instructions.
+The value will not loaded in the counter until the PCL is high.
 
-* `PCE`: The PCE signal is used to expose the Program Counter’s output as the address to the ROM. `(Usage may depend on your design – clarify if needed)`.
+* `PCL`: The PCL signal is used to load the value from program counter register to the program counter.
 
 * `RomO`: The RomO signal loads the current instruction from ROM onto the bus.
 
