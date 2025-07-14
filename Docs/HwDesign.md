@@ -25,7 +25,7 @@
 | Pin Num | Signal |
 |  :---:  |  :---: |
 |    17   |  PCI   |
-|    18   |  PCE   |
+|    18   |  PCL   |
 |    19   |  PCC   |
 |    20   |  RomO  |
 |    21   |  MdI   |
@@ -68,3 +68,10 @@
 
 
 **\* Those are NOT output from Microcode IC; They are input to the uCode IC.**
+
+
+
+# Component blocks
+
+## Program Counter
+![Top-Level Architecture](../Images/Program%20Counter.png)
