@@ -2,8 +2,10 @@ import argparse
 import os
 import hexdump
 
-MAX_VAL_8_BIT     = 255
-MAX_ADDRESS_8_BIT = 255
+MAX_VAL_8_BIT          = 256
+MAX_ROM_ADDRESS_8_BIT  = 256
+MAX_ROM_ADDRESS_11_BIT = 2048
+MAX_MEM_ADDRESS_4_BIT  = 16
 
 def isInt(s):
     try:
@@ -22,7 +24,7 @@ def isHex(s):
 
 
 class Compiler:
-    def __init__(self, assemblyFile, outFile, silent):
+    def __init__(self, assemblyFile, outFile, silent, support8):
         if not os.path.exists(assemblyFile):
             print(f"{assemblyFile} not found!!!")
             exit(-1)
@@ -39,6 +41,7 @@ class Compiler:
         self.assemblyMain       = assembly
         self.outFile            = outFile
         self.silent             = silent
+        self.support8BitAddress = support8
         self.tagDict            = dict()
         self.binArr             = bytearray()
         self.sourceMaxLength    = 0
@@ -72,6 +75,7 @@ class Compiler:
             'JMP': 0b0000_0101,
             'JMZ': 0b0001_0101,
             'JNZ': 0b0010_0101,
+            'JMC': 0b0011_0101,
             # 0110
             'MOV':     0b_0110,
             # 0111
@@ -98,9 +102,10 @@ class Compiler:
             'LDI': 2,
             'LDM': 2,
             'SAV': 2,
-            'JMP': 2,
-            'JMZ': 2,
-            'JNZ': 2,
+            'JMP': 3,
+            'JMZ': 3,
+            'JNZ': 3,
+            'JMC': 3,
             'AND': 1,
             'OR' : 1,
             'XOR': 1,
@@ -110,6 +115,12 @@ class Compiler:
             'OUT': 1,
             'HLT': 1
         }
+
+        if self.support8BitAddress:
+            self.instructionSizeDict['JMP'] = 2
+            self.instructionSizeDict['JMZ'] = 2
+            self.instructionSizeDict['JNZ'] = 2
+            self.instructionSizeDict['JMC'] = 2
 
         self.preProcess()
         self.compile()
@@ -161,9 +172,9 @@ class Compiler:
             f.close()
 
 
-    def printCompiledLine(self, line, value, value2 = None):
-        binary  = f"{value:08b}"
-        tag     = next((key for key, value in self.tagDict.items() if value == self.addressIndex), None)
+    def printCompiledLine(self, line, instruc, value1 = None, value2 = None):
+        binary  = f"{instruc:08b}"
+        tag     = next((key for key, instruc in self.tagDict.items() if instruc == self.addressIndex), None)
         if tag == None:
             tag = " "*self.tagMaxLength
         else:
@@ -174,12 +185,26 @@ class Compiler:
         printLine += f"{line:{self.sourceMaxLength}} | Code: "
         printLine += f"{binary[:4]}_{binary[4:]} "
 
-        if value2 != None:
+        if value1 == None: # Value2 ofcourse null
+            if self.support8BitAddress:
+                printLine += f"            // 0x{instruc:02X}"
+            else:
+                printLine += f"                     // 0x{instruc:02X}"
+
+
+        if value1 != None and value2 == None: # Only one value send
+            binary = f"{value1:08b}"
+            printLine += f" {binary[:4]}_{binary[4:]} "
+            if self.support8BitAddress:
+                printLine += f" // 0x{instruc:02X} 0x{value1:02X}"
+            else:
+                printLine += f"          // 0x{instruc:02X} 0x{value1:02X}"
+
+        if value1 != None and value2 != None: # Both high and low address send
+            binary1 = f"{value1:08b}"
             binary2 = f"{value2:08b}"
-            printLine += f" {binary2[:4]}_{binary2[4:]} "
-            printLine += f"// 0x{value:02X} 0x{value2:02X}"
-        else:
-            printLine += f"           // 0x{value:02X}"
+            printLine += f" {binary1[:4]}_{binary1[4:]} {binary2[:4]}_{binary2[4:]} "
+            printLine += f"// 0x{instruc:02X} 0x{value1:02X} 0x{value2:02X}"
 
         self.logBuffer.append(printLine)
 
@@ -203,6 +228,7 @@ class Compiler:
                 continue
 
             splitData         = line.split()
+            splitData         = [element for item in splitData for element in item.split(',') if element]
             opcode            = splitData[0]
 
             if len(splitData) == 1 and line[-1] == ":":
@@ -224,6 +250,7 @@ class Compiler:
                 continue
 
             splitData   = line.split()
+            splitData   = [element for item in splitData for element in item.split(',') if element]
             opcode      = splitData[0]
             payloadList = splitData[1:]
             payloadLen  = len(payloadList)
@@ -282,7 +309,7 @@ class Compiler:
 
 
             ## Parse JMP, JMZ, JNZ command | Format: 00TT_0101
-            elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ":
+            elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ" or opcode == "JMC":
                 if payloadLen != 1:
                     errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 
@@ -297,19 +324,36 @@ class Compiler:
                 else:
                     errorPrint(index, f"'{payload}' is not a proper address")
 
-                if address > MAX_ADDRESS_8_BIT:
-                    errorPrint(index, "Max address limit cross!!")
+                if self.support8BitAddress:
+                    if address >= MAX_ROM_ADDRESS_8_BIT:
+                        errorPrint(index, "Max ROM address limit cross!!")
+                else:
+                    if address >= MAX_ROM_ADDRESS_11_BIT:
+                        errorPrint(index, "Max ROM address limit cross!!")
 
                 bitVal = self.instructionDict[opcode] # JMP, JMZ, JNZ are 8 bit
 
                 if not self.silent:
-                    self.printCompiledLine(line, bitVal, address)
+                    if self.support8BitAddress:
+                        self.printCompiledLine(line, bitVal, address)
+                    else:
+                        highAddress = address >> 8
+                        lowAddress = address & 0xff
+                        self.printCompiledLine(line, bitVal, highAddress, lowAddress)
+
 
                 self.binArr.append(bitVal)
                 self.addressIndex += 1
 
-                self.binArr.append(address)
-                self.addressIndex += 1
+                if self.support8BitAddress:
+                    self.binArr.append(address)
+                    self.addressIndex += 1
+                else:
+                    highAddress = address >> 8
+                    lowAddress = address & 0xff
+                    self.binArr.append(highAddress)
+                    self.binArr.append(lowAddress)
+                    self.addressIndex += 2
 
 
             ## Parse LDI, CMI command | Format: RRTT_0100, RR00_1100
@@ -330,7 +374,7 @@ class Compiler:
                     errorPrint(index, f"{immediateVal} is not a int or hex value!!")
                     immediateVal = 0
 
-                if immediateVal > MAX_VAL_8_BIT:
+                if immediateVal >= MAX_VAL_8_BIT:
                     errorPrint(index, "Max value limit cross!!")
 
                 bitVal = bitVal | self.registerDict[destReg]
@@ -366,8 +410,8 @@ class Compiler:
                     errorPrint(index, f"{memAddress} is not a int or hex value!!")
                     memAddress = 0
 
-                if memAddress > MAX_ADDRESS_8_BIT:
-                    errorPrint(index, "Max address limit cross!!")
+                if memAddress >= MAX_MEM_ADDRESS_4_BIT:
+                    errorPrint(index, "Max memory address limit cross!!")
 
                 bitVal = bitVal | self.registerDict[destReg]
 
@@ -437,13 +481,15 @@ def main():
     parser.add_argument("assemblyFile", help = "Assembly File")
     parser.add_argument("-o", "--out", default = "out.bin", help = "output Bin File")
     parser.add_argument("-s", "--silent", action = 'store_true', help = "Do not generate intermediate files")
+    parser.add_argument("-s8", "--support8", action = 'store_true', help = "Support only 8 bit ROM address")
 
     args = parser.parse_args()
     assemblyFile = args.assemblyFile
     outFile      = args.out
     silent       = args.silent
+    support8     = args.support8
 
-    compile = Compiler(assemblyFile, outFile, silent)
+    compile = Compiler(assemblyFile, outFile, silent, support8)
 
 if __name__ == "__main__":
     main()
