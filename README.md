@@ -1,9 +1,12 @@
 
 # 8-Bit Computer from Scratch (Built with Logic Gates)
 
-Welcome to the documentation repository for my custom-built **8-bit computer**, constructed entirely from logic gates and basic components. This project is a deep dive into computer architecture, taking inspiration from classic microprocessors and educational systems, but designed from the ground up with a custom Instruction Set Architecture (ISA), control logic, and microcode.
+Welcome to the documentation repository for my custom-built **8-bit computer**, constructed entirely from logic gates
+and basic components. This project is a deep dive into computer architecture, taking inspiration from classic
+microprocessors and educational systems, but designed from the ground up with a custom Instruction Set Architecture (ISA),
+ control logic, and microcode.
 
-![Top-Level Architecture](Images/top_level_architecture.png)
+![Top-Level Architecture](Images/BlockDiagram/TopLevelArchitecture.png)
 
 ## 🔧 Project Overview
 
@@ -41,7 +44,9 @@ This project is about understanding and constructing the fundamental building bl
 │   └── SignalInfo.md                # Information about all the control signals
 ├── Gen7segDriver/                   # 7 Segment display driver EEPROM logic
 ├── Images/
-│   └── top_level_architecture.png   # High-level block diagram of the computer
+│   ├── Schematic/                   # Schematic diagram for each PCB
+│   └── BlockDiagram/                # Top level block diagrams
+|       └── TopLevelArchitecture.png # High-level block diagram of the computer
 ├── MicroCode/
 │   ├── FlashMicrocode/              # Microcode flasher firmware and application
 │   └── GenMicrocode/                # Microcode definitions and sequencing logic
@@ -59,7 +64,8 @@ This project is about understanding and constructing the fundamental building bl
 
 ## 🧾 Instruction Set
 
-Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the **[`ISA.md`](Docs/ISA.md)** file.
+Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the
+**[`ISA.md`](Docs/ISA.md)** file.
 
 Each instruction is defined with:
 - Opcode
@@ -76,7 +82,7 @@ In the **[`HwDesign.md`](Docs/HwDesign.md)** file, placement of the signals ins 
 
 ## 📸 Visuals
 
-- Block Diagram: `Images/top_level_architecture.png`
+- Block Diagram: `Images/BlockDiagram/TopLevelArchitecture.png`
 - Future updates may include breadboard photos, logic analyzer screenshots, and waveforms.
 
 ## 🎯 Goals
@@ -88,7 +94,8 @@ In the **[`HwDesign.md`](Docs/HwDesign.md)** file, placement of the signals ins 
 
 ## 📬 Feedback & Contributions
 
-This is a personal learning project, but contributions, discussions, and feedback are welcome! Feel free to open an issue or pull request if you'd like to contribute.
+This is a personal learning project, but contributions, discussions, and feedback are welcome! Feel free to open an
+issue or pull request if you'd like to contribute.
 
 ---
 
