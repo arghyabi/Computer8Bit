@@ -1,3 +1,9 @@
+# Component blocks
+
+* [`General Purpose Registers`](Registers.md)
+* [`Program Counter`](ProgramCounter.md)
+
+
 # BUS pin configuration
 
 | Pin Num | Signal |
@@ -68,10 +74,3 @@
 
 
 **\* Those are NOT output from Microcode IC; They are input to the uCode IC.**
-
-
-
-# Component blocks
-
-## Program Counter
-![Top-Level Architecture](../Images/Program%20Counter.png)
