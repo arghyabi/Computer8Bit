@@ -24,7 +24,7 @@ def isHex(s):
 
 
 class Compiler:
-    def __init__(self, assemblyFile, outFile, silent, support8):
+    def __init__(self, assemblyFile, outFile, silent, support8, padding):
         if not os.path.exists(assemblyFile):
             print(f"{assemblyFile} not found!!!")
             exit(-1)
@@ -42,6 +42,7 @@ class Compiler:
         self.outFile            = outFile
         self.silent             = silent
         self.support8BitAddress = support8
+        self.paddingEnabled     = padding
         self.tagDict            = dict()
         self.binArr             = bytearray()
         self.sourceMaxLength    = 0
@@ -473,23 +474,58 @@ class Compiler:
 
         f = open(self.outFile, 'wb')
         f.write(self.binArr)
+        if self.paddingEnabled:
+            paddingSize = MAX_ROM_ADDRESS_11_BIT - len(self.binArr)
+            if paddingSize > 0:
+                paddingBytes = bytearray([0xFF] * paddingSize)
+                self.binArr.extend(paddingBytes)
+                f.write(paddingBytes)
         f.close()
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("assemblyFile", help = "Assembly File")
-    parser.add_argument("-o", "--out", default = "out.bin", help = "output Bin File")
-    parser.add_argument("-s", "--silent", action = 'store_true', help = "Do not generate intermediate files")
-    parser.add_argument("-s8", "--support8", action = 'store_true', help = "Support only 8 bit ROM address")
+    parser.add_argument(
+        "assemblyFile",
+        help = "Assembly File"
+    )
+
+    parser.add_argument(
+        "-o",
+        "--out",
+        default = "out.bin",
+        help    = "output Bin File"
+    )
+
+    parser.add_argument(
+        "-s",
+        "--silent",
+        action = 'store_true',
+        help   = "Do not generate intermediate files"
+    )
+
+    parser.add_argument(
+        "-s8",
+        "--support8",
+        action = 'store_true',
+        help   = "Support only 8 bit ROM address"
+    )
+
+    parser.add_argument(
+        "-p",
+        "--padding",
+        action = 'store_true',
+        help   = "Pad the output file to 2048 bytes"
+    )
 
     args = parser.parse_args()
     assemblyFile = args.assemblyFile
     outFile      = args.out
     silent       = args.silent
     support8     = args.support8
+    padding      = args.padding
 
-    compile = Compiler(assemblyFile, outFile, silent, support8)
+    compile = Compiler(assemblyFile, outFile, silent, support8, padding)
 
 if __name__ == "__main__":
     main()
