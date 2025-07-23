@@ -1,5 +1,5 @@
 # Signal Informations
-Our 8-bit computer has 30 control signals. All these signals are controlled by the Control Unit with the help of
+Our 8-bit computer has 32 control signals. All these signals are controlled by the Control Unit with the help of
 microcode.
 
 
@@ -57,14 +57,17 @@ also helps execute the `INC` and `DEC` instructions.
 * `Seg7E`: The Seg7E signal is used to display the value of Register A on the 7-segment display in decimal format.
 
 ## Memory Related Signals
-* `PCC`: The PCC signal enables the Program Counter to count. If PCC is high, the counter increments on each clock cycle.
+* `PCLI`: The PCLI signal (Program Counter Register Low Input) is used to load the **lower 8 bits** of a 11-bit address
+into the Program Counter Low Register. This signal is typically used for executing branch instructions. The value will
+not loaded in the counter until the PCL is high.
 
-* `PCI`: The PCI signal (Program Counter Register Input) is used to load a specific value into the Program Counter
-Register.
-This signal is typically used for executing branch instructions.
-The value will not loaded in the counter until the PCL is high.
+* `PCHI`: The PCHI signal (Program Counter Register High Input) is used to load the **upper 3 bits** of a 11-bit into
+the Program Counter High Register. This signal is typically used for executing branch instructions. The value will not
+loaded in the counter until the PCL is high.
 
 * `PCL`: The PCL signal is used to load the value from program counter register to the program counter.
+
+* `PCC`: The PCC signal enables the Program Counter to count. If PCC is high, the counter increments on each clock cycle.
 
 * `RomO`: The RomO signal loads the current instruction from ROM onto the bus.
 

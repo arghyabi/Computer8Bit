@@ -4,7 +4,7 @@ the ALU.
 
 ## Block diagram
 
-![General Purpose Registers Diagram](../Images/BlockDiagram/Register.png)
+![General Purpose Registers Diagram](../Images/BlockDiagram/Registers.svg)
 
 ## Schematic
 
