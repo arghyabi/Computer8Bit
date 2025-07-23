@@ -6,7 +6,7 @@ and basic components. This project is a deep dive into computer architecture, ta
 microprocessors and educational systems, but designed from the ground up with a custom Instruction Set Architecture (ISA),
  control logic, and microcode.
 
-![Top-Level Architecture](Images/BlockDiagram/TopLevelArchitecture.png)
+![Top-Level Architecture](Images/BlockDiagram/TopLevelArchitecture.svg)
 
 ## 🔧 Project Overview
 

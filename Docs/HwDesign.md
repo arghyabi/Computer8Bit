@@ -30,41 +30,41 @@
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    17   |  PCI   |
-|    18   |  PCL   |
-|    19   |  PCC   |
-|    20   |  RomO  |
-|    21   |  MdI   |
-|    22   |  MeO   |
-|    23   |  MeI   |
-|    24   |  IRI   |
+|    17   |  PCLI  |
+|    18   |  PCHI  |
+|    19   |  PCL   |
+|    20   |  PCC   |
+|    21   |  RomO  |
+|    22   |  MdI   |
+|    23   |  MeO   |
+|    24   |  MeI   |
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    25   |  SqR   |
-|    26   |  AdSuO |
-|    27   |  AdSu  |
-|    28   |  Cin   |
-|    29   |  CmpO  |
-|    30   |  T1I   |
-|    31   |  T2I   |
-|    32   |  NtO   |
+|    25   |  IRI   |
+|    26   |  SqR   |
+|    27   |  AdSuO |
+|    28   |  AdSu  |
+|    29   |  Cin   |
+|    30   |  CmpO  |
+|    31   |  T1I   |
+|    32   |  T2I   |
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    33   | AndO   |
-|    34   | OrO    |
-|    35   | XorO   |
-|    36   | Seg7E  |
-|    37   | ZeroF **\***|
-|    38   | Carry **\***|
+|    33   |  NtO   |
+|    34   |  AndO  |
+|    35   |  OrO   |
+|    36   |  XorO  |
+|    37   |  Seg7E |
+|    38   |        |
 |    39   |        |
 |    40   | HLT    |
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    41   |        |
-|    42   |        |
+|    41   |  ZeroF **\***|
+|    42   |  Carry **\***|
 |    43   |        |
 |    44   |        |
 |    45   |  CLK   |
