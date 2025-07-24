@@ -45,6 +45,7 @@ class ParseInstructions:
             from Instructions.Input_15_bit import InsOR  as  OR
             from Instructions.Input_15_bit import InsXOR as XOR
             from Instructions.Input_15_bit import InsNOT as NOT
+            from Instructions.Input_15_bit import InsRST as RST
 
             self.insObjects = [
                 NOP,
@@ -66,6 +67,7 @@ class ParseInstructions:
                 OR,
                 XOR,
                 NOT,
+                RST,
             ]
         self.InstructionParsedData = {}
 
