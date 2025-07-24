@@ -91,6 +91,8 @@ class Compiler:
             'CMP':     0b_1011,
             # 1100
             'CMI':   0b00_1100,
+            # 1111
+            'RST': 0b1111_1111,
         }
 
         self.instructionSizeDict = {
@@ -114,7 +116,8 @@ class Compiler:
             'CMP': 1,
             'CMI': 2,
             'OUT': 1,
-            'HLT': 1
+            'HLT': 1,
+            'RST': 1,
         }
 
         if self.support8BitAddress:
@@ -429,12 +432,12 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse HLT, NOP, OUT commands | Format: 00TT_0000
-            elif opcode == "HLT" or opcode == "NOP" or opcode == "OUT":
+            ## Parse HLT, NOP, OUT, RST commands | Format: 00TT_0000, 1111_1111
+            elif opcode == "HLT" or opcode == "NOP" or opcode == "OUT" or opcode == "RST":
                 if payloadLen != 0:
                     errorPrint(index, f"No payload expected!! but found {payloadLen}")
 
-                bitVal = self.instructionDict[opcode] # HLT, NOP, OUT are 8 bit
+                bitVal = self.instructionDict[opcode] # HLT, NOP, OUT, RST are 8 bit
 
                 if not self.silent:
                     self.printCompiledLine(line, bitVal)

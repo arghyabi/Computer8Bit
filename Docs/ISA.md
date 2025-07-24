@@ -148,6 +148,13 @@ SUB B C ; Subtract C from B and keep in B
             <td valign="top">2 Byte</td>
             <td valign="top">Compare register with a immediate values</td>
         </tr>
+        <tr>
+            <td valign="top"><strong>1111_1111</strong></td>
+            <td valign="top">1111_1111</td>
+            <td valign="top">RST</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Reset it self</td>
+        </tr>
     </tbody>
 </table>
 
@@ -502,3 +509,15 @@ This `HLT` instruction is used to halt the system till reset
 | Instruction  | Binary Value |
 | :---         |    :---:     |
 | HLT          | 0010_0000    |
+
+---------------
+
+### ✅ Instruction: RST
+This `RST` instruction is used to reset the computer
+
+#### `Ins. Format: RST`
+#### `Bin. Format: 1111_1111`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| RST          | 1111_1111    |
