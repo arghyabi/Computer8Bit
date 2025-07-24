@@ -1,7 +1,7 @@
 # 💻 8-bit Computer ISA
 
 > **Available Registers:** `A`, `B`, `C`, `D`
-> 
+>
 > The corresponding value for each register is as follows.
 
 | Register | Binary |
@@ -14,13 +14,13 @@
 ---
 
 > 💡 **Note**
-> - Use `;` for comments  
+> - Use `;` for comments
 > - No `,` in instructions
 
 ### 🧾 **Example**
 ```asm
 MOV A B ; Copy the value of B to A
-SUB B C ; Subtract C from B and keep in B 
+SUB B C ; Subtract C from B and keep in B
 ```
 
 ## 🧾 Instruction Format
@@ -33,7 +33,19 @@ SUB B C ; Subtract C from B and keep in B
 > - Full binary encodings
 > - Descriptions for each instruction
 
+### Abbreviation Table
 
+| Abbreviation | Meaning            |
+| :----------: | :------------------|
+| **R**        | Any Register       |
+| **S**        | Source Register    |
+| **D**        | Dest. Register     |
+| **T**        | Instruction Type   |
+| **V**        | Value              |
+| **A**        | Address            |
+
+
+### Instruction Table
 <table>
     <thead>
         <tr>
@@ -46,91 +58,91 @@ SUB B C ; Subtract C from B and keep in B
     </thead>
     <tbody>
         <tr>
-            <td valign="top"><strong>00TT_0000</strong><br>T: Type</td>
+            <td valign="top"><strong>00TT_0000</strong></td>
             <td valign="top">0000_0000<br>0001_0000<br>0010_0000</td>
             <td valign="top">NOP<br>OUT<br>HLT</td>
             <td valign="top">1 Byte<br>1 Byte<br>1 Byte</td>
             <td valign="top">No Operation<br>Display a value in 7-Segment<br>Halt the platform</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_0001</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_0001</strong></td>
             <td valign="top">SSDD_0001</td>
-            <td valign="top">ADD S D</td>
+            <td valign="top">ADD D S</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Add 2 registers and update to source</td>
+            <td valign="top">Add 2 registers and update to destination</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_0010</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_0010</strong></td>
             <td valign="top">SSDD_0010</td>
-            <td valign="top">SUB S D</td>
+            <td valign="top">SUB D S</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Subtract 2 registers & update to source</td>
+            <td valign="top">Subtract source from dest. & update to dest.</td>
         </tr>
         <tr>
-            <td valign="top"><strong>RRTT_0011</strong><br>R: Register<br>T: Type</td>
+            <td valign="top"><strong>RRTT_0011</strong></td>
             <td valign="top">RR10_0011<br>RR11_0011</td>
             <td valign="top">INC R<br>DEC R</td>
             <td valign="top">1 Byte<br>1 Byte</td>
             <td valign="top">Increment register<br>Decrement register</td>
         </tr>
         <tr>
-            <td valign="top"><strong>RRTT_0100</strong><br>R: Register<br>T: Type</td>
+            <td valign="top"><strong>RRTT_0100</strong></td>
             <td valign="top">RR00_0100<br>RR01_0100<br>RR10_0100</td>
             <td valign="top">LDI R VV<br>LDM R AA<br>SAV R AA</td>
             <td valign="top">2 Byte<br>2 Byte<br>2 Byte</td>
             <td valign="top">Load immediate<br>Load from memory<br>Save to memory</td>
         </tr>
         <tr>
-            <td valign="top"><strong>00TT_0101</strong><br>T: Type</td>
+            <td valign="top"><strong>00TT_0101</strong></td>
             <td valign="top">0000_0101<br>0001_0101<br>0010_0101<br>0011_0101</td>
             <td valign="top">JMP AA<br>JMZ AA<br>JNZ AA<br>JMC AA</td>
-            <td valign="top">2 Byte<br>2 Byte<br>2 Byte<br>2 Byte</td>
-            <td valign="top">Jump to address<br>Jump if Zero flag set<br>Jump if Zero flag not set<br>Jump if Carry flag set</td>
+            <td valign="top">3 Byte<br>3 Byte<br>3 Byte<br>3 Byte</td>
+            <td valign="top">Jump to address<br>Jump to address if Zero flag set<br>Jump to address if Zero flag NOT set<br>Jump to address if Carry flag set</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_0110</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_0110</strong></td>
             <td valign="top">SSDD_0110</td>
-            <td valign="top">MOV S D</td>
+            <td valign="top">MOV D S</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Register-to-register move</td>
+            <td valign="top">Move from source to destination</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_0111</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_0111</strong></td>
             <td valign="top">SSDD_0111</td>
-            <td valign="top">AND S D</td>
+            <td valign="top">AND D S</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Logical AND operation</td>
+            <td valign="top">Logical AND operation; update to destination</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_1000</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_1000</strong></td>
             <td valign="top">SSDD_1000</td>
-            <td valign="top">OR S D</td>
+            <td valign="top">OR D S</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Logical OR operation</td>
+            <td valign="top">Logical OR operation; update to destination</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_1001</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_1001</strong></td>
             <td valign="top">SSDD_1001</td>
-            <td valign="top">XOR S D</td>
+            <td valign="top">XOR D S</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Logical XOR operation</td>
+            <td valign="top">Logical XOR operation; update to destination</td>
         </tr>
         <tr>
-            <td valign="top"><strong>RR00_1010</strong><br>R: Register</td>
+            <td valign="top"><strong>RR00_1010</strong></td>
             <td valign="top">RR00_1010</td>
             <td valign="top">NOT R</td>
             <td valign="top">1 Byte</td>
             <td valign="top">Bitwise NOT operation</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SSDD_1011</strong><br>S: Source Register<br>D: Dest. Register</td>
+            <td valign="top"><strong>SSDD_1011</strong></td>
             <td valign="top">SSDD_1011</td>
-            <td valign="top">CMP S D</td>
+            <td valign="top">CMP R R</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Compare two register values</td>
+            <td valign="top">Compare two register values; update the flag</td>
         </tr>
         <tr>
-            <td valign="top"><strong>RR00_1100</strong><br>R: Register<br>V: value</td>
+            <td valign="top"><strong>RR00_1100</strong></td>
             <td valign="top">RR00_1100</td>
             <td valign="top">CMI R VV</td>
             <td valign="top">2 Byte</td>
@@ -145,7 +157,8 @@ SUB B C ; Subtract C from B and keep in B
 ### ✅ Instruction: NOP
 This `NOP` instruction does nothing. It's kind of a blank instruction.
 
-#### `Format: 0000_0000`
+#### `Ins. Format: NOP`
+#### `Bin. Format: 0000_0000`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -154,9 +167,10 @@ This `NOP` instruction does nothing. It's kind of a blank instruction.
 ---------------
 
 ### ✅ Instruction: ADD
-This `ADD` instruction is used to add two numbers and save the output in the source register.
+This `ADD` instruction is used to add two numbers and save the output in the destination register.
 
-#### `Format: SSDD_0001`
+#### `Ins. Format: ADD D S`
+#### `Bin. Format: SSDD_0001`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -176,9 +190,10 @@ This `ADD` instruction is used to add two numbers and save the output in the sou
 ---------------
 
 ### ✅ Instruction: SUB
-This `SUB` instruction is used to subtract one number from another and save the output in the source register.
+This `SUB` instruction is used to subtract one number from another and save the output in the destination register.
 
-#### `Format: SSDD_0010`
+#### `Ins. Format: SUB D S`
+#### `Bin. Format: SSDD_0010`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -200,7 +215,8 @@ This `SUB` instruction is used to subtract one number from another and save the 
 ### ✅ Instruction: INC
 This `INC` instruction is used to increase the register value by 1.
 
-#### `Format: RR10_0011`
+#### `Ins. Format: INC R`
+#### `Bin. Format: RR10_0011`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -214,7 +230,8 @@ This `INC` instruction is used to increase the register value by 1.
 ### ✅ Instruction: DEC
 This `DEC` instruction is used to decrease the register value by 1.
 
-#### `Format: RR11_0011`
+#### `Ins. Format: DEC R`
+#### `Bin. Format: RR11_0011`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -228,7 +245,8 @@ This `DEC` instruction is used to decrease the register value by 1.
 ### ✅ Instruction: LDI
 This `LDI` instruction is used to load an 8-bit value immediately into a register
 
-#### `Format: RR00_0100`
+#### `Ins. Format: LDI R VV`
+#### `Bin. Format: RR00_0100`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -242,7 +260,8 @@ This `LDI` instruction is used to load an 8-bit value immediately into a registe
 ### ✅ Instruction: LDM
 This `LDM` instruction is used to load an 8-bit value into a register from memory
 
-#### `Format: RR01_0100`
+#### `Ins. Format: LDM R AA`
+#### `Bin. Format: RR01_0100`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -256,7 +275,8 @@ This `LDM` instruction is used to load an 8-bit value into a register from memor
 ### ✅ Instruction: SAV
 This `SAV` instruction is used to save a value from the register to memory
 
-#### `Format: RR10_0100`
+#### `Ins. Format: SAV R AA`
+#### `Bin. Format: RR10_0100`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -270,7 +290,8 @@ This `SAV` instruction is used to save a value from the register to memory
 ### ✅ Instruction: JMP
 This `JMP` instruction is used to jump to a specific address
 
-#### `Format: 0000_0101`
+#### `Ins. Format: JMP AA`
+#### `Bin. Format: 0000_0101`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -281,7 +302,8 @@ This `JMP` instruction is used to jump to a specific address
 ### ✅ Instruction: JMZ
 This `JMZ` instruction is used to jump to a specific address when the `Zero` flag is set
 
-#### `Format: 0001_0101`
+#### `Ins. Format: JMZ AA`
+#### `Bin. Format: 0001_0101`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -292,7 +314,8 @@ This `JMZ` instruction is used to jump to a specific address when the `Zero` fla
 ### ✅ Instruction: JNZ
 This `JNZ` instruction is used to jump to a specific address when the `Zero` flag is not set
 
-#### `Format: 0010_0101`
+#### `Ins. Format: JNZ AA`
+#### `Bin. Format: 0010_0101`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -303,7 +326,8 @@ This `JNZ` instruction is used to jump to a specific address when the `Zero` fla
 ### ✅ Instruction: JMC
 This `JMC` instruction is used to jump to a specific address when the `Carry` flag is set
 
-#### `Format: 0011_0101`
+#### `Ins. Format: JMC AA`
+#### `Bin. Format: 0011_0101`
 
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
@@ -314,7 +338,8 @@ This `JMC` instruction is used to jump to a specific address when the `Carry` fl
 ### ✅ Instruction: MOV
 This `MOV` instruction is used to move a value from one register to another
 
-#### `Format: SSDD_0110`
+#### `Ins. Format: MOV D S`
+#### `Bin. Format: SSDD_0110`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -334,9 +359,10 @@ This `MOV` instruction is used to move a value from one register to another
 ---------------
 
 ### ✅ Instruction: AND
-This `AND` instruction is used to do a bitwise AND operation and keep the output in the source register
+This `AND` instruction is used to do a bitwise AND operation and keep the output in the destination register
 
-#### `Format: SSDD_0111`
+#### `Ins. Format: AND D S`
+#### `Bin. Format: SSDD_0111`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -356,9 +382,10 @@ This `AND` instruction is used to do a bitwise AND operation and keep the output
 ---------------
 
 ### ✅ Instruction: OR
-This `OR` instruction is used to do a bitwise OR operation and keep the output in the source register
+This `OR` instruction is used to do a bitwise OR operation and keep the output in the destination register
 
-#### `Format: SSDD_1000`
+#### `Ins. Format: OR D S`
+#### `Bin. Format: SSDD_1000`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -378,9 +405,10 @@ This `OR` instruction is used to do a bitwise OR operation and keep the output i
 ---------------
 
 ### ✅ Instruction: XOR
-This `XOR` instruction is used to do a bitwise XOR operation and keep the output in the source register
+This `XOR` instruction is used to do a bitwise XOR operation and keep the output in the destination register
 
-#### `Format: SSDD_1001`
+#### `Ins. Format: XOR D S`
+#### `Bin. Format: SSDD_1001`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -400,9 +428,10 @@ This `XOR` instruction is used to do a bitwise XOR operation and keep the output
 ---------------
 
 ### ✅ Instruction: NOT
-This `NOT` instruction is used to do a bitwise NOT operation and keep the output in the source register
+This `NOT` instruction is used to do a bitwise NOT operation and keep the output in the same register
 
-#### `Format: RR00_1010`
+#### `Ins. Format: NOT R`
+#### `Bin. Format: RR00_1010`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -416,7 +445,8 @@ This `NOT` instruction is used to do a bitwise NOT operation and keep the output
 ### ✅ Instruction: CMP
 This `CMP` instruction is used to do a comparison and set/reset the `Zero` flag
 
-#### `Format: SSDD_1011`
+#### `Ins. Format: CMP R R`
+#### `Bin. Format: SSDD_1011`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -438,7 +468,8 @@ This `CMP` instruction is used to do a comparison and set/reset the `Zero` flag
 ### ✅ Instruction: CMI
 This `CMI` instruction is used to do a comparison and set/reset the `Zero` flag
 
-#### `Format: RR00_1100`
+#### `Ins. Format: CMI R VV`
+#### `Bin. Format: RR00_1100`
 
 | Instruction  |     Binary Value      |
 | :---         |        :---:          |
@@ -453,7 +484,8 @@ This `CMI` instruction is used to do a comparison and set/reset the `Zero` flag
 ### ✅ Instruction: OUT
 This `OUT` instruction is used to show the value of register A in the 7-seg display
 
-#### `Format: 0001_0000`
+#### `Ins. Format: OUT`
+#### `Bin. Format: 0001_0000`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
@@ -464,7 +496,8 @@ This `OUT` instruction is used to show the value of register A in the 7-seg disp
 ### ✅ Instruction: HLT
 This `HLT` instruction is used to halt the system till reset
 
-#### `Format: 0010_0000`
+#### `Ins. Format: HLT`
+#### `Bin. Format: 0010_0000`
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
