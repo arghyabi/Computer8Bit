@@ -8,4 +8,4 @@ the ALU.
 
 ## Schematic
 
-![General Purpose Registers](../Images/Schematic/General_Purpose_Registers.svg)
+![General Purpose Registers](../Images/Schematic/GeneralPurposeRegisters.svg)
