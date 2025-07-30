@@ -1,19 +1,6 @@
-typedef enum {
-    OPERATION_READ,
-    OPERATION_WRITE,
-    OPERATION_UNKNOWN
-} opMode_t;
+#include "EepromFlashFirmware.h"
 
-typedef enum {
-    CMD_MODE_SET  = 0xAA,
-    CMD_DATA_SEND = 0x55
-} cmd_t;
-
-typedef enum {
-    ACK_OK = 0xAA,
-    ACK_NO = 0x55
-} ack_t;
-
+// Pin definitions
 // Address shift register (74LS595)
 const int addDataPin   = 2;
 const int addClockPin  = 3;
@@ -39,19 +26,12 @@ const int greenLedPin  = A3;
 const int redLedPin    = A4;
 const int blueLedPin   = A5;
 
-const int inOutPins[]  = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6, inOut7};
+const int inOutPins[8] = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6, inOut7};
 
+// Global variables
 uint16_t led_counter   = 0;
 bool led_state         = false;
 opMode_t operationMode = OPERATION_UNKNOWN;
-
-
-void    setAddress(uint16_t address, bool reverse = true);
-uint8_t readEEPROM(uint16_t address);
-void    writeEEPROM(uint16_t address, uint8_t data);
-void    initializeInputPort();
-void    initializeOutputPort();
-
 
 void setup() {
     // Address shift register pins
@@ -78,7 +58,6 @@ void setup() {
 
     Serial.begin(115200);
 }
-
 
 void loop() {
     // Read operation instructions
@@ -118,7 +97,7 @@ void loop() {
             led_counter++;
             if (led_counter >= 2) {
                 led_state = !led_state;
-                digitalWrite(redLedPin, led_state ? HIGH : LOW);
+                digitalWrite(blueLedPin, led_state ? HIGH : LOW);
                 led_counter = 0;
             }
         }
@@ -138,13 +117,12 @@ void loop() {
             led_counter++;
             if (led_counter >= 2) {
                 led_state = !led_state;
-                digitalWrite(redLedPin, led_state ? HIGH : LOW);
+                digitalWrite(greenLedPin, led_state ? HIGH : LOW);
                 led_counter = 0;
             }
         }
     }
 }
-
 
 void initializeInputPort() {
     // Set all inOut pins to INPUT
@@ -154,7 +132,6 @@ void initializeInputPort() {
     }
 }
 
-
 void initializeOutputPort() {
     // Set all inOut pins to OUTPUT
     for (int i = 0; i < 8; i++) {
@@ -162,10 +139,9 @@ void initializeOutputPort() {
     }
 }
 
-
 // ========== Set 16-bit address via 2x 74LS595 ==========
 void setAddress(uint16_t address, bool reverse) {
-    for (int i = 0; i <= 16; i++) {
+    for (int i = 1; i <= 16; i++) {
         digitalWrite(addLatchPin, LOW);
         digitalWrite(addClockPin, LOW);
         if(reverse)
@@ -176,7 +152,6 @@ void setAddress(uint16_t address, bool reverse) {
         digitalWrite(addLatchPin, HIGH);
     }
 }
-
 
 // ========== Read 8-bit data from EEPROM ==========
 uint8_t readEEPROM(uint16_t address) {
@@ -197,7 +172,6 @@ uint8_t readEEPROM(uint16_t address) {
 
     return value;
 }
-
 
 // ========== Write 8-bit data to EEPROM ==========
 void writeEEPROM(uint16_t address, uint8_t data) {

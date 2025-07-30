@@ -2,7 +2,7 @@
 
 # Target board and port
 BOARD_TAG = uno
-OBJDIR  = build-MicroCode
+OBJDIR  = build-EepromFlash
 
 # Arduino installation path
 ARDUINO_DIR = /usr/share/arduino
@@ -15,11 +15,11 @@ CFLAGS += -I$(ARDUINO_DIR)/hardware/arduino/avr/cores/arduino
 CFLAGS += -I$(ARDUINO_DIR)/hardware/arduino/avr/variants/eightanaloginputs
 
 # Source files
-LOCAL_INO_SRCS = FlashMicrocode.ino
-LOCAL_CPP_SRCS =
+LOCAL_INO_SRCS =
+LOCAL_CPP_SRCS = EepromFlashFirmware.cpp
 
 # Output file
-TARGET = FlashMicrocode.hex
+TARGET = EepromFlashFirmware.hex
 
 
 include /usr/share/arduino/Arduino.mk
