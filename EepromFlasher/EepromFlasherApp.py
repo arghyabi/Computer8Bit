@@ -101,7 +101,7 @@ class MicrocodeFlasher:
 
     def getSerialPorts(self):
         ports = serial.tools.list_ports.comports()
-        portList =["Select"]
+        portList = ["Select"]
         serialPorts = [port.device for port in ports]
         serialPorts.reverse()
         portList.extend(serialPorts)
@@ -121,7 +121,7 @@ class MicrocodeFlasher:
 
         if filePath:
             self.finalWriteFile = filePath
-            self.labelWriteSeletedFile.config(
+            self.labelWriteSelectedFile.config(
                 text = os.path.basename(filePath)
             )
             self.btnWriteStart.config(
@@ -133,8 +133,8 @@ class MicrocodeFlasher:
             print("Selected binary:", self.finalWriteFile)
 
 
-    def setWriteAboard(self):
-        self.writeAboard = True
+    def setWriteAbort(self):
+        self.writeAbort = True
 
 
     def chooseReadFilePath(self):
@@ -144,7 +144,7 @@ class MicrocodeFlasher:
 
         if filePath:
             self.finalReadFile = filePath
-            self.labelReadSeletedFile.config(
+            self.labelReadSelectedFile.config(
                 text = os.path.basename(filePath)
             )
             self.btnReadStart.config(
@@ -156,8 +156,8 @@ class MicrocodeFlasher:
             print("Selected binary:", self.finalReadFile)
 
 
-    def setReadAboard(self):
-        self.readAboard = True
+    def setReadAbort(self):
+        self.readAbort = True
 
 
     def guiSetupMain(self):
@@ -293,13 +293,13 @@ class MicrocodeFlasher:
             padx = 5
         )
 
-        self.labelWriteSeletedFile = tk.Label(
+        self.labelWriteSelectedFile = tk.Label(
             fileSelectFrame,
             text   = "No file selected",
             width  = 25,
             anchor = "w"
         )
-        self.labelWriteSeletedFile.pack(
+        self.labelWriteSelectedFile.pack(
             side = tk.LEFT
         )
 
@@ -330,14 +330,14 @@ class MicrocodeFlasher:
         )
 
         # === Write Progress Bar ===
-        writeProgessFrame = tk.Frame(fileWriteFrame)
-        writeProgessFrame.pack(
+        writeProgressFrame = tk.Frame(fileWriteFrame)
+        writeProgressFrame.pack(
             pady = 5
         )
 
         writeProgressValue = tk.DoubleVar()
         writeProgressbar = ttk.Progressbar(
-            writeProgessFrame,
+            writeProgressFrame,
             length   = 250,
             variable = writeProgressValue,
             maximum  = 100
@@ -346,12 +346,12 @@ class MicrocodeFlasher:
             side = tk.LEFT
         )
 
-        writeProgessLabel = tk.Label(
-            writeProgessFrame,
+        writeProgressLabel = tk.Label(
+            writeProgressFrame,
             text  = "0%",
             width = 7
         )
-        writeProgessLabel.pack(
+        writeProgressLabel.pack(
             side = tk.LEFT,
             padx = 5
         )
@@ -368,13 +368,13 @@ class MicrocodeFlasher:
         self.btnWriteStart.config(
             command = lambda : self.sendBinToChip(
                 writeProgressValue,
-                writeProgessLabel,
+                writeProgressLabel,
                 writeProgressbar
             )
         )
 
         self.btnWriteAbort.config(
-            command = lambda: self.setWriteAboard()
+            command = lambda: self.setWriteAbort()
         )
 
 
@@ -404,13 +404,13 @@ class MicrocodeFlasher:
             padx = 5
         )
 
-        self.labelReadSeletedFile = tk.Label(
+        self.labelReadSelectedFile = tk.Label(
             fileSelectFrame,
             text   = "No path defined",
             width  = 25,
             anchor = "w"
         )
-        self.labelReadSeletedFile.pack(
+        self.labelReadSelectedFile.pack(
             side = tk.LEFT
         )
 
@@ -442,14 +442,14 @@ class MicrocodeFlasher:
 
 
         # === Read Progress Bar ===
-        readProgessFrame = tk.Frame(fileReadFrame)
-        readProgessFrame.pack(
+        readProgressFrame = tk.Frame(fileReadFrame)
+        readProgressFrame.pack(
             pady = 5
         )
 
         readProgressValue = tk.DoubleVar()
         readProgressbar = ttk.Progressbar(
-            readProgessFrame,
+            readProgressFrame,
             length   = 250,
             variable = readProgressValue,
             maximum  = 100
@@ -458,12 +458,12 @@ class MicrocodeFlasher:
             side = tk.LEFT
         )
 
-        readProgessLabel = tk.Label(
-            readProgessFrame,
+        readProgressLabel = tk.Label(
+            readProgressFrame,
             text  = "0%",
             width = 7
         )
-        readProgessLabel.pack(
+        readProgressLabel.pack(
             side = tk.LEFT,
             padx = 5
         )
@@ -480,13 +480,13 @@ class MicrocodeFlasher:
         self.btnReadStart.config(
             command = lambda : self.readBinFromChip(
                 readProgressValue,
-                readProgessLabel,
+                readProgressLabel,
                 readProgressbar
             )
         )
 
         self.btnReadAbort.config(
-            command = lambda: self.setReadAboard()
+            command = lambda: self.setReadAbort()
         )
 
 
@@ -566,8 +566,8 @@ class MicrocodeFlasher:
         )
 
 
-    def sendBinToChip(self, progressVal:tk.DoubleVar, progessLabel:tk.Label, progressBar:ttk.Progressbar):
-        self.writeAboard = False
+    def sendBinToChip(self, progressVal:tk.DoubleVar, progressLabel:tk.Label, progressBar:ttk.Progressbar):
+        self.writeAbort = False
         self.updateGuiForStartWriting()
 
         try:
@@ -626,10 +626,10 @@ class MicrocodeFlasher:
 
                     percent = (addr + 1) * 100 / self.finalChipSize
                     progressVal.set(percent)
-                    progessLabel.config(text = f"{percent:0.2f}%")
+                    progressLabel.config(text = f"{percent:0.2f}%")
                     progressBar.update()
 
-                    if self.writeAboard:
+                    if self.writeAbort:
                         self.labelWriteStatus.config(
                             text = "[ERROR] Write Aborted manually."
                         )
@@ -724,8 +724,8 @@ class MicrocodeFlasher:
         )
 
 
-    def readBinFromChip(self, progressVal:tk.DoubleVar, progessLabel:tk.Label, progressBar:ttk.Progressbar):
-        self.readAboard = False
+    def readBinFromChip(self, progressVal:tk.DoubleVar, progressLabel:tk.Label, progressBar:ttk.Progressbar):
+        self.readAbort = False
         self.updateGuiForStartReading()
 
         data = [0]*self.finalChipSize
@@ -768,10 +768,10 @@ class MicrocodeFlasher:
 
                     percent = (addr + 1) * 100 / self.finalChipSize
                     progressVal.set(percent)
-                    progessLabel.config(text = f"{percent:0.2f}%")
+                    progressLabel.config(text = f"{percent:0.2f}%")
                     progressBar.update()
 
-                    if self.readAboard:
+                    if self.readAbort:
                         self.labelReadStatus.config(
                             text = "[ERROR] Read Aborted manually."
                         )
