@@ -2,23 +2,7 @@
 #define EEPROM_FLASH_FIRMWARE_H
 
 #include <Arduino.h>
-
-// Enumerations
-typedef enum {
-    OPERATION_READ,
-    OPERATION_WRITE,
-    OPERATION_UNKNOWN
-} opMode_t;
-
-typedef enum {
-    CMD_MODE_SET  = 0xAA,
-    CMD_DATA_SEND = 0x55
-} cmd_t;
-
-typedef enum {
-    ACK_OK = 0xAA,
-    ACK_NO = 0x55
-} ack_t;
+#include "communication.h"
 
 // Pin definitions
 // Address shift register (74LS595)

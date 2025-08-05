@@ -243,31 +243,6 @@ class ReadTab:
         self.parent.update()
 
         try:
-            # Send Read commands to chip
-            self.labelReadStatus.config(text="[INFO] Reading in progress...")
-            self.main.consoleInfo("Sending Read command to chip...", end = "")
-            self.parent.update()
-            serial.write(bytes([0xAA, 0x00]))  # Instruction for Read
-            ack = serial.read()
-            if ack == b'\x55':
-                self.labelReadStatus.config(text="[ERROR] Instruction failed!!")
-                self.main.consoleError(" Failed.", append = True)
-                serial.close()
-                self.updateGuiForAbortReading()
-                return
-            elif ack == b'\xAA':
-                self.main.consoleSuccess(f" Success.", append = True)
-            else:
-                self.labelReadStatus.config(
-                    text = "[ERROR] Unexpected response from chip!"
-                )
-                self.main.consoleError(" Failed.", append = True)
-                self.main.consoleError(f"Unexpected response from chip! Received: {ack}")
-                serial.close()
-                self.updateGuiForAbortReading()
-                return
-            self.parent.update()
-
             # Start Reading data from chip
             self.main.consoleInfo("Starting data read from chip...")
             self.parent.update()
@@ -275,17 +250,17 @@ class ReadTab:
                 addrHigh = (addr >> 8) & 0xFF
                 addrLow = addr & 0xFF
 
-                serial.write(bytes([addrHigh, addrLow]))
+                serial.write(bytes([OPERATION_READ, addrHigh, addrLow]))
                 dataByte = serial.read()
                 ack = serial.read()
 
                 data[addr] = dataByte[0]
-                if ack != b'\xAA':
+                if ack != ACK_READ_OK:
                     self.labelReadStatus.config(
                         text = f"[ERROR] No ACK at address 0x{addr:04X}"
                     )
                     self.main.consoleError(" Failed.", append = True)
-                    self.main.consoleError(f"No ACK at address 0x{addr:04X}")
+                    self.main.consoleError(f"Wrong read ACK at address 0x{addr:04X}; ACK: {ack}")
                     serial.close()
                     self.updateGuiForAbortReading()
                     return
