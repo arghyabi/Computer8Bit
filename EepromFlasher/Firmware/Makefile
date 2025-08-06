@@ -2,7 +2,7 @@
 
 # Target board and port
 BOARD_TAG = uno
-OBJDIR  = build-EepromFlash
+OBJDIR  = build-EepromFlashFirmware
 
 # Arduino installation path
 ARDUINO_DIR = /usr/share/arduino

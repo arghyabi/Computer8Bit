@@ -1,4 +1,5 @@
 #include "EepromFlashFirmware.h"
+#include "communication.h"
 
 // Pin definitions
 // Address shift register (74LS595)
@@ -30,8 +31,12 @@ const int inOutPins[8] = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6
 
 // Global variables
 uint16_t led_counter   = 0;
-bool led_state         = false;
+bool red_led_state     = false;
+bool green_led_state   = false;
+bool blue_led_state    = false;
 opMode_t operationMode = OPERATION_UNKNOWN;
+
+int payloadBytes[PAYLOAD_SIZE_MAX] = {0};
 
 void setup() {
     // Address shift register pins
@@ -59,67 +64,85 @@ void setup() {
     Serial.begin(115200);
 }
 
+returnCode_t readPayloadBytes(payloadSize_t payloadSize) {
+    unsigned long startTime = millis();
+    const unsigned long timeout = 100; // 100ms timeout for reading payload
+
+    for (int i = 0; i < payloadSize; i++) {
+        while (Serial.available() == 0) {
+            if (millis() - startTime > timeout) {
+                return RET_PAYLOAD_TOO_SHORT; // Timeout
+            }
+        }
+        payloadBytes[i] = Serial.read();
+    }
+
+    return RET_OK;
+}
+
+
 void loop() {
-    // Read operation instructions
-    if (operationMode == OPERATION_UNKNOWN) {
-        if (Serial.available() >= 2) {
-            if ((cmd_t)Serial.read() != CMD_MODE_SET)
-                return;
-            opMode_t tmp = (opMode_t)Serial.read();
-            if(tmp == OPERATION_READ) {
-                operationMode = tmp;
-                initializeInputPort();
-                Serial.write(ACK_OK);
-            }
-            else if (tmp == OPERATION_WRITE) {
-                operationMode = tmp;
+    uint8_t  data    = 0;
+    uint16_t address = 0;
+    // Check for incoming serial data
+    if (Serial.available() > 0) {
+        switch (operationMode) {
+            // OPERATION_UNKNOWN: // Default case, wait for operation type
+            case OPERATION_UNKNOWN:
+                operationMode = (opMode_t)Serial.read();
+                break;
+
+            // OPERATION_WRITE: // Handle write operation
+            case OPERATION_WRITE:
                 initializeOutputPort();
-                Serial.write(ACK_OK);
-            }
-            else {
-                Serial.write(ACK_NO);
-            }
-        }
-        return;
-    }
+                if (readPayloadBytes(PAYLOAD_SIZE_OP_WRITE) == RET_OK) {
+                    address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS]; // High byte + Low byte
+                    data    = payloadBytes[IDX_DATA]; // Data byte
+                    writeEEPROM(address, data);
+                    Serial.write(ACK_WRITE_OK);
+                    digitalWrite(blueLedPin, blue_led_state ? HIGH : LOW);
+                    blue_led_state = !blue_led_state;
+                } else {
+                    Serial.write(ACK_WRITE_NO); // Payload too short
+                }
+                operationMode = OPERATION_UNKNOWN;
+                break;
 
-    // Write data to eeprom
-    else if (operationMode == OPERATION_WRITE) {
-        if (Serial.available() >= 3) {
-            uint16_t addr = Serial.read() << 8;
-            addr |= Serial.read();
-            uint8_t data = Serial.read();
+            // OPERATION_READ: // Handle read operation
+            case OPERATION_READ:
+                initializeInputPort();
+                if (readPayloadBytes(PAYLOAD_SIZE_OP_READ) == RET_OK) {
+                    address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS]; // High byte + Low byte
+                    data    = readEEPROM(address);
+                    Serial.write(data);
+                    Serial.write(ACK_READ_OK);
+                    digitalWrite(greenLedPin, green_led_state ? HIGH : LOW);
+                    green_led_state = !green_led_state;
+                } else {
+                    Serial.write(0xFF); // Send 0xFF if no data read
+                    Serial.write(ACK_READ_NO); // Payload too short
+                }
+                operationMode = OPERATION_UNKNOWN;
+                break;
 
-            writeEEPROM(addr, data);
-            Serial.write(ACK_OK);  // ACK
+            // TODO: Implement actual firmware instruction logic
+            // OPERATION_INS_FW: // Handle instruction firmware;
+            case OPERATION_INS_FW:
+                Serial.write(ACK_INS_FW_OK);
+                operationMode = OPERATION_UNKNOWN;
+                break;
 
-            // Toggle LED every 256 bytes
-            led_counter++;
-            if (led_counter >= 2) {
-                led_state = !led_state;
-                digitalWrite(blueLedPin, led_state ? HIGH : LOW);
-                led_counter = 0;
-            }
-        }
-    }
+            // TODO: Implement actual instruction done logic
+            // OPERATION_INS_DONE: // Handle instruction done
+            case OPERATION_INS_DONE:
+                Serial.write(ACK_INS_DONE_OK);
+                operationMode = OPERATION_UNKNOWN;
+                break;
 
-    // Read data from eeprom
-    else if (operationMode == OPERATION_READ) {
-        if (Serial.available() >= 2) {
-            uint16_t addr = Serial.read() << 8;
-            addr |= Serial.read();
-            uint8_t data = readEEPROM(addr);
-            Serial.write(data);
-
-            Serial.write(ACK_OK);  // ACK
-
-            // Toggle LED every 256 bytes
-            led_counter++;
-            if (led_counter >= 2) {
-                led_state = !led_state;
-                digitalWrite(greenLedPin, led_state ? HIGH : LOW);
-                led_counter = 0;
-            }
+            // Default case: Unknown operation
+            default:
+                operationMode = OPERATION_UNKNOWN;
+                Serial.write(ACK_OTHER_NO); // Default to other no
         }
     }
 }

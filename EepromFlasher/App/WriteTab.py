@@ -266,35 +266,6 @@ class WriteTab:
         self.parent.update()
 
         try:
-            # Send Write command to chip
-            self.main.consoleInfo("Sending Write command to chip...", end = "")
-            self.labelWriteStatus.config(
-                text = "[INFO] Sending Write command to chip"
-            )
-            self.parent.update()
-            serial.write(bytes([0xAA, 0x01]))  # Instruction for Write
-            ack = serial.read()
-            if ack == b'\x55':
-                self.labelWriteStatus.config(
-                    text = "[ERROR] Write instruction failed!"
-                )
-                self.main.consoleError(" Failed.", append = True)
-                serial.close()
-                self.updateGuiForAbortWriting()
-                return
-            elif ack == b'\xAA':
-                self.main.consoleSuccess(f" Success.", append = True)
-            else:
-                self.labelWriteStatus.config(
-                    text = "[ERROR] Unexpected response from chip!"
-                )
-                self.main.consoleError(" Failed.", append = True)
-                self.main.consoleError(f"Unexpected response from chip! Received: {ack}")
-                serial.close()
-                self.updateGuiForAbortWriting()
-                return
-            self.parent.update()
-
             # Start writing data to chip
             self.main.consoleInfo("Starting data write to chip...")
             self.parent.update()
@@ -303,14 +274,14 @@ class WriteTab:
                 addrLow  = addr & 0xFF
                 byte     = data[addr]
 
-                serial.write(bytes([addrHigh, addrLow, byte]))
+                serial.write(bytes([OPERATION_WRITE, addrHigh, addrLow, byte]))
                 ack = serial.read()
-                if ack != b'\xAA':
+                if ack != ACK_WRITE_OK:
                     self.labelWriteStatus.config(
-                        text = f"[ERROR] No ACK at address 0x{addr:04X}"
+                        text = f"[ERROR] Wrong ACK at address 0x{addr:04X}"
                     )
                     self.main.consoleError(" Failed.", append = True)
-                    self.main.consoleError(f"No ACK at address 0x{addr:04X}")
+                    self.main.consoleError(f"Wrong write ACK at address 0x{addr:04X}; ACK: {ack}")
                     serial.close()
                     self.updateGuiForAbortWriting()
                     return
