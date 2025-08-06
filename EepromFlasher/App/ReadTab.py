@@ -17,6 +17,7 @@ class ReadTab:
         self.finalChipType     = None
         self.finalChipSize     = 0
         self.readAbort         = False
+        self.readTimeStart     = 0
 
         self.main.readTabGuiDisableHook  = self.disableReadTabGui
         self.main.readTabGuiEnableHook   = self.enableReadTabGui
@@ -242,6 +243,7 @@ class ReadTab:
         self.main.consoleSuccess(f" Success.", append = True)
         self.parent.update()
 
+        self.readTimeStart = time.time()
         try:
             # Start Reading data from chip
             self.main.consoleInfo("Starting data read from chip...")
@@ -312,3 +314,6 @@ class ReadTab:
             self.enableReadTabGui()
             self.main.writeTabGuiEnableHook()
             self.parent.update()
+            currentTime = time.time()
+            elapsedTime = currentTime - self.readTimeStart
+            self.main.consoleInfo(f"Total read time: {elapsedTime:.2f} seconds")
