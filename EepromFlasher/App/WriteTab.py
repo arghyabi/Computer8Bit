@@ -17,6 +17,7 @@ class WriteTab:
         self.finalChipType     = None
         self.finalChipSize     = 0
         self.writeAbort        = False
+        self.writeTimeStart    = 0
 
         self.main.writeTabGuiDisableHook = self.disableWriteTabGui
         self.main.writeTabGuiEnableHook  = self.enableWriteTabGui
@@ -29,8 +30,10 @@ class WriteTab:
 
         if self.isUsbPortSelected and self.isChipSelected:
             self.writeFileChooseBtn.config(state=tk.NORMAL)
+            self.verifyAfterWriteCheck.config(state=tk.NORMAL)
         else:
             self.writeFileChooseBtn.config(state=tk.DISABLED)
+            self.verifyAfterWriteCheck.config(state=tk.DISABLED)
 
 
     def onChipSelect(self, isChipSelected:bool, selectedChip:str):
@@ -39,8 +42,10 @@ class WriteTab:
 
         if self.isUsbPortSelected and self.isChipSelected:
             self.writeFileChooseBtn.config(state=tk.NORMAL)
+            self.verifyAfterWriteCheck.config(state=tk.NORMAL)
         else:
             self.writeFileChooseBtn.config(state=tk.DISABLED)
+            self.verifyAfterWriteCheck.config(state=tk.DISABLED)
 
         if self.selectedChip == CHIP_AT28C16:
             self.labelWriteFileSelect.config(
@@ -146,6 +151,22 @@ class WriteTab:
             pady = 10
         )
 
+        # checkbox for verify each byte after writing
+        self.verifyAfterWriteVar = tk.BooleanVar(value = True)
+        self.verifyAfterWriteCheck = tk.Checkbutton(
+            fileWriteFrame,
+            text     = "Verify after write",
+            variable = self.verifyAfterWriteVar,
+            state    = tk.DISABLED,
+            # by default the checkbox is checked
+            onvalue  = True,
+            offvalue = False,
+            width    = 20
+        )
+        self.verifyAfterWriteCheck.pack(
+            pady = 5
+        )
+
         # === Write Progress Bar ===
         writeProgressFrame = tk.Frame(fileWriteFrame)
         writeProgressFrame.pack(
@@ -199,12 +220,14 @@ class WriteTab:
         self.btnWriteStart.config(state = tk.DISABLED)
         self.btnWriteAbort.config(state = tk.DISABLED if disableAbort else tk.NORMAL)
         self.writeFileChooseBtn.config(state = tk.DISABLED)
+        self.verifyAfterWriteCheck.config(state = tk.DISABLED)
 
 
     def enableWriteTabGui(self):
         self.btnWriteStart.config(state = tk.NORMAL)
         self.btnWriteAbort.config(state = tk.DISABLED)
         self.writeFileChooseBtn.config(state = tk.NORMAL)
+        self.verifyAfterWriteCheck.config(state = tk.NORMAL)
 
 
     def updateGuiForStartWriting(self):
@@ -265,6 +288,14 @@ class WriteTab:
         self.main.consoleSuccess(f" Success.", append = True)
         self.parent.update()
 
+        # verify after write
+        self.main.consoleInfo("Verify after write ", end = "")
+        if self.verifyAfterWriteVar.get():
+            self.main.consoleSuccess("Enabled", append = True)
+        else:
+            self.main.consoleWarning("Disabled", append = True)
+
+        self.writeTimeStart = time.time()
         try:
             # Start writing data to chip
             self.main.consoleInfo("Starting data write to chip...")
@@ -285,6 +316,22 @@ class WriteTab:
                     serial.close()
                     self.updateGuiForAbortWriting()
                     return
+
+                if self.verifyAfterWriteVar.get():
+                    serial.write(bytes([OPERATION_READ, addrHigh, addrLow]))
+                    readByte = serial.read()
+                    ack = serial.read()
+                    if readByte != bytes([byte]):
+                        self.labelWriteStatus.config(
+                            text = f"[ERROR] Verification failed at address 0x{addr:04X}"
+                        )
+                        self.main.consoleError(" Failed.", append = True)
+                        self.main.consoleError(
+                            f"Verification failed at 0x{addr:04X}; Expected: 0x{byte:02X}, Read: 0x{readByte.hex()}"
+                        )
+                        serial.close()
+                        self.updateGuiForAbortWriting()
+                        return
 
                 percent = (addr + 1) * 100 / self.finalChipSize
                 progressVal.set(percent)
@@ -324,4 +371,6 @@ class WriteTab:
             self.enableWriteTabGui()
             self.main.readTabGuiEnableHook()
             self.parent.update()
-
+            currentTime = time.time()
+            elapsedTime = currentTime - self.writeTimeStart
+            self.main.consoleInfo(f"Total write time: {elapsedTime:.2f} seconds")
