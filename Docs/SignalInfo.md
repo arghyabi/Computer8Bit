@@ -49,7 +49,9 @@ also helps execute the `INC` and `DEC` instructions.
 
 * `XorO`: The XorO signal is used to copy the logical XOR result of Temp-Register 1 and Temp-Register 2 onto the bus.
 
-* `NtO`: The NtO signal is used to copy the logical NOT result of Temp-Register 1 onto the bus.
+* `NtO`: The NtO signal is used to copy the logical NOT result of Temp-Register 2 onto the bus. `To reduce hardware,
+this signal is a virtual signal: the same addition/subtraction circuit is reused, and the AdSu and AdSuO signals
+together function as NtO`.
 
 * `FlgU`: The FlgU signal updates the flag register with the values from the Comparator and Adder/Subtractor modules.
 
