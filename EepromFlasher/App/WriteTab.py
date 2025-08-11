@@ -350,6 +350,19 @@ class WriteTab:
                     self.updateGuiForAbortWriting()
                     return
 
+            # Final done command to finalize the write operation
+            serial.write(bytes([OPERATION_INS_DONE, 0x00]))  # Send dummy byte 0x00
+            readByte = serial.read()
+            if readByte != ACK_INS_DONE_OK:
+                self.labelWriteStatus.config(
+                    text = "[ERROR] Failed to finalize write operation."
+                )
+                self.main.consoleError(" Failed.", append = True)
+                self.main.consoleError("Failed to finalize write operation.")
+                serial.close()
+                self.updateGuiForAbortWriting()
+                return
+
             self.main.consoleSuccess(" Success.", append = True)
             self.main.consoleInfo("Data write complete.")
             self.labelWriteStatus.config(

@@ -284,6 +284,20 @@ class ReadTab:
                     self.updateGuiForAbortReading()
                     return
 
+            # Final done command to finalize the read operation
+            serial.write(bytes([OPERATION_INS_DONE, 0x00]))  # Send dummy byte 0x00
+            time.sleep(0.1)  # Wait for Arduino to process the command
+            readByte = serial.read()
+            if readByte != ACK_INS_DONE_OK:
+                self.labelReadStatus.config(
+                    text = "[ERROR] Failed to finalize read operation."
+                )
+                self.main.consoleError(" Failed.", append = True)
+                self.main.consoleError(f"Failed to finalize read operation. ack: {readByte}")
+                serial.close()
+                self.updateGuiForAbortReading()
+                return
+
             self.labelReadStatus.config(
                 text = "[SUCCESS] EEPROM reading complete."
             )

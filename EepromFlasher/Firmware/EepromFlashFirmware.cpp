@@ -27,6 +27,9 @@ const int greenLedPin  = A3;
 const int redLedPin    = A4;
 const int blueLedPin   = A5;
 
+// Buzzer pin
+const int buzzerPin    = 13;
+
 const int inOutPins[8] = {inOut0, inOut1, inOut2, inOut3, inOut4, inOut5, inOut6, inOut7};
 
 // Global variables
@@ -61,6 +64,10 @@ void setup() {
     digitalWrite(outputEnbPin, LOW);   // Disable read
     digitalWrite(chipEnbPin,   LOW);   // Enable chip
 
+    //buzzerPin
+    pinMode(buzzerPin, OUTPUT);
+    digitalWrite(buzzerPin, LOW); // Ensure buzzer is off
+
     Serial.begin(115200);
 }
 
@@ -87,12 +94,12 @@ void loop() {
     // Check for incoming serial data
     if (Serial.available() > 0) {
         switch (operationMode) {
-            // OPERATION_UNKNOWN: // Default case, wait for operation type
+            // OPERATION_UNKNOWN: Default case, wait for operation type
             case OPERATION_UNKNOWN:
                 operationMode = (opMode_t)Serial.read();
                 break;
 
-            // OPERATION_WRITE: // Handle write operation
+            // OPERATION_WRITE: Handle write operation
             case OPERATION_WRITE:
                 initializeOutputPort();
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_WRITE) == RET_OK) {
@@ -108,7 +115,7 @@ void loop() {
                 operationMode = OPERATION_UNKNOWN;
                 break;
 
-            // OPERATION_READ: // Handle read operation
+            // OPERATION_READ: Handle read operation
             case OPERATION_READ:
                 initializeInputPort();
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_READ) == RET_OK) {
@@ -125,17 +132,32 @@ void loop() {
                 operationMode = OPERATION_UNKNOWN;
                 break;
 
-            // TODO: Implement actual firmware instruction logic
-            // OPERATION_INS_FW: // Handle instruction firmware;
+            // OPERATION_INS_FW: Handle firmware instruction
             case OPERATION_INS_FW:
-                Serial.write(ACK_INS_FW_OK);
+                if (readPayloadBytes(PAYLOAD_SIZE_OP_INS_FW) == RET_OK) {
+                    // Dummy byte received and ignored (payloadBytes[0])
+                    Serial.write(ACK_INS_FW_OK);
+                } else {
+                    Serial.write(ACK_INS_FW_NO); // Payload too short
+                }
                 operationMode = OPERATION_UNKNOWN;
                 break;
 
-            // TODO: Implement actual instruction done logic
-            // OPERATION_INS_DONE: // Handle instruction done
+            // OPERATION_INS_DONE: Handle instruction done
             case OPERATION_INS_DONE:
-                Serial.write(ACK_INS_DONE_OK);
+                if (readPayloadBytes(PAYLOAD_SIZE_OP_INS_DONE) == RET_OK) {
+                    // Dummy byte received and ignored (payloadBytes[0])
+                    Serial.write(ACK_INS_DONE_OK);
+                    digitalWrite(redLedPin, LOW);
+                    digitalWrite(greenLedPin, LOW);
+                    digitalWrite(blueLedPin, LOW);
+                    // Play buzzer for 1000ms
+                    digitalWrite(buzzerPin, HIGH);
+                    delay(1000);
+                    digitalWrite(buzzerPin, LOW);
+                } else {
+                    Serial.write(ACK_INS_DONE_NO); // Payload too short
+                }
                 operationMode = OPERATION_UNKNOWN;
                 break;
 
@@ -143,6 +165,7 @@ void loop() {
             default:
                 operationMode = OPERATION_UNKNOWN;
                 Serial.write(ACK_OTHER_NO); // Default to other no
+                break;
         }
     }
 }
