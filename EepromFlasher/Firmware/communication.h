@@ -51,8 +51,8 @@ typedef enum ack {
 typedef enum payloadSize {
     PAYLOAD_SIZE_OP_WRITE     = 3,    // | H Address | L Address | Data |
     PAYLOAD_SIZE_OP_READ      = 2,    // | H Address | L Address |
-    PAYLOAD_SIZE_OP_INS_FW    = 0,    // |
-    PAYLOAD_SIZE_OP_INS_DONE  = 0,    // |
+    PAYLOAD_SIZE_OP_INS_FW    = 1,    // | Dummy Byte |
+    PAYLOAD_SIZE_OP_INS_DONE  = 1,    // | Dummy Byte |
     PAYLOAD_SIZE_MAX          = 3     // Maximum frame size for any operation
 } payloadSize_t;
 
