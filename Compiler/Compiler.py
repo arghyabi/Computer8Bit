@@ -480,7 +480,7 @@ class Compiler:
         if self.paddingEnabled:
             paddingSize = MAX_ROM_ADDRESS_11_BIT - len(self.binArr)
             if paddingSize > 0:
-                paddingBytes = bytearray([0xFF] * paddingSize)
+                paddingBytes = bytearray([0x12] * paddingSize)
                 self.binArr.extend(paddingBytes)
                 f.write(paddingBytes)
         f.close()

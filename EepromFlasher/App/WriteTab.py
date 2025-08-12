@@ -288,6 +288,32 @@ class WriteTab:
         self.main.consoleSuccess(f" Success.", append = True)
         self.parent.update()
 
+        # Flush any stale bytes after reset
+        try:
+            serial.reset_input_buffer()
+            serial.reset_output_buffer()
+        except Exception:
+            pass
+
+        # Send page size configuration (INS_FW) so firmware can optimize page writes (retry up to 3 times)
+        pageCfg = PAGE_SIZE_AT28C16# if self.finalChipType == CHIP_AT28C16 else PAGE_SIZE_AT28C256
+        cfgAcked = False
+        for attempt in range(3):
+            try:
+                serial.write(bytes([OPERATION_INS_FW, pageCfg]))
+                ackCfg = serial.read()
+                if ackCfg == ACK_INS_FW_OK:
+                    self.main.consoleInfo(f" PageSize={pageCfg}", append = True)
+                    cfgAcked = True
+                    break
+                else:
+                    self.main.consoleWarning(f" Page cfg attempt {attempt+1} ack={ackCfg}", append = True)
+            except Exception as e:
+                self.main.consoleWarning(f" Page cfg attempt {attempt+1} failed: {e}", append = True)
+            time.sleep(0.05)
+        if not cfgAcked:
+            self.main.consoleWarning(" Using default page size (16).", append = True)
+
         # verify after write
         self.main.consoleInfo("Verify after write ", end = "")
         if self.verifyAfterWriteVar.get():
@@ -300,7 +326,11 @@ class WriteTab:
             # Start writing data to chip using block transfers
             self.main.consoleInfo("Starting data write to chip (block mode)...")
             self.parent.update()
-            chunk = DEFAULT_CHUNK_SIZE
+            # Select chunk size based on chip; align to 16-byte page for optimal writes
+            if self.finalChipType == CHIP_AT28C16:
+                chunk = PAGE_SIZE_AT28C16
+            else:
+                chunk = PAGE_SIZE_AT28C16  # 64 bytes for AT28C256
             total = self.finalChipSize
             addr = 0
             while addr < total:
@@ -308,8 +338,18 @@ class WriteTab:
                 addrHigh = (addr >> 8) & 0xFF
                 addrLow  = addr & 0xFF
                 payload = bytes([OPERATION_WRITE_BLOCK, addrHigh, addrLow, length]) + bytes(data[addr:addr+length])
+                # Ensure output buffer clear before sending block
+                try:
+                    serial.reset_input_buffer()
+                except Exception:
+                    pass
                 serial.write(payload)
-                ack = serial.read()
+                ack = serial.read()  # expect ACK_WRITE_OK
+                if ack not in (ACK_WRITE_OK, ACK_WRITE_NO):
+                    # Try one immediate resend if unexpected byte
+                    self.main.consoleWarning(f" Unexpected ACK byte {ack} at 0x{addr:04X}, retrying block", append = True)
+                    serial.write(payload)
+                    ack = serial.read()
                 if ack != ACK_WRITE_OK:
                     self.labelWriteStatus.config(text = f"[ERROR] Write block failed at 0x{addr:04X}")
                     self.main.consoleError(" Failed.", append = True)

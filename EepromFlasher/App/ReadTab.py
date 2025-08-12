@@ -245,6 +245,16 @@ class ReadTab:
 
         self.readTimeStart = time.time()
         try:
+            # Configure page size (not strictly required for reads but keeps firmware state consistent if reused)
+            pageCfg = PAGE_SIZE_AT28C16 if self.finalChipType == CHIP_AT28C16 else PAGE_SIZE_AT28C256
+            try:
+                serial.write(bytes([OPERATION_INS_FW, pageCfg]))
+                ackCfg = serial.read()
+                if ackCfg != ACK_INS_FW_OK:
+                    self.main.consoleWarning(f" Page config not acknowledged (ack={ackCfg}).", append = True)
+            except Exception as e:
+                self.main.consoleWarning(f" Page config send failed: {e}", append = True)
+
             # Start Reading data from chip using block transfers
             self.main.consoleInfo("Starting data read from chip (block mode)...")
             self.parent.update()
