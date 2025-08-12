@@ -109,21 +109,6 @@ returnCode_t readExact(uint8_t* buf, size_t len, unsigned long timeoutMs = 200) 
     return RET_OK;
 }
 
-// Fast per-byte write pulse without the final write-cycle delay.
-static inline void writeEEPROMPulse(uint16_t address, uint8_t data) {
-    setAddress(address);
-    digitalWrite(outputEnbPin, HIGH);  // Ensure EEPROM is not driving the bus
-    // Drive data onto the bus (pinMode already OUTPUT)
-    for (int i = 0; i < 8; i++) {
-        digitalWrite(inOutPins[i], (data & (1 << i)) ? HIGH : LOW);
-    }
-    delayMicroseconds(1);              // Setup time before WE
-    digitalWrite(writeEnbPin, LOW);    // Begin write
-    delayMicroseconds(1);              // tWP (min ~200ns)
-    digitalWrite(writeEnbPin, HIGH);   // End write
-}
-
-
 void loop() {
     uint8_t  data    = 0;
     uint16_t address = 0;
@@ -171,13 +156,13 @@ void loop() {
                 break;
 
             // OPERATION_WRITE_BLOCK: Handle block write
-            case OPERATION_WRITE_BLOCK: {
+            case OPERATION_WRITE_BLOCK:
                 initializeOutputPort();
                 digitalWrite(outputEnbPin, HIGH);
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
                     address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
                     dataLen = payloadBytes[IDX_LEN];
-                    if (dataLen == 0 || dataLen > SINGLE_PAGE_SIZE) {
+                    if (dataLen == 0 || dataLen > DEFAULT_CHUNK_SIZE) {
                         Serial.write(ACK_WRITE_NO);
                         operationMode = OPERATION_UNKNOWN;
                         break;
@@ -203,10 +188,9 @@ void loop() {
                 }
                 operationMode = OPERATION_UNKNOWN;
                 break;
-            }
 
             // OPERATION_READ_BLOCK: Handle block read
-            case OPERATION_READ_BLOCK: {
+            case OPERATION_READ_BLOCK:
                 initializeInputPort();
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
                     address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
@@ -227,7 +211,6 @@ void loop() {
                 }
                 operationMode = OPERATION_UNKNOWN;
                 break;
-            }
 
             // OPERATION_INS_DONE: Handle instruction done
             case OPERATION_INS_DONE:

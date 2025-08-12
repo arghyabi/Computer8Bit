@@ -52,7 +52,4 @@ ACK_INS_DONE_NO       = bytes([0x45])
 ACK_OTHER_NO          = bytes([0xF5])
 
 # Tuning constants
-DEFAULT_CHUNK_SIZE    = 64  # bytes per block transfer (safe default)
-SINGLE_PAGE_SIZE     = 32
-PAGE_SIZE_AT28C256    = 64
-PAGE_CFG_LEGACY       = 0x00
+DEFAULT_CHUNK_SIZE    = 64  # bytes per block transfer

@@ -88,6 +88,6 @@ typedef enum payloadIndex {
 } payloadIndex_t;
 
 
-#define SINGLE_PAGE_SIZE  32
+#define DEFAULT_CHUNK_SIZE  64
 
 #endif // COMMUNICATION_H
