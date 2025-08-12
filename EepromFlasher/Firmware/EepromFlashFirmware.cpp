@@ -127,6 +127,8 @@ static inline void writeEEPROMPulse(uint16_t address, uint8_t data) {
 void loop() {
     uint8_t  data    = 0;
     uint16_t address = 0;
+    uint8_t  dataLen = 0;
+
     // Check for incoming serial data
     if (Serial.available() > 0) {
         switch (operationMode) {
@@ -174,13 +176,13 @@ void loop() {
                 digitalWrite(outputEnbPin, HIGH);
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
                     address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
-                    uint8_t len = (uint8_t)payloadBytes[2];
-                    if (len == 0 || len > SINGLE_PAGE_SIZE) {
+                    dataLen = payloadBytes[IDX_LEN];
+                    if (dataLen == 0 || dataLen > SINGLE_PAGE_SIZE) {
                         Serial.write(ACK_WRITE_NO);
                         operationMode = OPERATION_UNKNOWN;
                         break;
                     }
-                    if (readExact(writeBuffer, len) != RET_OK) {
+                    if (readExact(writeBuffer, dataLen) != RET_OK) {
                         Serial.write(ACK_WRITE_NO);
                         operationMode = OPERATION_UNKNOWN;
                         break;
@@ -188,16 +190,17 @@ void loop() {
                     // Reliable per-byte path for small page size (AT28C16) to avoid boundary issues
                     // Per-byte writes using internal polling; optional end verification
                     initializeOutputPort();
-                    for (uint8_t i = 0; i < len; i++) {
-                        writeEEPROM(address + i, writeBuffer[i]);
+                    for (uint8_t index = 0; index < dataLen; index++) {
+                        writeEEPROM(address + index, writeBuffer[index]);
                     }
+                    digitalWrite(blueLedPin, blue_led_state ? HIGH : LOW);
+                    blue_led_state = !blue_led_state;
                     Serial.write(ACK_WRITE_OK);
                     operationMode = OPERATION_UNKNOWN;
                     break;
                 } else {
                     Serial.write(ACK_WRITE_NO);
                 }
-            write_block_done:
                 operationMode = OPERATION_UNKNOWN;
                 break;
             }
@@ -206,17 +209,18 @@ void loop() {
             case OPERATION_READ_BLOCK: {
                 initializeInputPort();
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
-                    uint16_t base = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
-                    uint8_t len = payloadBytes[IDX_LEN];
-                    if (len == 0) {
+                    address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
+                    dataLen = payloadBytes[IDX_LEN];
+                    if (dataLen == 0) {
                         Serial.write(ACK_READ_NO);
                         operationMode = OPERATION_UNKNOWN;
                         break;
                     }
-                    for (uint16_t i = 0; i < len; i++) {
-                        uint8_t d = readEEPROM(base + i);
-                        Serial.write(d);
+                    for (uint16_t index = 0; index < dataLen; index++) {
+                        Serial.write(readEEPROM(address + index));
                     }
+                    digitalWrite(greenLedPin, green_led_state ? HIGH : LOW);
+                    green_led_state = !green_led_state;
                     Serial.write(ACK_READ_OK);
                 } else {
                     Serial.write(ACK_READ_NO);
