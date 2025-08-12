@@ -246,7 +246,7 @@ class ReadTab:
         self.readTimeStart = time.time()
         try:
             # Configure page size (not strictly required for reads but keeps firmware state consistent if reused)
-            pageCfg = PAGE_SIZE_AT28C16 if self.finalChipType == CHIP_AT28C16 else PAGE_SIZE_AT28C256
+            pageCfg = SINGLE_PAGE_SIZE if self.finalChipType == CHIP_AT28C16 else PAGE_SIZE_AT28C256
             try:
                 serial.write(bytes([OPERATION_INS_FW, pageCfg]))
                 ackCfg = serial.read()

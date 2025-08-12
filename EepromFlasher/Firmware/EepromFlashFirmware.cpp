@@ -38,8 +38,11 @@ bool red_led_state     = false;
 bool green_led_state   = false;
 bool blue_led_state    = false;
 opMode_t operationMode = OPERATION_UNKNOWN;
-// Configurable page size (bytes). Default 16; can be updated to 64 via INS_FW command for AT28C256.
-static uint8_t g_pageSize = 16;
+
+uint8_t writeBuffer[64] = {0};
+
+// Configurable page size (bytes). Default 32; can be updated to 64 via INS_FW command for AT28C256.
+static uint8_t g_pageSize = 32;
 
 #define INTER_PULSE_DELAY_US 3  // fine-tuned small delay between successive load pulses (< tBLC 150us)
 
@@ -193,95 +196,31 @@ void loop() {
                     uint8_t len = (uint8_t)payloadBytes[2];
                     if (len == 0 || len > 32) { Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; break; }
                     // Read all data bytes first
-                    uint8_t buffer[64];
-                    for (uint8_t i = 0; i < len; i++) {
-                        if (readExact(&buffer[i], 1) != RET_OK) {
-                            Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; goto write_block_done;
-                        }
-                    }
-                    // Reliable per-byte path for small page size (AT28C16) to avoid boundary issues
-                    bool okByte = true;
-                    if (g_pageSize == 32) {
-                        // Per-byte writes using internal polling; optional end verification
-                        initializeOutputPort();
-                        for (uint8_t i = 0; i < len && okByte; i++) {
-                            writeEEPROM(base + i, buffer[i]);
-                        }
-                        // Lightweight verify: sample last byte only
-                        // initializeInputPort();
-                        // uint8_t rb = readEEPROM(base + len - 1);
-                        // okByte = (rb == buffer[len - 1]);
-                        // initializeOutputPort();
-                        // Serial.write(okByte ? ACK_WRITE_OK : ACK_WRITE_NO);
-                        Serial.write(ACK_WRITE_OK);
+                    // for (uint8_t i = 0; i < len; i++) {
+                    //     if (readExact(&buffer[i], 1) != RET_OK) {
+                    //         Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; goto write_block_done;
+                    //     }
+                    // }
+                    if (readExact(writeBuffer, len) != RET_OK) {
+                        Serial.write(ACK_WRITE_NO);
                         operationMode = OPERATION_UNKNOWN;
                         break;
                     }
-#if 0
-                    // Page optimized writes (dynamic page size: 16 or 64)
-                    const uint8_t PAGE = g_pageSize;
-                    uint16_t offset = 0;
-                    bool ok = true;
-                    while (offset < len && ok) {
-                        uint16_t addr = base + offset;
-                        uint8_t pageRemain = PAGE - (addr & (PAGE - 1));
-                        uint8_t burst = (uint8_t)((len - offset) < pageRemain ? (len - offset) : pageRemain);
-                        // Load this page: successive WE pulses must occur with < tBLC (150us) between them.
-                        for (uint8_t i = 0; i < burst; i++) {
-                            writeEEPROMPulse(addr + i, buffer[offset + i]);
-                            delayMicroseconds(INTER_PULSE_DELAY_US);
-                        }
-                        // Data polling on last byte: D7 goes to final state when write complete
-                        uint16_t lastAddr = addr + burst - 1;
-                        uint8_t expected  = buffer[offset + burst - 1];
-                        unsigned long startPoll = millis();
-                        pinMode(inOutPins[0], INPUT); // ensure at least once; full switch below
-                        // Switch bus to input one time
-                        initializeInputPort();
-                        digitalWrite(outputEnbPin, LOW);
-                        bool done = false;
-                        while (millis() - startPoll < 25) { // 25ms safety timeout
-                            setAddress(lastAddr);
-                            delayMicroseconds(1);
-                            uint8_t val = 0;
-                            for (uint8_t bit = 0; bit < 8; bit++) {
-                                if (digitalRead(inOutPins[bit]) == HIGH) val |= (1 << bit);
-                            }
-                            if ((val & 0x80) == (expected & 0x80) && val == expected) { done = true; break; }
-                        }
-                        digitalWrite(outputEnbPin, HIGH);
-                        if (!done) {
-                            // Fallback: write bytes individually using slow routine
-                            initializeOutputPort();
-                            for (uint8_t i = 0; i < burst; i++) {
-                                writeEEPROM(addr + i, buffer[offset + i]);
-                            }
-                            // Final verify last byte
-                            initializeInputPort();
-                            digitalWrite(outputEnbPin, LOW);
-                            setAddress(lastAddr);
-                            delayMicroseconds(1);
-                            uint8_t verifyVal = 0; for (uint8_t bit=0; bit<8; bit++){ if(digitalRead(inOutPins[bit])==HIGH) verifyVal|=(1<<bit);} ;
-                            digitalWrite(outputEnbPin, HIGH);
-                            if (verifyVal != expected) { ok = false; break; }
-                        } else {
-                            // Quick verify entire burst
-                            for (uint8_t i = 0; i < burst && ok; i++) {
-                                setAddress(addr + i);
-                                digitalWrite(outputEnbPin, LOW);
-                                delayMicroseconds(1);
-                                uint8_t val = 0; for (uint8_t bit=0; bit<8; bit++){ if(digitalRead(inOutPins[bit])==HIGH) val |= (1<<bit); }
-                                digitalWrite(outputEnbPin, HIGH);
-                                if (val != buffer[offset + i]) { ok = false; break; }
-                            }
-                        }
-                        // Switch back to output to prepare next page load
-                        initializeOutputPort();
-                        digitalWrite(outputEnbPin, HIGH);
-                        offset += burst;
+                    // Reliable per-byte path for small page size (AT28C16) to avoid boundary issues
+                    // Per-byte writes using internal polling; optional end verification
+                    initializeOutputPort();
+                    for (uint8_t i = 0; i < len; i++) {
+                        writeEEPROM(base + i, writeBuffer[i]);
                     }
-#endif
-                    Serial.write(okByte ? ACK_WRITE_OK : ACK_WRITE_NO);
+                    // Lightweight verify: sample last byte only
+                    // initializeInputPort();
+                    // uint8_t rb = readEEPROM(base + len - 1);
+                    // okByte = (rb == buffer[len - 1]);
+                    // initializeOutputPort();
+                    // Serial.write(okByte ? ACK_WRITE_OK : ACK_WRITE_NO);
+                    Serial.write(ACK_WRITE_OK);
+                    operationMode = OPERATION_UNKNOWN;
+                    break;
                 } else {
                     Serial.write(ACK_WRITE_NO);
                 }
