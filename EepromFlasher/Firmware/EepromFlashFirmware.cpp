@@ -46,7 +46,7 @@ static uint8_t g_pageSize = 32;
 
 #define INTER_PULSE_DELAY_US 3  // fine-tuned small delay between successive load pulses (< tBLC 150us)
 
-int payloadBytes[PAYLOAD_SIZE_MAX] = {0};
+uint8_t payloadBytes[PAYLOAD_SIZE_MAX] = {0};
 
 void setup() {
     // Address shift register pins
@@ -168,39 +168,18 @@ void loop() {
                 operationMode = OPERATION_UNKNOWN;
                 break;
 
-            // OPERATION_INS_FW: Handle firmware instruction
-            case OPERATION_INS_FW:
-                if (readPayloadBytes(PAYLOAD_SIZE_OP_INS_FW) == RET_OK) {
-                    uint8_t cfg = payloadBytes[0];
-                    // Backward compatibility: 0x00 = legacy noop
-                    if (cfg == 16 || cfg == 32) {
-                        g_pageSize = cfg;
-                        Serial.write(ACK_INS_FW_OK);
-                    } else if (cfg == 0x00) {
-                        Serial.write(ACK_INS_FW_OK);
-                    } else {
-                        Serial.write(ACK_INS_FW_NO);
-                    }
-                } else {
-                    Serial.write(ACK_INS_FW_NO); // Payload too short
-                }
-                operationMode = OPERATION_UNKNOWN;
-                break;
-
             // OPERATION_WRITE_BLOCK: Handle block write
             case OPERATION_WRITE_BLOCK: {
                 initializeOutputPort();
                 digitalWrite(outputEnbPin, HIGH);
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
-                    uint16_t base = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
+                    address = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
                     uint8_t len = (uint8_t)payloadBytes[2];
-                    if (len == 0 || len > 32) { Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; break; }
-                    // Read all data bytes first
-                    // for (uint8_t i = 0; i < len; i++) {
-                    //     if (readExact(&buffer[i], 1) != RET_OK) {
-                    //         Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; goto write_block_done;
-                    //     }
-                    // }
+                    if (len == 0 || len > SINGLE_PAGE_SIZE) {
+                        Serial.write(ACK_WRITE_NO);
+                        operationMode = OPERATION_UNKNOWN;
+                        break;
+                    }
                     if (readExact(writeBuffer, len) != RET_OK) {
                         Serial.write(ACK_WRITE_NO);
                         operationMode = OPERATION_UNKNOWN;
@@ -210,14 +189,8 @@ void loop() {
                     // Per-byte writes using internal polling; optional end verification
                     initializeOutputPort();
                     for (uint8_t i = 0; i < len; i++) {
-                        writeEEPROM(base + i, writeBuffer[i]);
+                        writeEEPROM(address + i, writeBuffer[i]);
                     }
-                    // Lightweight verify: sample last byte only
-                    // initializeInputPort();
-                    // uint8_t rb = readEEPROM(base + len - 1);
-                    // okByte = (rb == buffer[len - 1]);
-                    // initializeOutputPort();
-                    // Serial.write(okByte ? ACK_WRITE_OK : ACK_WRITE_NO);
                     Serial.write(ACK_WRITE_OK);
                     operationMode = OPERATION_UNKNOWN;
                     break;
@@ -234,8 +207,12 @@ void loop() {
                 initializeInputPort();
                 if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
                     uint16_t base = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
-                    uint8_t len = (uint8_t)payloadBytes[2];
-                    if (len == 0) { Serial.write(ACK_READ_NO); operationMode = OPERATION_UNKNOWN; break; }
+                    uint8_t len = payloadBytes[IDX_LEN];
+                    if (len == 0) {
+                        Serial.write(ACK_READ_NO);
+                        operationMode = OPERATION_UNKNOWN;
+                        break;
+                    }
                     for (uint16_t i = 0; i < len; i++) {
                         uint8_t d = readEEPROM(base + i);
                         Serial.write(d);

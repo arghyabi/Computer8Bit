@@ -83,8 +83,11 @@ typedef enum returnCode {
 typedef enum payloadIndex {
     IDX_H_ADDRESS   = 0,    // High byte of address
     IDX_L_ADDRESS   = 1,    // Low byte of address
+    IDX_LEN         = 2,    // Length byte for block operations
     IDX_DATA        = 2     // Data byte for write operation
 } payloadIndex_t;
 
+
+#define SINGLE_PAGE_SIZE  32
 
 #endif // COMMUNICATION_H
