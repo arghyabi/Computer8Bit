@@ -87,6 +87,35 @@ returnCode_t readPayloadBytes(payloadSize_t payloadSize) {
     return RET_OK;
 }
 
+// Read exactly N bytes with timeout; returns RET_OK or RET_PAYLOAD_TOO_SHORT
+returnCode_t readExact(uint8_t* buf, size_t len, unsigned long timeoutMs = 200) {
+    unsigned long start = millis();
+    size_t got = 0;
+    while (got < len) {
+        if (Serial.available()) {
+            buf[got++] = (uint8_t)Serial.read();
+            start = millis();
+        } else if (millis() - start > timeoutMs) {
+            return RET_PAYLOAD_TOO_SHORT;
+        }
+    }
+    return RET_OK;
+}
+
+// Fast per-byte write pulse without the final write-cycle delay.
+static inline void writeEEPROMPulse(uint16_t address, uint8_t data) {
+    setAddress(address);
+    digitalWrite(outputEnbPin, HIGH);  // Ensure EEPROM is not driving the bus
+    // Drive data onto the bus (pinMode already OUTPUT)
+    for (int i = 0; i < 8; i++) {
+        digitalWrite(inOutPins[i], (data & (1 << i)) ? HIGH : LOW);
+    }
+    delayMicroseconds(1);              // Setup time before WE
+    digitalWrite(writeEnbPin, LOW);    // Begin write
+    delayMicroseconds(1);              // tWP (min ~200ns)
+    digitalWrite(writeEnbPin, HIGH);   // End write
+}
+
 
 void loop() {
     uint8_t  data    = 0;
@@ -142,6 +171,50 @@ void loop() {
                 }
                 operationMode = OPERATION_UNKNOWN;
                 break;
+
+            // OPERATION_WRITE_BLOCK: Handle block write
+            case OPERATION_WRITE_BLOCK: {
+                initializeOutputPort();
+                digitalWrite(outputEnbPin, HIGH);
+                if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
+                    uint16_t base = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
+                    uint8_t len = (uint8_t)payloadBytes[2];
+                    if (len == 0 || len > 64) { Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; break; }
+                    uint8_t buffer[64];
+                    for (uint8_t i = 0; i < len; i++) {
+                        if (readExact(&buffer[i], 1) != RET_OK) { Serial.write(ACK_WRITE_NO); operationMode = OPERATION_UNKNOWN; goto write_block_done; }
+                    }
+                    // Safe per-byte writes (with internal 10ms delay each). Slower than ideal but reliable.
+                    for (uint8_t i = 0; i < len; i++) {
+                        writeEEPROM(base + i, buffer[i]);
+                    }
+                    Serial.write(ACK_WRITE_OK);
+                } else {
+                    Serial.write(ACK_WRITE_NO);
+                }
+            write_block_done:
+                operationMode = OPERATION_UNKNOWN;
+                break;
+            }
+
+            // OPERATION_READ_BLOCK: Handle block read
+            case OPERATION_READ_BLOCK: {
+                initializeInputPort();
+                if (readPayloadBytes(PAYLOAD_SIZE_OP_BLOCK_HDR) == RET_OK) {
+                    uint16_t base = (payloadBytes[IDX_H_ADDRESS] << 8) | payloadBytes[IDX_L_ADDRESS];
+                    uint8_t len = (uint8_t)payloadBytes[2];
+                    if (len == 0) { Serial.write(ACK_READ_NO); operationMode = OPERATION_UNKNOWN; break; }
+                    for (uint16_t i = 0; i < len; i++) {
+                        uint8_t d = readEEPROM(base + i);
+                        Serial.write(d);
+                    }
+                    Serial.write(ACK_READ_OK);
+                } else {
+                    Serial.write(ACK_READ_NO);
+                }
+                operationMode = OPERATION_UNKNOWN;
+                break;
+            }
 
             // OPERATION_INS_DONE: Handle instruction done
             case OPERATION_INS_DONE:

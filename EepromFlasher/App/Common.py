@@ -35,6 +35,8 @@ OPERATION_WRITE       = 0x10
 OPERATION_READ        = 0x20
 OPERATION_INS_FW      = 0x30
 OPERATION_INS_DONE    = 0x40
+OPERATION_WRITE_BLOCK = 0x50
+OPERATION_READ_BLOCK  = 0x60
 OPERATION_UNKNOWN     = 0xFF
 
 ACK_WRITE_OK          = bytes([0x1A])
@@ -48,3 +50,6 @@ ACK_INS_FW_NO         = bytes([0x35])
 ACK_INS_DONE_NO       = bytes([0x45])
 
 ACK_OTHER_NO          = bytes([0xF5])
+
+# Tuning constants
+DEFAULT_CHUNK_SIZE    = 64  # bytes per block transfer (safe default)
