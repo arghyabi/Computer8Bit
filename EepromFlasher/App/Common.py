@@ -1,4 +1,4 @@
-APP_VERSION      = "1.2.0.1002"
+APP_VERSION      = "1.3.0.1003"
 FIRMWARE_VERSION = "1.0.0.1000"
 
 CHIP_AT28C16     = "AT28C16"
@@ -6,7 +6,7 @@ CHIP_AT28C256    = "AT28C256"
 SIZE_AT28C16     = 2048
 SIZE_AT28C256    = 32768
 
-SERIAL_BAUD_RATE = 115200
+SERIAL_BAUD_RATE = 250000  # increased for faster transfers (ensure board supports this baud)
 
 # Application Constants
 APP_NAME         = "EEPROM Flasher"
@@ -35,6 +35,8 @@ OPERATION_WRITE       = 0x10
 OPERATION_READ        = 0x20
 OPERATION_INS_FW      = 0x30
 OPERATION_INS_DONE    = 0x40
+OPERATION_WRITE_BLOCK = 0x50
+OPERATION_READ_BLOCK  = 0x60
 OPERATION_UNKNOWN     = 0xFF
 
 ACK_WRITE_OK          = bytes([0x1A])
@@ -48,3 +50,6 @@ ACK_INS_FW_NO         = bytes([0x35])
 ACK_INS_DONE_NO       = bytes([0x45])
 
 ACK_OTHER_NO          = bytes([0xF5])
+
+# Tuning constants
+DEFAULT_CHUNK_SIZE    = 64  # bytes per block transfer

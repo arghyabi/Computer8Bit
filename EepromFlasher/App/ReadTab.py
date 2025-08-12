@@ -245,39 +245,38 @@ class ReadTab:
 
         self.readTimeStart = time.time()
         try:
-            # Start Reading data from chip
-            self.main.consoleInfo("Starting data read from chip...")
+            # Start Reading data from chip using block transfers
+            self.main.consoleInfo("Starting data read from chip (block mode)...")
             self.parent.update()
-            for addr in range(self.finalChipSize):
+            chunk = DEFAULT_CHUNK_SIZE
+            total = self.finalChipSize
+            addr = 0
+            while addr < total:
+                length = min(chunk, total - addr)
                 addrHigh = (addr >> 8) & 0xFF
-                addrLow = addr & 0xFF
-
-                serial.write(bytes([OPERATION_READ, addrHigh, addrLow]))
-                dataByte = serial.read()
-                ack = serial.read()
-
-                data[addr] = dataByte[0]
-                if ack != ACK_READ_OK:
-                    self.labelReadStatus.config(
-                        text = f"[ERROR] No ACK at address 0x{addr:04X}"
-                    )
+                addrLow  = addr & 0xFF
+                serial.write(bytes([OPERATION_READ_BLOCK, addrHigh, addrLow, length]))
+                # Expect 'length' data bytes then 1 ACK
+                block = serial.read(length)
+                ack   = serial.read()
+                if (not block) or (len(block) != length) or (ack != ACK_READ_OK):
+                    self.labelReadStatus.config(text = f"[ERROR] Read block failed at 0x{addr:04X}")
                     self.main.consoleError(" Failed.", append = True)
-                    self.main.consoleError(f"Wrong read ACK at address 0x{addr:04X}; ACK: {ack}")
+                    self.main.consoleError(f"Read block failed at 0x{addr:04X}; got {len(block) if block else 0} bytes, ack={ack}")
                     serial.close()
                     self.updateGuiForAbortReading()
                     return
+                data[addr:addr+length] = list(block)
 
-                percent = (addr + 1) * 100 / self.finalChipSize
+                addr += length
+                percent = addr * 100 / total
                 progressVal.set(percent)
                 progressLabel.config(text = f"{percent:0.2f}%")
                 progressBar.update()
-
                 self.main.consoleInfo(".", end = "", append = True)
 
                 if self.readAbort:
-                    self.labelReadStatus.config(
-                        text = "[ERROR] Read Aborted manually."
-                    )
+                    self.labelReadStatus.config(text = "[ERROR] Read Aborted manually.")
                     self.main.consoleWarning(" Aborted.", append = True)
                     self.main.consoleWarning("Read Aborted manually.")
                     serial.close()
