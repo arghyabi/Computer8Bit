@@ -4,44 +4,56 @@ def getNegetiveNum(num):
     return (num ^ 0xFF) + 1
 
 
+
+    # ' aaaa '
+    # 'f    b'
+    # 'f    b'
+    # ' gggg '
+    # 'e    c'
+    # 'e    c'
+    # ' dddd '
+
 segment_map = [
-                #      a b c d e f g
-    0b111_1110, # 0 => 1 1 1 1 1 1 0 // 0x7E
-    0b011_0000, # 1 => 0 1 1 0 0 0 0 // 0x30
-    0b110_1101, # 2 => 1 1 0 1 1 0 1 // 0x6D
-    0b111_1001, # 3 => 1 1 1 1 0 0 1 // 0x79
-    0b011_0011, # 4 => 0 1 1 0 0 1 1 // 0x33
-    0b101_1011, # 5 => 1 0 1 1 0 1 1 // 0x5B
-    0b101_1111, # 6 => 1 0 1 1 1 1 1 // 0x5F
-    0b111_0000, # 7 => 1 1 1 0 0 0 0 // 0x70
-    0b111_1111, # 8 => 1 1 1 1 1 1 1 // 0x7F
-    0b111_1011, # 9 => 1 1 1 1 0 1 1 // 0x7B
-    0b000_0001  # - => 0 0 0 0 0 0 1 // 0x01
+                 #      g f e d  c b a -
+    0b0111_1110, # 0 => 0 1 1 1  1 1 1 0 // 0x7E
+    0b0000_1100, # 1 => 0 0 0 0  1 1 0 0 // 0x0C
+    0b1011_1010, # 2 => 1 0 1 1  1 0 1 0 // 0xBA
+    0b1001_1110, # 3 => 1 0 0 1  1 1 1 0 // 0x9E
+    0b1100_1100, # 4 => 1 1 0 0  1 1 0 0 // 0xCC
+    0b1101_1010, # 5 => 1 1 0 1  1 0 1 0 // 0xDA
+    0b1111_1010, # 6 => 1 1 1 1  1 0 1 0 // 0xFA
+    0b0000_1110, # 7 => 0 0 0 0  1 1 1 0 // 0x0E
+    0b1111_1110, # 8 => 1 1 1 1  1 1 1 0 // 0xFE
+    0b1101_1110, # 9 => 1 1 0 1  1 1 1 0 // 0xDE
+    0b1000_0000  # - => 1 0 0 0  0 0 0 0 // 0x80
+
 ]
 
 eeprom = [0]*2048  # 2 KB for AT28C16
 
 # For positive numbers
-for i in range(256):  # All 8-bit switch combinations
-    num = i
-    u = num % 10
-    t = (num // 10) % 10
-    h = (num // 100) % 10
+for index in range(256):  # All 8-bit switch combinations
+    num = index
+    unit = num % 10
+    ten = (num // 10) % 10
+    hundred = (num // 100) % 10
 
-    eeprom[0b000_0000_0000 + i] = segment_map[u]  # Units digit
-    eeprom[0b001_0000_0000 + i] = segment_map[t]  # Tens digit
-    eeprom[0b010_0000_0000 + i] = segment_map[h]  # Hundreds digit
+    eeprom[0b000_0000_0000 + index] = 0x00                 # MSB
+    eeprom[0b001_0000_0000 + index] = segment_map[hundred] # Hundreds digit
+    eeprom[0b010_0000_0000 + index] = segment_map[ten]     # Tens digit
+    eeprom[0b011_0000_0000 + index] = segment_map[unit]    # Units digit
 
-# # For negative numbers
-for i in range(256):  # All 8-bit switch combinations
-    num = getNegetiveNum(i)
-    u = num % 10
-    t = (num // 10) % 10
-    h = (num // 100) % 10
+# For negative numbers
+for index in range(256):  # All 8-bit switch combinations
+    num = getNegetiveNum(index)
+    unit = num % 10
+    ten = (num // 10) % 10
+    hundred = (num // 100) % 10
 
-    eeprom[0b100_0000_0000 + i] = segment_map[u]  # Units digit
-    eeprom[0b101_0000_0000 + i] = segment_map[t]  # Tens digit
-    eeprom[0b110_0000_0000 + i] = segment_map[h]  # Hundreds digit
+    eeprom[0b100_0000_0000 + index] = segment_map[-1]       # MSB
+    eeprom[0b101_0000_0000 + index] = segment_map[hundred]  # Hundreds digit
+    eeprom[0b110_0000_0000 + index] = segment_map[ten]      # Tens digit
+    eeprom[0b111_0000_0000 + index] = segment_map[unit]     # Units digit
 
 with open("decimal_display_segments.bin", "wb") as f:
     f.write(bytes(eeprom))
