@@ -288,6 +288,13 @@ class WriteTab:
         self.main.consoleSuccess(f" Success.", append = True)
         self.parent.update()
 
+        # Flush any stale bytes after reset
+        try:
+            serial.reset_input_buffer()
+            serial.reset_output_buffer()
+        except Exception:
+            pass
+
         # verify after write
         self.main.consoleInfo("Verify after write ", end = "")
         if self.verifyAfterWriteVar.get():
@@ -297,43 +304,53 @@ class WriteTab:
 
         self.writeTimeStart = time.time()
         try:
-            # Start writing data to chip
-            self.main.consoleInfo("Starting data write to chip...")
+            # Start writing data to chip using block transfers
+            self.main.consoleInfo("Starting data write to chip (block mode)...")
             self.parent.update()
-            for addr in range(self.finalChipSize):
+            total = self.finalChipSize
+            addr = 0
+            while addr < total:
+                length = min(DEFAULT_CHUNK_SIZE, total - addr)
                 addrHigh = (addr >> 8) & 0xFF
                 addrLow  = addr & 0xFF
-                byte     = data[addr]
+                payload = bytes([OPERATION_WRITE_BLOCK, addrHigh, addrLow, length]) + bytes(data[addr:addr+length])
+                # Ensure output buffer clear before sending block
+                try:
+                    serial.reset_input_buffer()
+                except Exception as e:
+                    self.main.consoleWarning(f"Exception while resetting input buffer: {e}")
 
-                serial.write(bytes([OPERATION_WRITE, addrHigh, addrLow, byte]))
-                ack = serial.read()
+                serial.write(payload)
+                ack = serial.read()  # expect ACK_WRITE_OK
                 if ack != ACK_WRITE_OK:
-                    self.labelWriteStatus.config(
-                        text = f"[ERROR] Wrong ACK at address 0x{addr:04X}"
-                    )
+                    self.labelWriteStatus.config(text = f"[ERROR] Write block failed at 0x{addr:04X}")
                     self.main.consoleError(" Failed.", append = True)
-                    self.main.consoleError(f"Wrong write ACK at address 0x{addr:04X}; ACK: {ack}")
+                    self.main.consoleError(f"Write block failed at 0x{addr:04X}; ack: {ack}")
                     serial.close()
                     self.updateGuiForAbortWriting()
                     return
 
                 if self.verifyAfterWriteVar.get():
-                    serial.write(bytes([OPERATION_READ, addrHigh, addrLow]))
-                    readByte = serial.read()
-                    ack = serial.read()
-                    if readByte != bytes([byte]):
-                        self.labelWriteStatus.config(
-                            text = f"[ERROR] Verification failed at address 0x{addr:04X}"
-                        )
+                    serial.write(bytes([OPERATION_READ_BLOCK, addrHigh, addrLow, length]))
+                    readBlock = serial.read(length)
+                    ack2 = serial.read()
+                    if (not readBlock) or (len(readBlock) != length) or (ack2 != ACK_READ_OK):
+                        self.labelWriteStatus.config(text = f"[ERROR] Verify read block failed at 0x{addr:04X}")
                         self.main.consoleError(" Failed.", append = True)
-                        self.main.consoleError(
-                            f"Verification failed at 0x{addr:04X}; Expected: 0x{byte:02X}, Read: 0x{readByte.hex()}"
-                        )
+                        self.main.consoleError(f"Verify read block failed at 0x{addr:04X}; got {len(readBlock) if readBlock else 0} bytes, ack={ack2}")
+                        serial.close()
+                        self.updateGuiForAbortWriting()
+                        return
+                    if readBlock != bytes(data[addr:addr+length]):
+                        self.labelWriteStatus.config(text = f"[ERROR] Verification mismatch at 0x{addr:04X}")
+                        self.main.consoleError(" Failed.", append = True)
+                        self.main.consoleError(f"Verification mismatch at 0x{addr:04X}")
                         serial.close()
                         self.updateGuiForAbortWriting()
                         return
 
-                percent = (addr + 1) * 100 / self.finalChipSize
+                addr += length
+                percent = addr * 100 / total
                 progressVal.set(percent)
                 progressLabel.config(text = f"{percent:0.2f}%")
                 progressBar.update()
@@ -341,9 +358,7 @@ class WriteTab:
                 self.main.consoleInfo(".", end = "", append = True)
 
                 if self.writeAbort:
-                    self.labelWriteStatus.config(
-                        text = "[ERROR] Write Aborted manually."
-                    )
+                    self.labelWriteStatus.config(text = "[ERROR] Write Aborted manually.")
                     self.main.consoleWarning(" Aborted.", append = True)
                     self.main.consoleWarning("Write Aborted manually.")
                     serial.close()
