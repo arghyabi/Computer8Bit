@@ -1,0 +1,48 @@
+
+4bit Output Control
+1111    rAO
+1110    rBO
+1101    rCO
+1100    rDO
+1011    RomO
+1010    SpO
+1001    MeO
+1000    AdSuO
+0111    OrO
+0110    AndO
+0101    XorO
+0100
+0011
+0010
+0001
+0000
+
+
+4bit Input Control
+1111    rAI
+1110    rBI
+1101    rCI
+1100    rDI
+1011    PCLI
+1010    PCHI
+1001    MdI
+1000    MeI
+0111    IRI
+0110    T1I
+0101    T2I
+0100    Seg7E
+0011
+0010
+0001
+0000
+
+
+Extra:
+PCL
+PCC
+SpC
+SpUd
+SpL
+SqR
+AdSu
+Cin
