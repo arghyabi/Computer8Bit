@@ -2,10 +2,15 @@ import argparse
 import os
 import hexdump
 
-MAX_VAL_8_BIT          = 256
-MAX_ROM_ADDRESS_8_BIT  = 256
-MAX_ROM_ADDRESS_11_BIT = 2048
+MAX_VAL_UNSIGNED_8_BIT = 255
+MIN_VAL_UNSIGNED_8_BIT = 0
+MAX_VAL_SIGNED_8_BIT   = 127
+MIN_VAL_SIGNED_8_BIT   = -128
+MAX_ROM_ADDRESS_8_BIT  = 255
+MAX_ROM_ADDRESS_11_BIT = 2047
 MAX_MEM_ADDRESS_4_BIT  = 16
+
+PADDING_CHAR           = 0xFF
 
 def isInt(s):
     try:
@@ -23,8 +28,22 @@ def isHex(s):
         return False
 
 
+def isBinary(s):
+    try:
+        int(s, 2)
+        return True
+    except ValueError:
+        return False
+
+
+def get2sComplement(value):
+    if value < 0:
+        value = (1 << 8) + value
+    return value
+
+
 class Compiler:
-    def __init__(self, assemblyFile, outFile, silent, support8, padding):
+    def __init__(self, assemblyFile, outFile, silent, support8, padding, unsigned):
         if not os.path.exists(assemblyFile):
             print(f"{assemblyFile} not found!!!")
             exit(-1)
@@ -43,6 +62,7 @@ class Compiler:
         self.silent             = silent
         self.support8BitAddress = support8
         self.paddingEnabled     = padding
+        self.unsigned           = unsigned
         self.tagDict            = dict()
         self.binArr             = bytearray()
         self.sourceMaxLength    = 0
@@ -146,7 +166,25 @@ class Compiler:
                 print(f"{col:02X} ", end = "")
             print("\n          ------------------------------------------------")
 
-            hexdump.hexdump(self.binArr)
+            if self.paddingEnabled:
+                originalLen = len(self.binArr)
+                tmpArr = self.binArr.copy()
+                align16andOneLine = ((originalLen + 15) // 16 * 16) + 16
+                paddingBytes = bytearray([PADDING_CHAR] * (align16andOneLine - originalLen))
+                tmpArr.extend(paddingBytes)
+                hexdump.hexdump(tmpArr)
+                print()
+                print(".... .... [elided middle padding bytes] .... ....")
+                print()
+                # Print the last full 16-byte line of the ROM space as padding
+                last_line_addr = ((MAX_ROM_ADDRESS_11_BIT + 1 - 16) // 16) * 16  # e.g., 0x07F0 for 2KB
+                # Hex groups (8 + 8) and ASCII column (dots for non-printables)
+                hex_left  = " ".join(f"{PADDING_CHAR:02X}" for _ in range(8))
+                hex_right = " ".join(f"{PADDING_CHAR:02X}" for _ in range(8))
+                ascii_col = "." * 16
+                print(f"{last_line_addr:08X}: {hex_left}  {hex_right}  {ascii_col}")
+            else:
+                hexdump.hexdump(self.binArr)
 
 
     def preProcess(self):
@@ -156,6 +194,7 @@ class Compiler:
 
         # remove comments
         self.assemblyLine = [line.split(";")[0] for line in self.assemblyLine]
+        self.assemblyLine = [line.split("@")[0] for line in self.assemblyLine]
 
         # make all upper case
         self.assemblyLine = [line.upper() for line in self.assemblyLine]
@@ -171,8 +210,17 @@ class Compiler:
             tempName = ".".join((self.assemblyFile).split(".")[:-1])
             tempName = f"{tempName}.i"
             f = open(tempName, "w")
+            tagFound = False
             for line in self.assemblyLine:
-                f.write(f"{line}\n")
+                lineStripped = line.strip()
+                if lineStripped:  # Only write non-empty lines
+                    if lineStripped[-1] == ":":
+                        tagFound = True
+                        f.write(f"\n{lineStripped}\n")
+                    elif tagFound:
+                        f.write(f"    {lineStripped}\n")
+                    else:
+                        f.write(f"{lineStripped}\n")
             f.close()
 
 
@@ -321,6 +369,8 @@ class Compiler:
                 address = 0xFF # Default value
                 if isInt(payload):
                     address = int(payload)
+                elif isBinary(payload):
+                    address = int(payload, 2)
                 elif isHex(payload):
                     address = int(payload, 16)
                 elif payload in self.tagDict:
@@ -329,10 +379,10 @@ class Compiler:
                     errorPrint(index, f"'{payload}' is not a proper address")
 
                 if self.support8BitAddress:
-                    if address >= MAX_ROM_ADDRESS_8_BIT:
+                    if address > MAX_ROM_ADDRESS_8_BIT:
                         errorPrint(index, "Max ROM address limit cross!!")
                 else:
-                    if address >= MAX_ROM_ADDRESS_11_BIT:
+                    if address > MAX_ROM_ADDRESS_11_BIT:
                         errorPrint(index, "Max ROM address limit cross!!")
 
                 bitVal = self.instructionDict[opcode] # JMP, JMZ, JNZ are 8 bit
@@ -372,14 +422,29 @@ class Compiler:
                 immediateVal = payloadList[1]
                 if isInt(immediateVal):
                     immediateVal = int(immediateVal)
+                elif isBinary(immediateVal):
+                    immediateVal = int(immediateVal, 2)
                 elif isHex(immediateVal):
                     immediateVal = int(immediateVal, 16)
                 else:
-                    errorPrint(index, f"{immediateVal} is not a int or hex value!!")
+                    errorPrint(index, f"{immediateVal} is not a valid value!!")
                     immediateVal = 0
 
-                if immediateVal >= MAX_VAL_8_BIT:
-                    errorPrint(index, "Max value limit cross!!")
+                if self.unsigned:
+                    if not (MIN_VAL_UNSIGNED_8_BIT <= immediateVal <= MAX_VAL_UNSIGNED_8_BIT):
+                        errorPrint(index, "Value out of unsigned 8-bit range!")
+                    if immediateVal < 0:
+                        errorPrint(index, "Negative value not allowed in unsigned mode!")
+                else:
+                    if immediateVal < 0: # if negative value then check if must be greater than or equal to -128
+                        if immediateVal < MIN_VAL_SIGNED_8_BIT:
+                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
+                        else:
+                            immediateVal = get2sComplement(immediateVal)
+                    else:
+                        # if positive value then user might want as 2's complement value; but still is <= 255
+                        if immediateVal > MAX_VAL_UNSIGNED_8_BIT:
+                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
 
                 bitVal = bitVal | self.registerDict[destReg]
 
@@ -408,10 +473,12 @@ class Compiler:
                 memAddress = payloadList[1]
                 if isInt(memAddress):
                     memAddress = int(memAddress)
+                elif isBinary(memAddress):
+                    memAddress = int(memAddress, 2)
                 elif isHex(memAddress):
                     memAddress = int(memAddress, 16)
                 else:
-                    errorPrint(index, f"{memAddress} is not a int or hex value!!")
+                    errorPrint(index, f"{memAddress} is not a valid value!!")
                     memAddress = 0
 
                 if memAddress >= MAX_MEM_ADDRESS_4_BIT:
@@ -478,10 +545,9 @@ class Compiler:
         f = open(self.outFile, 'wb')
         f.write(self.binArr)
         if self.paddingEnabled:
-            paddingSize = MAX_ROM_ADDRESS_11_BIT - len(self.binArr)
+            paddingSize = MAX_ROM_ADDRESS_11_BIT - len(self.binArr) + 1
             if paddingSize > 0:
-                paddingBytes = bytearray([0xFF] * paddingSize)
-                self.binArr.extend(paddingBytes)
+                paddingBytes = bytearray([PADDING_CHAR] * paddingSize)
                 f.write(paddingBytes)
         f.close()
 
@@ -521,14 +587,22 @@ def main():
         help   = "Pad the output file to 2048 bytes"
     )
 
+    parser.add_argument(
+        "-u",
+        "--unsigned",
+        action = 'store_true',
+        help   = "Use unsigned 8 bit integers"
+    )
+
     args = parser.parse_args()
     assemblyFile = args.assemblyFile
     outFile      = args.out
     silent       = args.silent
     support8     = args.support8
     padding      = args.padding
+    unsigned     = args.unsigned
 
-    compile = Compiler(assemblyFile, outFile, silent, support8, padding)
+    compile = Compiler(assemblyFile, outFile, silent, support8, padding, unsigned)
 
 if __name__ == "__main__":
     main()
