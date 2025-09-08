@@ -31,6 +31,8 @@ import ParseConfig
 
 SIGNAL_TYPE_INPUT  = "I"
 SIGNAL_TYPE_OUTPUT = "O"
+SIGNAL_TYPE_HEADER = "X"
+SIGNAL_TYPE_IGNORE = "---"
 
 SIGNAL_VALUE_HIGH = "1"
 SIGNAL_VALUE_LOW  = "0"
@@ -72,7 +74,7 @@ class ParseInstructions:
             CMI,
             RST,
         ]
-        self.insObjects = [ INC ]
+        # self.insObjects = [ INC ]
         self.InstructionParsedData = {}
 
 
@@ -92,71 +94,52 @@ class ParseInstructions:
             InsOutSignalLineList = []
             InsExtSignalLineList = []
             instructionName = None
+            OtherLineIndex = -1
             for line in lines:
                 if "INSTRUCTION:" in line:
                     instructionName = line.split(":")[-1].strip()
                     print(f"Instruction Name: {instructionName}")
                     break
 
-            # autoGenInsDict[instructionName] = insFile
 
-            addressMatrix  = []
-            outputMatrix   = {"0":[],"1":[],"2":[], "3":[], "4": []}
-            microInsMatrix = {"in":[],"out":{"0":[],"1":[],"2":[], "3":[], "4": []}}
-            outCount = 0
-            segmentCount = 0
             for line in lines:
+                OtherLineIndex += 1
                 lineSplit = [item.strip() for item in line.split("|") if item.strip()]
                 if len(lineSplit) < 2:
-                    InsOtherLineList.append(line)
+                    InsOtherLineList.append((line, OtherLineIndex))
                     continue
-                # print(line)
+
                 signalType = lineSplit[INDEX_OF_SIGNAL_TYPE]
                 signalName = lineSplit[INDEX_OF_SIGNAL_NAME]
                 signalData = lineSplit[2:]
 
-                if signalType not in [SIGNAL_TYPE_INPUT, SIGNAL_TYPE_OUTPUT]:
-                    InsOtherLineList.append(line)
-                    continue
-                if signalName == "-":
-                    InsOtherLineList.append(line)
+                if signalType == SIGNAL_TYPE_IGNORE or signalName == "-":
                     continue
 
-                # print(lineSplit)
-                if signalType == SIGNAL_TYPE_INPUT:
-                    # print(f"address: {lineSplit[2:]}")
-                    # addressMatrix.append(lineSplit[2:])
-                    # microInsMatrix["in"].append(signalName)
-                    InsOtherLineList.append(line)
+                if signalType != SIGNAL_TYPE_OUTPUT:
+                    InsOtherLineList.append((line, OtherLineIndex))
+                    continue
+
                 elif signalType == SIGNAL_TYPE_OUTPUT:
                     pinIndex, sectionType = ParseConfig.getSignalIndex(signalName, self.uCodeConfig)
                     if pinIndex == -1:
                         print(f"ERROR: Signal '{signalName}' not found in configuration. Ignoring...")
                         raise Exception(f"Signal '{signalName}' not found in configuration.")
+
                     if sectionType == SIGNAL_CFG_EXTRA:
                         InsExtSignalLineList.append(line)
-                        pass
+
                     if sectionType == SIGNAL_CFG_OUTPUT:
                         InsOutSignalLineList.append(lineSplit)
-                        pass
-                    elif sectionType == SIGNAL_CFG_INPUT:
+
+                    if sectionType == SIGNAL_CFG_INPUT:
                         InsInSignalLineList.append(lineSplit)
-                        pass
-                    else:
-                        # print(f"Warning: Signal '{signalName}' has unknown section '{sectionType}'. Ignoring...")
-                        continue
 
-            # self.InstructionParsedData[instructionName] = {
-            #     "microInsMatrix": microInsMatrix,
-            #     "addressMatrix": addressMatrix,
-            #     "outputMatrix": outputMatrix
-            # }
-        # print(json.dumps(self.InstructionParsedData, indent=4))
-        # print(self.InstructionParsedData)
 
-            # print("Auto-generated Instruction Lines:")
-            # for line in InsOtherLineList:
-            #     print(line)
+
+            print("Auto-generated Instruction Lines:")
+            for (line, index) in InsOtherLineList:
+                print(line, index)
 
             if len(InsInSignalLineList) > 16:
                 print("\nError: Number of Input Control Signals exceeded 16")
@@ -170,7 +153,7 @@ class ParseInstructions:
 
             autogenInSignalDict = self.autogenInputSignalLines(InsInSignalLineList)
 
-            # print(autogenInSignalDict)
+            print(autogenInSignalDict)
 
             print("\nOutput Control Signals used:")
             for line in InsOutSignalLineList:
@@ -178,12 +161,7 @@ class ParseInstructions:
 
             autogenOutSignalDict = self.autogenOutputSignalLines(InsOutSignalLineList)
 
-            # print(autogenOutSignalDict)
-
-            # if len(autogenInSignalDict[0]) != len(autogenOutSignalDict[0]):
-            #     print("\nError: Number of Input Control Signal columns and Output Control Signal columns are not matching")
-                # raise Exception("Number of Input Control Signal columns and Output Control Signal columns are not matching")
-
+            print(autogenOutSignalDict)
 
 
     # Auto-generate virtual Input Control Signals with help of the config file
