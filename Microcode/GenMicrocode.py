@@ -2,6 +2,7 @@ import os
 import shutil
 import argparse
 
+import CreateAutogenIns
 import ParseInstruction
 
 CHIP_AT28C16  = "AT28C16"
@@ -75,10 +76,14 @@ def main():
     args = parser.parse_args()
     chipName = args.chip
 
-    insParser = ParseInstruction.ParseInstructions(chipName)
-    insParser.parseEachInstruction()
     if os.path.exists("out"):
         shutil.rmtree("out")
+
+    parser = CreateAutogenIns.GenAutoInstructions()
+    parser.parseEachInstruction()
+
+    insParser = ParseInstruction.ParseInstructions(chipName)
+    insParser.parseEachInstruction()
     microcodeBank, microInsMatrix = insParser.generateAddressDataMap()
     for chipNumber in microcodeBank:
         print(f"Creating Microcode for Chip: {chipNumber}")
