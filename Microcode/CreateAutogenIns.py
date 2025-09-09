@@ -1,33 +1,8 @@
 import os
-
-from Instructions.Input_15_bit import InsNOP as NOP
-from Instructions.Input_15_bit import InsOUT as OUT
-from Instructions.Input_15_bit import InsHLT as HLT
-from Instructions.Input_15_bit import InsADD as ADD
-from Instructions.Input_15_bit import InsSUB as SUB
-from Instructions.Input_15_bit import InsINC as INC
-from Instructions.Input_15_bit import InsDEC as DEC
-from Instructions.Input_15_bit import InsLDI as LDI
-from Instructions.Input_15_bit import InsLDM as LDM
-from Instructions.Input_15_bit import InsSAV as SAV
-from Instructions.Input_15_bit import InsJMP as JMP
-from Instructions.Input_15_bit import InsJMZ as JMZ
-from Instructions.Input_15_bit import InsJNZ as JNZ
-from Instructions.Input_15_bit import InsJMC as JMC
-from Instructions.Input_15_bit import InsMOV as MOV
-from Instructions.Input_15_bit import InsAND as AND
-from Instructions.Input_15_bit import InsOR  as  OR
-from Instructions.Input_15_bit import InsXOR as XOR
-from Instructions.Input_15_bit import InsNOT as NOT
-from Instructions.Input_15_bit import InsCMP as CMP
-from Instructions.Input_15_bit import InsCMI as CMI
-from Instructions.Input_15_bit import InsRST as RST
-
+import importlib
+import glob
 
 import ParseConfig
-
-# CHIP_AT28C16  = "AT28C16"
-# CHIP_AT28C256 = "AT28C256"
 
 SIGNAL_TYPE_INPUT  = "I"
 SIGNAL_TYPE_OUTPUT = "O"
@@ -45,73 +20,64 @@ SIGNAL_CFG_EXTRA  = "Extra"
 INDEX_OF_SIGNAL_TYPE = 0
 INDEX_OF_SIGNAL_NAME = 1
 
-microCodeMapFile = os.path.join("out", "microCodeMap.txt")
 
 class GenAutoInstructions:
     def __init__(self):
         self.uCodeConfig = ParseConfig.parseConfig(MICROCODE_CFG_FILE)
-        self.insObjects = [
-            LDM,
-            NOP,
-            OUT,
-            HLT,
-            ADD,
-            SUB,
-            INC,
-            DEC,
-            LDI,
-            SAV,
-            JMP,
-            JMZ,
-            JNZ,
-            JMC,
-            MOV,
-            AND,
-            OR ,
-            XOR,
-            NOT,
-            CMP,
-            CMI,
-            RST,
-        ]
-        # self.insObjects = [ INC ]
-        self.InstructionParsedData = {}
+
+        self.insObjects = []
+        instructionDir = os.path.join(os.path.dirname(__file__), "Instructions", "Input_15_bit")
+        instructionFiles = glob.glob(os.path.join(instructionDir, "Ins*.py"))
+
+        for filePath in sorted(instructionFiles):
+            moduleFilename = os.path.basename(filePath)
+            moduleName = moduleFilename[:-3]  # Remove .py extension
+
+            try:
+                # Import the module dynamically
+                module = importlib.import_module(f"Instructions.Input_15_bit.{moduleName}")
+                self.insObjects.append(module)
+                print(f"Successfully imported: {moduleName}")
+            except ImportError as e:
+                print(f"Failed to import {moduleName}: {e}")
+
+        print(f"Total instructions imported: {len(self.insObjects)}")
+
+        self.insObjects.sort(key = lambda x: x.__name__)
+        self.instructionParsedData = {}
 
 
-    def parseEachInstruction(self):
-        autoGenInsDict = {}
+    def autogenEachInstruction(self):
         for ins in self.insObjects:
             insFile = ins.__file__
             if insFile:
-                print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                 print("Reading File:", "/".join((insFile).split(os.path.sep)[-2:]))
 
             textIns :str = ins.INS
             lines = textIns.split("\n")
 
-            InsOtherLineList = []
-            InsInSignalLineList = []
-            InsOutSignalLineList = []
-            InsExtSignalLineList = []
+            insOtherLineList     = []
+            insInSignalLineList  = []
+            insOutSignalLineList = []
+            insExtSignalLineList = []
             instructionName = None
-            OtherLineIndex = -1
+            otherLineIndex  = -1
+
             for line in lines:
                 if "INSTRUCTION:" in line:
                     instructionName = line.split(":")[-1].strip()
                     print(f"Instruction Name: {instructionName}")
                     break
 
-
             for line in lines:
-                OtherLineIndex += 1
+                otherLineIndex += 1
                 lineSplit = [item.strip() for item in line.split("|") if item.strip()]
                 if len(lineSplit) < 2:
-                    InsOtherLineList.append((line, OtherLineIndex))
+                    insOtherLineList.append((line, otherLineIndex))
                     continue
 
                 signalType = lineSplit[INDEX_OF_SIGNAL_TYPE]
                 signalName = lineSplit[INDEX_OF_SIGNAL_NAME]
-                signalData = lineSplit[2:]
 
                 if signalType == SIGNAL_TYPE_IGNORE or signalName == "-":
                     continue
@@ -123,67 +89,48 @@ class GenAutoInstructions:
                         raise Exception(f"Signal '{signalName}' not found in configuration.")
 
                     if sectionType == SIGNAL_CFG_EXTRA:
-                        InsExtSignalLineList.append(line)
+                        insExtSignalLineList.append(line)
 
                     if sectionType == SIGNAL_CFG_OUTPUT:
-                        InsOutSignalLineList.append(lineSplit)
+                        insOutSignalLineList.append(lineSplit)
 
                     if sectionType == SIGNAL_CFG_INPUT:
-                        InsInSignalLineList.append(lineSplit)
+                        insInSignalLineList.append(lineSplit)
                 else:
-                    InsOtherLineList.append((line, OtherLineIndex))
+                    insOtherLineList.append((line, otherLineIndex))
 
 
-            # print("Auto-generated Instruction Lines:")
-            # for (line, index) in InsOtherLineList:
-            #     print(line, index)
-
-            if len(InsInSignalLineList) > 16:
+            if len(insInSignalLineList) > 16:
                 print("\nError: Number of Input Control Signals exceeded 16")
 
-            if len(InsOutSignalLineList) > 16:
+            if len(insOutSignalLineList) > 16:
                 print("\nError: Number of Output Control Signals exceeded 16")
 
-            # print("\nInput Control Signals used:")
-            # for line in InsInSignalLineList:
-            #     print(line)
-
-            autogenInSignalDict = self.autogenInputSignalLines(InsInSignalLineList)
-
-            # print(autogenInSignalDict)
-
-            # print("\nOutput Control Signals used:")
-            # for line in InsOutSignalLineList:
-            #     print(line)
-
-            autogenOutSignalDict = self.autogenOutputSignalLines(InsOutSignalLineList)
-
-            # print(autogenOutSignalDict)
+            autogenInSignalDict  = self.autogenInputSignalLines(insInSignalLineList)
+            autogenOutSignalDict = self.autogenOutputSignalLines(insOutSignalLineList)
 
             self.createAutoGenInstructionFile(insFile,
                                                 instructionName,
-                                                InsOtherLineList,
+                                                insOtherLineList,
                                                 autogenInSignalDict,
                                                 autogenOutSignalDict,
-                                                InsInSignalLineList,
-                                                InsExtSignalLineList)
-
-
+                                                insInSignalLineList,
+                                                insExtSignalLineList)
 
 
     # Auto-generate virtual Input Control Signals with help of the config file
     # This is a internal logic to generate the autogen Instruction Files.
-    def autogenInputSignalLines(self, InSignalLineList):
+    def autogenInputSignalLines(self, inSignalLineList):
         virtualPins = ParseConfig.getAllVirtualPins(self.uCodeConfig)
         autogenSignalDict = {}
         for signal in virtualPins["InputControlPins"]:
             autogenSignalDict[signal] = []
 
-        totalColumnNo = len(InSignalLineList[0])
+        totalColumnNo = len(inSignalLineList[0])
         signalIndexDict =  ParseConfig.getAllSignalIndex(SIGNAL_CFG_INPUT, self.uCodeConfig)
         for columnNo in range(totalColumnNo):
             highFound = False
-            for line in InSignalLineList:
+            for line in inSignalLineList:
                 signalName = line[INDEX_OF_SIGNAL_NAME]
                 item = line[columnNo]
                 if item not in [SIGNAL_VALUE_HIGH, SIGNAL_VALUE_LOW]:
@@ -202,25 +149,22 @@ class GenAutoInstructions:
                 for signal in virtualPins["InputControlPins"]:
                     autogenSignalDict[signal].append(0)
 
-        # for signal, values in autogenSignalDict.items():
-        #     print(signal, values)
-
         return autogenSignalDict
 
 
     # Auto-generate virtual Output Control Signals with help of the config file
     # This is a internal logic to generate the autogen Instruction Files.
-    def autogenOutputSignalLines(self, OutSignalLineList):
+    def autogenOutputSignalLines(self, outSignalLineList):
         virtualPins = ParseConfig.getAllVirtualPins(self.uCodeConfig)
         autogenSignalDict = {}
         for signal in virtualPins["OutputControlPins"]:
             autogenSignalDict[signal] = []
 
-        totalColumnNo = len(OutSignalLineList[0])
+        totalColumnNo = len(outSignalLineList[0])
         signalIndexDict =  ParseConfig.getAllSignalIndex(SIGNAL_CFG_OUTPUT, self.uCodeConfig)
         for columnNo in range(totalColumnNo):
             highFound = False
-            for line in OutSignalLineList:
+            for line in outSignalLineList:
                 signalName = line[INDEX_OF_SIGNAL_NAME]
                 item = line[columnNo]
                 if item not in [SIGNAL_VALUE_HIGH, SIGNAL_VALUE_LOW]:
@@ -239,20 +183,17 @@ class GenAutoInstructions:
                 for signal in virtualPins["OutputControlPins"]:
                     autogenSignalDict[signal].append(0)
 
-        # for signal, values in autogenSignalDict.items():
-        #     print(signal, values)
-
         return autogenSignalDict
 
 
     def createAutoGenInstructionFile(self,
                                      insFile,
                                      instructionName,
-                                     InsOtherLineList,
+                                     insOtherLineList,
                                      autogenInSignalDict,
                                      autogenOutSignalDict,
-                                     InsInSignalLineList,
-                                     InsExtSignalLineList):
+                                     insInSignalLineList,
+                                     insExtSignalLineList):
         # Merging all the data together and create a autogen Instruction File
         if not os.path.exists("out"):
             os.mkdir("out")
@@ -263,7 +204,7 @@ class GenAutoInstructions:
         f.write(f"# Generated from {insFile}\n\n")
 
         f.write("INS = '''")
-        for (line, index) in InsOtherLineList[:-2]:
+        for (line, index) in insOtherLineList[:-2]:
             f.write(f"{line}\n")
 
         for signal in autogenInSignalDict:
@@ -274,31 +215,25 @@ class GenAutoInstructions:
         for signal in autogenOutSignalDict:
             values = autogenOutSignalDict[signal]
             f.write(f"| O | {signal} | " + " | ".join([str(v) for v in values]) + " |\n")
-        f.write(f"|---|-------|" + "|".join(["---"] * len(InsInSignalLineList[0][2:])) + "|\n")
+        f.write(f"|---|-------|" + "|".join(["---"] * len(insInSignalLineList[0][2:])) + "|\n")
 
         count = 0
-        for line in InsExtSignalLineList:
+        for line in insExtSignalLineList:
             f.write(f"{line}\n")
             count += 1
             if count == 8:
-                f.write(f"|---|-------|" + "|".join(["---"] * len(InsInSignalLineList[0][2:])) + "|\n")
+                f.write(f"|---|-------|" + "|".join(["---"] * len(insInSignalLineList[0][2:])) + "|\n")
                 count = 0
 
         for _ in range(8 - count):
-            f.write(f"| O |  -    | " + " | ".join(["-"] * len(InsInSignalLineList[0][2:])) + " |\n")
+            f.write(f"| O |  -    | " + " | ".join(["-"] * len(insInSignalLineList[0][2:])) + " |\n")
 
-        for (line, index) in InsOtherLineList[-2:]:
+        for (line, index) in insOtherLineList[-2:]:
             f.write(f"{line}\n")
         f.write("'''\n")
         f.close()
 
 
 if __name__ == "__main__":
-    parser = GenAutoInstructions()
-    parser.parseEachInstruction()
-    # print("=====================================")
-    # parser.generateAddressDataMap()
-
-    # val = parser.getValueFromList(["1", "1", "0", "1", "0", "1", "0", "1"])
-    # for item in val:
-    # print(f"item: {val:08b}, {val}")
+    autoGen = GenAutoInstructions()
+    autoGen.autogenEachInstruction()

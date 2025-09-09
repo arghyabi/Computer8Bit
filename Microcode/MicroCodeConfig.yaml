@@ -1,6 +1,7 @@
-# PinConfig.yaml
-# This file maps signal names to their respective 4-bit control codes for
-# InputControl and OutputControl.
+# MicroCodeConfig.yaml
+# This file defines the instruction set and maps signal names to their
+# respective 4-bit control codes for InputControl and OutputControl.
+# It also includes extra control signals and virtual pin definitions.
 
 InsConfig:
   Instructions:
@@ -37,7 +38,7 @@ PinConfig:
     PCHI : 0b1010
     MdI  : 0b1001
     MeI  : 0b1000
-    IRI  : 0b0001 # update
+    IRI  : 0b1001
     T1I  : 0b0110
     T2I  : 0b0101
     Seg7E: 0b0100

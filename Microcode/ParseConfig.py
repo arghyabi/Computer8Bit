@@ -24,7 +24,7 @@ def getSignalIndex(signalName, config):
         controls = pinConfig.get(section, {})
         for signal, index in controls.items():
             if signal == signalName:
-                returnVal = index # if section != "Extra" else 0
+                returnVal   = index
                 sectionType = section
                 break
     return returnVal, sectionType
