@@ -26,7 +26,7 @@ class GenAutoInstructions:
         self.uCodeConfig = ParseConfig.parseConfig(MICROCODE_CFG_FILE)
 
         self.insObjects = []
-        instructionDir = os.path.join(os.path.dirname(__file__), "Instructions", "Input_15_bit")
+        instructionDir = os.path.join(os.path.dirname(__file__), "Instructions")
         instructionFiles = glob.glob(os.path.join(instructionDir, "Ins*.py"))
 
         for filePath in sorted(instructionFiles):
@@ -35,7 +35,7 @@ class GenAutoInstructions:
 
             try:
                 # Import the module dynamically
-                module = importlib.import_module(f"Instructions.Input_15_bit.{moduleName}")
+                module = importlib.import_module(f"Instructions.{moduleName}")
                 self.insObjects.append(module)
                 print(f"Successfully imported: {moduleName}")
             except ImportError as e:
