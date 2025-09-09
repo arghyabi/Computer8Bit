@@ -46,31 +46,36 @@
 |    27   |  AdSuO |
 |    28   |  AdSu  |
 |    29   |  Cin   |
-|    30   |  CmpO  |
+|    30   |  FlgU  |
 |    31   |  T1I   |
 |    32   |  T2I   |
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    33   |  NtO   |
-|    34   |  AndO  |
-|    35   |  OrO   |
-|    36   |  XorO  |
-|    37   |  Seg7E |
-|    38   |        |
-|    39   |        |
-|    40   | HLT    |
+|    33   |  AndO  |
+|    34   |  OrO   |
+|    35   |  XorO  |
+|    36   |  Seg7E |
+|    37   |  SpC   |
+|    38   |  SpUd  |
+|    39   |  SpO   |
+|    40   |  SpL   |
 
 | Pin Num | Signal |
 |  :---:  |  :---: |
-|    41   |  ZeroF **\***|
-|    42   |  Carry **\***|
-|    43   |        |
-|    44   |        |
-|    45   |  CLK   |
-|    46   |  CLK~  |
-|    47   |  V+    |
-|    48   |  GND   |
+|    41   |   -    |
+|    42   |   -    |
+|    43   |   -    |
+|    44   |   -    |
 
+| Pin Num | Signal |
+|  :---:  |  :---: |
+|    45   |  FlSe0 |
+|    46   |  FlSe1 |
+|    47   |  FlSe2 |
+|    48   |  HLT   |
+|    49   |  CLK   |
+|    50   |  CLK~  |
+|    51   |  V+    |
+|    52   |  GND   |
 
-**\* Those are NOT output from Microcode IC; They are input to the uCode IC.**

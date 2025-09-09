@@ -93,11 +93,11 @@ SUB B C ; Subtract C from B and keep in B
             <td valign="top">Load immediate<br>Load from memory<br>Save to memory</td>
         </tr>
         <tr>
-            <td valign="top"><strong>00TT_0101</strong></td>
-            <td valign="top">0000_0101<br>0001_0101<br>0010_0101<br>0011_0101</td>
-            <td valign="top">JMP AA<br>JMZ AA<br>JNZ AA<br>JMC AA</td>
-            <td valign="top">3 Byte<br>3 Byte<br>3 Byte<br>3 Byte</td>
-            <td valign="top">Jump to address<br>Jump to address if Zero flag set<br>Jump to address if Zero flag NOT set<br>Jump to address if Carry flag set</td>
+            <td valign="top"><strong>0TTT_0101</strong></td>
+            <td valign="top">0000_0101<br>0001_0101<br>0010_0101<br>0011_0101<br>0100_0101<br>0101_0101<br>0110_0101</td>
+            <td valign="top">JMP AA<br>JMZ AA<br>JNZ AA<br>JMC AA<br>JME AA<br>JMG AA<br>JML AA</td>
+            <td valign="top">3 Byte<br>3 Byte<br>3 Byte<br>3 Byte<br>3 Byte<br>3 Byte<br>3 Byte</td>
+            <td valign="top">Jump to address<br>Jump to address if Zero flag set<br>Jump to address if Zero flag NOT set<br>Jump to address if Carry flag set<br>Jump to address if Eql flag is set<br>Jump to address if Grt flag is set<br>Jump to address if Lst flag is set</td>
         </tr>
         <tr>
             <td valign="top"><strong>SSDD_0110</strong></td>
@@ -353,6 +353,42 @@ This `JMC` instruction is used to jump to a specific address when the `Carry` fl
 | Instruction  |     Binary Value    |
 | :---         |        :---:        |
 | JMC 0xXX     | 0011_0101 xxxx_xxxx |
+
+---------------
+
+### ✅ Instruction: JME
+This `JME` instruction is used to jump to a specific address when the `Eql` flag is set
+
+#### `Ins. Format: JME AA`
+#### `Bin. Format: 0100_0101`
+
+| Instruction  |     Binary Value    |
+| :---         |        :---:        |
+| JME 0xXX     | 0100_0101 xxxx_xxxx |
+
+---------------
+
+### ✅ Instruction: JMG
+This `JMG` instruction is used to jump to a specific address when the `Grt` flag is set
+
+#### `Ins. Format: JMG AA`
+#### `Bin. Format: 0101_0101`
+
+| Instruction  |     Binary Value    |
+| :---         |        :---:        |
+| JMG 0xXX     | 0101_0101 xxxx_xxxx |
+
+---------------
+
+### ✅ Instruction: JML
+This `JML` instruction is used to jump to a specific address when the `Lst` flag is set
+
+#### `Ins. Format: JML AA`
+#### `Bin. Format: 0110_0101`
+
+| Instruction  |     Binary Value    |
+| :---         |        :---:        |
+| JML 0xXX     | 0110_0101 xxxx_xxxx |
 
 ---------------
 

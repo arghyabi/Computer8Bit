@@ -54,6 +54,7 @@ PinConfig:
     OrO  : 0b0111
     AndO : 0b0110
     XorO : 0b0101
+    FlgU : 0b0100
   Extra:
     PCL  : null
     PCC  : null
@@ -63,7 +64,6 @@ PinConfig:
     SqR  : null
     AdSu : null
     Cin  : null
-    CmpO : null
     FlSe0: null
     FlSe1: null
     FlSe2: null

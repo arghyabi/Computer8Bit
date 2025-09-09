@@ -86,7 +86,22 @@ Instruction Register.
 
 * `SqR`: The SqR (Sequencer Reset) signal is used to reset the Sequencer, causing it to restart its count from 0.
 
-## flag Signals
-* `Carry`: The Carry signal is used to track the generation of a carry during addition or subtraction operations.
+## Flag Select Signals
+* `FlSe0`: Flag Select Signal 0
+* `FlSe1`: Flag Select Signal 1
+* `FlSe2`: Flag Select Signal 2; FlSe0, FlSe1, and FlSe2 combined point to a maximum of 8 flag bits.
 
-* `Zero`: The Zero flag signal indicates the output of the comparator—typically showing whether the result is zero.
+## Flag Signal
+* `Flag`: This is the common input from the flag register. according to the combination of FlSe0 FlSe1 FlSe2 one falg will be selected and come to the Flag signal.
+
+| FlSe2 | FlSe1 | FlSe0 | Flag       | Description              |
+| :---: | :---: | :---: | :----------| :------------------------|
+|   0   |   0   |   0   | **Zero**   | Temp1 is zero            |
+|   0   |   0   |   1   | **Carry**  | Add/Sub have carryout    |
+|   0   |   1   |   0   | **Grt**    | A > B                    |
+|   0   |   1   |   1   | **Lst**    | A < B                    |
+|   1   |   0   |   0   | **Eql**    | A = B                    |
+|   1   |   0   |   1   |  Reserved  | -                        |
+|   1   |   1   |   0   | Reserved   | -                        |
+|   1   |   1   |   1   | Reserved   | -                        |
+

@@ -97,6 +97,9 @@ class Compiler:
             'JMZ': 0b0001_0101,
             'JNZ': 0b0010_0101,
             'JMC': 0b0011_0101,
+            'JME': 0b0100_0101,
+            'JNG': 0b0101_0101,
+            'JML': 0b0110_0101,
             # 0110
             'MOV':     0b_0110,
             # 0111
@@ -129,6 +132,9 @@ class Compiler:
             'JMZ': 3,
             'JNZ': 3,
             'JMC': 3,
+            'JME': 3,
+            'JNG': 3,
+            'JML': 3,
             'AND': 1,
             'OR' : 1,
             'XOR': 1,
@@ -145,6 +151,9 @@ class Compiler:
             self.instructionSizeDict['JMZ'] = 2
             self.instructionSizeDict['JNZ'] = 2
             self.instructionSizeDict['JMC'] = 2
+            self.instructionSizeDict['JME'] = 2
+            self.instructionSizeDict['JMG'] = 2
+            self.instructionSizeDict['JNL'] = 2
 
         self.preProcess()
         self.compile()
@@ -360,8 +369,9 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse JMP, JMZ, JNZ command | Format: 00TT_0101
-            elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ" or opcode == "JMC":
+            ## Parse JMP, JMZ, JNZ, JMC, JME, JNG, JML command | Format: 0TTT_0101
+            elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ" or \
+                opcode == "JMC" or opcode == "JME" or opcode == "JNG" or opcode == "JML":
                 if payloadLen != 1:
                     errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 
