@@ -149,6 +149,20 @@ SUB B C ; Subtract C from B and keep in B
             <td valign="top">Compare register with a immediate values</td>
         </tr>
         <tr>
+            <td valign="top"><strong>RR00_1101</strong></td>
+            <td valign="top">RR00_1101<br>RR01_1101<br>0010_1101</td>
+            <td valign="top">PUSH R<br>POP R<br>RTN</td>
+            <td valign="top">1 Byte<br>1 Byte<br>1 Byte</td>
+            <td valign="top">Push register value to stack<br>Pop from stack and load to register<br>Pop the PC address and restore</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>00TT_1110</strong></td>
+            <td valign="top">0000_1110<br>0001_1110</td>
+            <td valign="top">PSHV VV<br>CALL AA</td>
+            <td valign="top">2 Byte<br>2 Byte</td>
+            <td valign="top">Push register value to stack<br>Push the PC to Stack and load PC with new address</td>
+        </tr>
+        <tr>
             <td valign="top"><strong>1111_1111</strong></td>
             <td valign="top">1111_1111</td>
             <td valign="top">RST</td>
