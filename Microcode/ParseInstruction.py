@@ -21,11 +21,10 @@ class ParseInstructions:
                 # Import the module dynamically
                 module = importlib.import_module(f"out.autogen.{moduleName}")
                 self.insObjects.append(module)
-                print(f"Successfully imported: {moduleName}")
             except ImportError as e:
                 print(f"Failed to import {moduleName}: {e}")
 
-        print(f"Total instructions imported: {len(self.insObjects)}")
+        print(f"Total autogen instructions imported: {len(self.insObjects)} \n")
 
         self.insObjects.sort(key = lambda x: x.__name__)
         self.instructionParsedData = {}
@@ -33,10 +32,6 @@ class ParseInstructions:
 
     def parseEachInstruction(self):
         for ins in self.insObjects:
-            insFile = ins.__file__
-            if insFile:
-                print("Reading File:", "/".join((insFile).split(os.path.sep)[-2:]))
-
             textIns :str = ins.INS
             lines = textIns.split("\n")
 
@@ -131,8 +126,16 @@ class ParseInstructions:
 
         mapFilePointer = open(microCodeMapFile, "w")
 
+        totalInstructions = len(self.instructionParsedData)
+
+        doneCount = 0
         for instruction in self.instructionParsedData:
-            print("Processing Instruction:", instruction)
+            print(f"Processing Instruction: {instruction}{' ' * 100}")
+            percent = (doneCount / totalInstructions) * 100
+            barLength = 40
+            filledLength = int(barLength * percent // 100)
+            bar = '#' * filledLength + '-' * (barLength - filledLength)
+            print(f"\t Progress: [{bar}] {percent:6.2f}%", end="\r")
             addressMatrix = self.instructionParsedData[instruction]["addressMatrix"]
             microInsMatrix = self.instructionParsedData[instruction]["microInsMatrix"]
             addressDataMap = []
@@ -164,7 +167,9 @@ class ParseInstructions:
                         strVal = str(f"{value:08b}")
                         mapFilePointer.write(f" {strAdd[:1]}_{strAdd[1:3]}_{strAdd[3:7]}_{strAdd[7:11]}.{strAdd[11:15]} :: {strAdd[:4]}.{strAdd[4:8]}\n")
                         mapIndex += 1
-            print("Process done.")
+            doneCount += 1
+
+        print(f"{' ' * 150}")
 
         mapFilePointer.close()
 

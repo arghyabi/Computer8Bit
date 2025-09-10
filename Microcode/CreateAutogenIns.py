@@ -37,22 +37,24 @@ class GenAutoInstructions:
                 # Import the module dynamically
                 module = importlib.import_module(f"Instructions.{moduleName}")
                 self.insObjects.append(module)
-                print(f"Successfully imported: {moduleName}")
             except ImportError as e:
                 print(f"Failed to import {moduleName}: {e}")
 
-        print(f"Total instructions imported: {len(self.insObjects)}")
+        print(f"Total instructions imported: {len(self.insObjects)} \n")
 
         self.insObjects.sort(key = lambda x: x.__name__)
         self.instructionParsedData = {}
 
 
     def autogenEachInstruction(self):
+        allInsFromConfig = ParseConfig.getAllInstructions(self.uCodeConfig)
+        # create a dict to check all ins are parsed or not
+        allInsDict = {}
+        for ins in allInsFromConfig:
+            allInsDict[ins] = False
+
         for ins in self.insObjects:
             insFile = ins.__file__
-            if insFile:
-                print("Reading File:", "/".join((insFile).split(os.path.sep)[-2:]))
-
             textIns :str = ins.INS
             lines = textIns.split("\n")
 
@@ -62,12 +64,20 @@ class GenAutoInstructions:
             insExtSignalLineList = []
             instructionName = None
             otherLineIndex  = -1
+            ignoreAutogen = False
 
             for line in lines:
                 if "INSTRUCTION:" in line:
                     instructionName = line.split(":")[-1].strip()
-                    print(f"Instruction Name: {instructionName}")
+                    if instructionName not in allInsFromConfig:
+                        print(f"Warning: Instruction '{instructionName}' not found in configuration. Ignoring...")
+                        ignoreAutogen = True
+                    else:
+                        allInsDict[instructionName] = True
                     break
+
+            if ignoreAutogen:
+                continue
 
             for line in lines:
                 otherLineIndex += 1
@@ -116,6 +126,12 @@ class GenAutoInstructions:
                                                 autogenOutSignalDict,
                                                 insInSignalLineList,
                                                 insExtSignalLineList)
+
+        # Check if any instruction in config is not parsed
+        for ins in allInsDict:
+            if not allInsDict[ins]:
+                raise Exception(f"ERROR: Instruction '{ins}' defined in configuration but not found in any instruction file.")
+
 
 
     # Auto-generate virtual Input Control Signals with help of the config file
