@@ -47,11 +47,16 @@ class GenAutoInstructions:
 
 
     def autogenEachInstruction(self):
-        allInsFromConfig = ParseConfig.getAllInstructions(self.uCodeConfig)
-        # create a dict to check all ins are parsed or not
-        allInsDict = {}
+        allInsFromConfig    = ParseConfig.getAllInstructions(self.uCodeConfig)
+        allSignalFromConfig = ParseConfig.getAllSignalList(self.uCodeConfig)
+
+        allInsDict = {}    # create a dict to check all ins are parsed or not
+        allSignalDict = {} # create a dict to check all Signal are parsed or not
         for ins in allInsFromConfig:
             allInsDict[ins] = False
+
+        for sig in allSignalFromConfig:
+            allSignalDict[sig] = False
 
         for ins in self.insObjects:
             insFile = ins.__file__
@@ -106,9 +111,16 @@ class GenAutoInstructions:
 
                     if sectionType == SIGNAL_CFG_INPUT:
                         insInSignalLineList.append(lineSplit)
+
+                    allSignalDict[signalName] = True
+
                 else:
                     insOtherLineList.append((line, otherLineIndex))
 
+            # Check if any signal in config is not parsed
+            for sig in allSignalDict:
+                if not allSignalDict[sig]:
+                    raise Exception(f"ERROR: Signal '{sig}' defined in configuration but not found in {insFile} file.")
 
             if len(insInSignalLineList) > 16:
                 print("\nError: Number of Input Control Signals exceeded 16")
@@ -116,8 +128,8 @@ class GenAutoInstructions:
             if len(insOutSignalLineList) > 16:
                 print("\nError: Number of Output Control Signals exceeded 16")
 
-            autogenInSignalDict  = self.autogenInputSignalLines(insInSignalLineList)
-            autogenOutSignalDict = self.autogenOutputSignalLines(insOutSignalLineList)
+            autogenInSignalDict  = self.autogenInputSignalLines(insInSignalLineList, instructionName)
+            autogenOutSignalDict = self.autogenOutputSignalLines(insOutSignalLineList, instructionName)
 
             self.createAutoGenInstructionFile(insFile,
                                                 instructionName,
@@ -133,10 +145,9 @@ class GenAutoInstructions:
                 raise Exception(f"ERROR: Instruction '{ins}' defined in configuration but not found in any instruction file.")
 
 
-
     # Auto-generate virtual Input Control Signals with help of the config file
     # This is a internal logic to generate the autogen Instruction Files.
-    def autogenInputSignalLines(self, inSignalLineList):
+    def autogenInputSignalLines(self, inSignalLineList, instructionName):
         virtualPins = ParseConfig.getAllVirtualPins(self.uCodeConfig)
         autogenSignalDict = {}
         for signal in virtualPins["InputControlPins"]:
@@ -153,7 +164,7 @@ class GenAutoInstructions:
                     highFound = True # Mark as found to avoid all zero
                     continue
                 if item == SIGNAL_VALUE_HIGH and highFound:
-                    print(f"Warning: Multiple HIGH signals found in column {columnNo}. Using the last one.")
+                    print(f"Warning: Multiple HIGH signals found in column {columnNo} of {instructionName}. Using the last one.")
                     break
                 if item == SIGNAL_VALUE_HIGH:
                     highFound = True
@@ -170,7 +181,7 @@ class GenAutoInstructions:
 
     # Auto-generate virtual Output Control Signals with help of the config file
     # This is a internal logic to generate the autogen Instruction Files.
-    def autogenOutputSignalLines(self, outSignalLineList):
+    def autogenOutputSignalLines(self, outSignalLineList, instructionName):
         virtualPins = ParseConfig.getAllVirtualPins(self.uCodeConfig)
         autogenSignalDict = {}
         for signal in virtualPins["OutputControlPins"]:
@@ -187,7 +198,7 @@ class GenAutoInstructions:
                     highFound = True # Mark as found to avoid all zero
                     continue
                 if item == SIGNAL_VALUE_HIGH and highFound:
-                    print(f"Warning: Multiple HIGH signals found in column {columnNo}. Using the last one.")
+                    print(f"Warning: Multiple HIGH signals found in column {columnNo}  of {instructionName}. Using the last one.")
                     break
                 if item == SIGNAL_VALUE_HIGH:
                     highFound = True
@@ -226,7 +237,6 @@ class GenAutoInstructions:
         for signal in autogenInSignalDict:
             values = autogenInSignalDict[signal]
             f.write(f"| O | {signal} | " + " | ".join([str(v) for v in values]) + " |\n")
-
 
         for signal in autogenOutSignalDict:
             values = autogenOutSignalDict[signal]

@@ -71,6 +71,8 @@ loaded in the counter until the PCL is high.
 
 * `PCC`: The PCC signal enables the Program Counter to count. If PCC is high, the counter increments on each clock cycle.
 
+* `PCO`: The PCO signal load the value from the PC register to the bus.
+
 * `RomO`: The RomO signal loads the current instruction from ROM onto the bus.
 
 * `MdI`: The MdI signal stands for Memory Decoder Input. It is used to activate the memory decoder when accessing the
@@ -101,7 +103,7 @@ Instruction Register.
 |   0   |   1   |   0   | **Grt**    | A > B                    |
 |   0   |   1   |   1   | **Lst**    | A < B                    |
 |   1   |   0   |   0   | **Eql**    | A = B                    |
-|   1   |   0   |   1   |  Reserved  | -                        |
+|   1   |   0   |   1   | Reserved   | -                        |
 |   1   |   1   |   0   | Reserved   | -                        |
 |   1   |   1   |   1   | Reserved   | -                        |
 

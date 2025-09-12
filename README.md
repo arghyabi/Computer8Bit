@@ -42,14 +42,16 @@ This project is about understanding and constructing the fundamental building bl
 |   ├── HwDesign.md                  # Details about hardware design
 |   ├── ISA.md                       # Details and documentation of supported instructions
 │   └── SignalInfo.md                # Information about all the control signals
+├── EepromFlasher/
+|   ├── App/                         # GUI Application for flash binary in eeprom
+│   └── Firmware/                    # Firmware code for the arduino for the eeprom flasher
 ├── Gen7segDriver/                   # 7 Segment display driver EEPROM logic
 ├── Images/
 │   ├── Schematic/                   # Schematic diagram for each PCB
 │   └── BlockDiagram/                # Top level block diagrams
 |       └── TopLevelArchitecture.png # High-level block diagram of the computer
 ├── MicroCode/
-│   ├── FlashMicrocode/              # Microcode flasher firmware and application
-│   └── GenMicrocode/                # Microcode definitions and sequencing logic
+│   └── GenMicrocode.py              # Microcode definitions and sequencing logic
 └── README.md
 ```
 
