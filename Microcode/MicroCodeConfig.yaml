@@ -30,38 +30,41 @@ InsConfig:
 
 PinConfig:
   InputControl:
-    rAI  : 0b1111
-    rBI  : 0b1110
-    rCI  : 0b1101
-    rDI  : 0b1100
-    PCLI : 0b1011
-    PCHI : 0b1010
-    MdI  : 0b1001
-    MeI  : 0b1000
-    IRI  : 0b1001
-    T1I  : 0b0110
-    T2I  : 0b0101
-    Seg7E: 0b0100
+    rAI  : 0b0000
+    rBI  : 0b0001
+    rCI  : 0b0010
+    rDI  : 0b0011
+    PCLI : 0b0100
+    PCHI : 0b0101
+    MdI  : 0b0110
+    MeI  : 0b0111
+    IRI  : 0b1000
+    T1I  : 0b1001
+    T2I  : 0b1010
+    Seg7E: 0b1011
+    SpL  : 0b1100
+    RESRV: 0b1111 # Reserved if no Pin need to be enabled
   OutputControl:
-    rAO  : 0b1111
-    rBO  : 0b1110
-    rCO  : 0b1101
-    rDO  : 0b1100
-    RomO : 0b1011
-    SpO  : 0b1010
-    MeO  : 0b1001
-    AdSuO: 0b1000
-    OrO  : 0b0111
-    AndO : 0b0110
-    XorO : 0b0101
-    FlgU : 0b0100
+    rAO  : 0b0000
+    rBO  : 0b0001
+    rCO  : 0b0010
+    rDO  : 0b0011
+    RomO : 0b0100
+    SpO  : 0b0101
+    MeO  : 0b0110
+    AdSuO: 0b0111
+    OrO  : 0b1000
+    AndO : 0b1001
+    XorO : 0b1010
+    FlgU : 0b1011
+    PCO  : 0b1100
+    SqR  : 0b1101
+    RESRV: 0b1111 # Reserved if no Pin need to be enabled
   Extra:
     PCL  : null
     PCC  : null
     SpC  : null
     SpUd : null
-    SpL  : null
-    SqR  : null
     AdSu : null
     Cin  : null
     FlSe0: null

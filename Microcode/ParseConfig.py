@@ -40,6 +40,23 @@ def getAllSignalIndex(sectionName, config):
     return signalIndexDict
 
 
+def getAllSignalList(config):
+    pinConfig = config.get("PinConfig", {})
+    InputSignals = pinConfig.get("InputControl", {})
+    OutputSignals = pinConfig.get("OutputControl", {})
+
+    signalList = []
+    for signal, index in InputSignals.items():
+        if signal == "RESRV":
+            continue
+        signalList.append(signal)
+    for signal, index in OutputSignals.items():
+        if signal == "RESRV":
+            continue
+        signalList.append(signal)
+    return signalList
+
+
 def getAllVirtualPins(config):
     virtualPinConfig = {}
     virtualPins = config.get("VirtualPins", {})
@@ -65,5 +82,6 @@ if __name__ == "__main__":
         print(getAllInstructions(config))
         print(getAllVirtualPins(config))
         print(getAllSignalIndex("InputControl", config))
+        print(getAllSignalList(config))
     except Exception as e:
         print(f"Error: {e}")
