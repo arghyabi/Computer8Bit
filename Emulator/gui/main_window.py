@@ -43,107 +43,107 @@ class EmulatorMainWindow:
         self.root.config(menu=menubar)
 
         # File menu
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Load Program...", command=self.loadProgram)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        fileMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=fileMenu)
+        fileMenu.add_command(label="Load Program...", command=self.loadProgram)
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Exit", command=self.root.quit)
 
         # CPU menu
-        cpu_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="CPU", menu=cpu_menu)
-        cpu_menu.add_command(label="Reset", command=self.resetCpu)
-        cpu_menu.add_command(label="Hard Reset", command=self.hardReset)
+        cpuMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="CPU", menu=cpuMenu)
+        cpuMenu.add_command(label="Reset", command=self.resetCpu)
+        cpuMenu.add_command(label="Hard Reset", command=self.hardReset)
 
         # Help menu
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self.showAbout)
+        helpMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=helpMenu)
+        helpMenu.add_command(label="About", command=self.showAbout)
 
     def createWidgets(self):
         """Create main GUI widgets"""
         # Main container
-        main_frame = tk.Frame(self.root)
-        main_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        mainFrame = tk.Frame(self.root)
+        mainFrame.pack(fill="both", expand=True, padx=5, pady=5)
 
         # Left panel - CPU state
-        left_frame = tk.Frame(main_frame, relief="ridge", bd=2)
-        left_frame.pack(side="left", fill="y", padx=(0,5))
+        leftFrame = tk.Frame(mainFrame, relief="ridge", bd=2)
+        leftFrame.pack(side="left", fill="y", padx=(0,5))
 
         # Registers
-        self.register_display = RegisterDisplay(left_frame)
-        self.register_display.pack(pady=5)
+        self.registerDisplay = RegisterDisplay(leftFrame)
+        self.registerDisplay.pack(pady=5)
 
         # Flags
-        self.flags_display = FlagsDisplay(left_frame)
-        self.flags_display.pack(pady=5)
+        self.flagsDisplay = FlagsDisplay(leftFrame)
+        self.flagsDisplay.pack(pady=5)
 
         # Status
-        self.status_display = StatusDisplay(left_frame)
-        self.status_display.pack(pady=5)
+        self.statusDisplay = StatusDisplay(leftFrame)
+        self.statusDisplay.pack(pady=5)
 
         # Memory
-        self.memory_display = MemoryDisplay(left_frame)
-        self.memory_display.pack(pady=5, fill="both", expand=True)
+        self.memoryDisplay = MemoryDisplay(leftFrame)
+        self.memoryDisplay.pack(pady=5, fill="both", expand=True)
 
         # Center panel - 7-segment display
-        center_frame = tk.Frame(main_frame, relief="ridge", bd=2)
-        center_frame.pack(side="left", fill="both", expand=True, padx=5)
+        centerFrame = tk.Frame(mainFrame, relief="ridge", bd=2)
+        centerFrame.pack(side="left", fill="both", expand=True, padx=5)
 
         # 7-segment display
-        display_frame = tk.Frame(center_frame)
-        display_frame.pack(expand=True)
+        displayFrame = tk.Frame(centerFrame)
+        displayFrame.pack(expand=True)
 
-        tk.Label(display_frame, text="4-Digit 7-Segment Display", font=("Arial", 14, "bold")).pack(pady=10)
-        self.sevenSegDisplay = FourDigitSevenSegmentDisplay(display_frame)
+        tk.Label(displayFrame, text="4-Digit 7-Segment Display", font=("Arial", 14, "bold")).pack(pady=10)
+        self.sevenSegDisplay = FourDigitSevenSegmentDisplay(displayFrame)
         self.sevenSegDisplay.pack(pady=20)
 
         # Connect display mode change to CPU mode
-        self.sevenSegDisplay.mode_var.trace('w', self._on_display_mode_change)
+        self.sevenSegDisplay.modeVar.trace('w', self._on_display_mode_change)
 
         # Assembly code display
-        code_frame = tk.LabelFrame(center_frame, text="Assembly Code", font=("Arial", 10, "bold"))
-        code_frame.pack(fill="both", expand=True, pady=10)
+        codeFrame = tk.LabelFrame(centerFrame, text="Assembly Code", font=("Arial", 10, "bold"))
+        codeFrame.pack(fill="both", expand=True, pady=10)
 
-        self.codeText = tk.Text(code_frame, width=50, height=15, font=("Courier", 9))
-        code_scrollbar = tk.Scrollbar(code_frame, orient="vertical", command=self.codeText.yview)
-        self.codeText.configure(yscrollcommand=code_scrollbar.set)
+        self.codeText = tk.Text(codeFrame, width=50, height=15, font=("Courier", 9))
+        codeScrollbar = tk.Scrollbar(codeFrame, orient="vertical", command=self.codeText.yview)
+        self.codeText.configure(yscrollcommand=codeScrollbar.set)
 
         self.codeText.pack(side="left", fill="both", expand=True)
-        code_scrollbar.pack(side="right", fill="y")
+        codeScrollbar.pack(side="right", fill="y")
 
     def createControls(self):
         """Create control buttons"""
-        control_frame = tk.Frame(self.root)
-        control_frame.pack(fill="x", pady=5)
+        controlFrame = tk.Frame(self.root)
+        controlFrame.pack(fill="x", pady=5)
 
         # File operations
-        file_frame = tk.LabelFrame(control_frame, text="File")
-        file_frame.pack(side="left", padx=5)
+        fileFrame = tk.LabelFrame(controlFrame, text="File")
+        fileFrame.pack(side="left", padx=5)
 
-        tk.Button(file_frame, text="Load Program", command=self.loadProgram).pack(side="left", padx=2)
+        tk.Button(fileFrame, text="Load Program", command=self.loadProgram).pack(side="left", padx=2)
 
         # Execution controls
-        exec_frame = tk.LabelFrame(control_frame, text="Execution")
-        exec_frame.pack(side="left", padx=5)
+        execFrame = tk.LabelFrame(controlFrame, text="Execution")
+        execFrame.pack(side="left", padx=5)
 
-        self.run_button = tk.Button(exec_frame, text="Run", command=self.toggleRun, bg="green", fg="white")
-        self.run_button.pack(side="left", padx=2)
+        self.runButton = tk.Button(execFrame, text="Run", command=self.toggleRun, bg="green", fg="white")
+        self.runButton.pack(side="left", padx=2)
 
-        tk.Button(exec_frame, text="Step", command=self.stepCpu).pack(side="left", padx=2)
-        tk.Button(exec_frame, text="Reset", command=self.resetCpu).pack(side="left", padx=2)
+        tk.Button(execFrame, text="Step", command=self.stepCpu).pack(side="left", padx=2)
+        tk.Button(execFrame, text="Reset", command=self.resetCpu).pack(side="left", padx=2)
 
         # Speed control
-        speed_frame = tk.LabelFrame(control_frame, text="Speed")
-        speed_frame.pack(side="left", padx=5)
+        speedFrame = tk.LabelFrame(controlFrame, text="Speed")
+        speedFrame.pack(side="left", padx=5)
 
-        tk.Label(speed_frame, text="Delay (ms):").pack(side="left")
-        self.speed_var = tk.StringVar(value="100")
-        speed_entry = tk.Entry(speed_frame, textvariable=self.speed_var, width=8)
-        speed_entry.pack(side="left", padx=2)
+        tk.Label(speedFrame, text="Delay (ms):").pack(side="left")
+        self.speedVar = tk.StringVar(value="100")
+        speedEntry = tk.Entry(speedFrame, textvariable=self.speedVar, width=8)
+        speedEntry.pack(side="left", padx=2)
 
         # Status
-        self.statusLabel = tk.Label(control_frame, text="Ready to load program",
+        self.statusLabel = tk.Label(controlFrame, text="Ready to load program",
                                     relief="sunken", anchor="w")
         self.statusLabel.pack(side="right", fill="x", expand=True, padx=5)
 
@@ -192,24 +192,24 @@ class EmulatorMainWindow:
             self.codeText.delete(1.0, tk.END)
 
             self.codeText.insert(tk.END, "; Disassembly\n")
-            for addr, opcode, operands, raw_bytes in instructions:
-                hex_bytes = " ".join(f"{b:02X}" for b in raw_bytes)
+            for addr, opcode, operands, rawBytes in instructions:
+                hex_bytes = " ".join(f"{b:02X}" for b in rawBytes)
 
                 # Format instruction
-                inst_str = opcode
-                if 'source_register' in operands and 'destination_register' in operands:
-                    src = self.cpu.decoder.register_name(operands['source_register'])
-                    dst = self.cpu.decoder.register_name(operands['destination_register'])
-                    inst_str += f" {dst} {src}"
+                instStr = opcode
+                if 'sourceRegister' in operands and 'destinationRegister' in operands:
+                    src = self.cpu.decoder.registerName(operands['sourceRegister'])
+                    dst = self.cpu.decoder.registerName(operands['destinationRegister'])
+                    instStr += f" {dst} {src}"
                 elif 'register' in operands:
-                    reg = self.cpu.decoder.register_name(operands['register'])
-                    inst_str += f" {reg}"
+                    reg = self.cpu.decoder.registerName(operands['register'])
+                    instStr += f" {reg}"
                     if 'immediate' in operands:
-                        inst_str += f" 0x{operands['immediate']:02X}"
+                        instStr += f" 0x{operands['immediate']:02X}"
                 elif 'address' in operands:
-                    inst_str += f" 0x{operands['address']:04X}"
+                    instStr += f" 0x{operands['address']:04X}"
 
-                line = f"{addr:04X}: {hex_bytes:<8} {inst_str}\n"
+                line = f"{addr:04X}: {hex_bytes:<8} {instStr}\n"
                 self.codeText.insert(tk.END, line)
 
         except Exception as e:
@@ -220,11 +220,11 @@ class EmulatorMainWindow:
         """Toggle run/stop execution"""
         if self.running:
             self.running = False
-            self.run_button.config(text="Run", bg="green")
+            self.runButton.config(text="Run", bg="green")
             self.statusLabel.config(text="Stopped")
         else:
             self.running = True
-            self.run_button.config(text="Stop", bg="red")
+            self.runButton.config(text="Stop", bg="red")
             self.statusLabel.config(text="Running...")
             self.runContinuous()
 
@@ -236,14 +236,14 @@ class EmulatorMainWindow:
 
             # Schedule next step
             try:
-                delay = int(self.speed_var.get())
+                delay = int(self.speedVar.get())
             except:
                 delay = 100
 
             self.root.after(delay, self.runContinuous)
         else:
             self.running = False
-            self.run_button.config(text="Run", bg="green")
+            self.runButton.config(text="Run", bg="green")
             if self.cpu.halted:
                 self.statusLabel.config(text="Program halted")
             else:
@@ -261,7 +261,7 @@ class EmulatorMainWindow:
     def resetCpu(self):
         """Reset CPU state"""
         self.running = False
-        self.run_button.config(text="Run", bg="green")
+        self.runButton.config(text="Run", bg="green")
         self.cpu.reset()
         self.updateDisplay()
         self.statusLabel.config(text="CPU reset")
@@ -269,7 +269,7 @@ class EmulatorMainWindow:
     def hardReset(self):
         """Hard reset - clear everything"""
         self.running = False
-        self.run_button.config(text="Run", bg="green")
+        self.runButton.config(text="Run", bg="green")
         self.cpu = CPU8Bit()  # Create new CPU instance
         self.updateDisplay()
         self.codeText.delete(1.0, tk.END)
@@ -280,17 +280,17 @@ class EmulatorMainWindow:
         state = self.cpu.getState()
 
         # Update widgets
-        self.register_display.updateRegisters(state['registers'])
-        self.flags_display.updateFlags(state['alu_flags'])
-        self.status_display.updateStatus(state)
-        self.memory_display.updateMemory(state['ram'])
+        self.registerDisplay.updateRegisters(state['registers'])
+        self.flagsDisplay.updateFlags(state['alu_flags'])
+        self.statusDisplay.updateStatus(state)
+        self.memoryDisplay.updateMemory(state['ram'])
         self.sevenSegDisplay.setValue(state['seven_segment'], state['outputEnabled'])
         # Sync display mode with CPU mode
         self.sevenSegDisplay.setMode(state['signedMode'])
 
     def _on_display_mode_change(self, *args):
         """Handle display mode change from 7-segment display"""
-        signedMode = (self.sevenSegDisplay.mode_var.get() == "Signed")
+        signedMode = (self.sevenSegDisplay.modeVar.get() == "Signed")
         self.cpu.setSignedMode(signedMode)
 
     def showAbout(self):

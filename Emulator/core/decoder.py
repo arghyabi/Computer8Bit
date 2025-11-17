@@ -23,7 +23,7 @@ class InstructionDecoder:
         }
 
         # Special opcodes with sub-types
-        self.special_opcodes = {
+        self.specialOpcodes = {
             0b0011: {  # INC/DEC
                 0b10: 'INC',  # RR10_0011
                 0b11: 'DEC'   # RR11_0011
@@ -53,120 +53,120 @@ class InstructionDecoder:
     def decode(self, instruction):
         """
         Decode a single instruction byte
-        Returns: (opcode, operand_info, instruction_size)
+        Returns: (opcode, operandInfo, instructionSize)
         """
         opcode = instruction & 0x0F  # Bottom 4 bits
-        upper_nibble = (instruction >> 4) & 0x0F  # Top 4 bits
+        upperNibble = (instruction >> 4) & 0x0F  # Top 4 bits
 
         # Check for 8-bit opcodes first
         if instruction in [0x00, 0x10, 0x20, 0xFF]:
-            return self._decode_8bit_opcode(instruction)
+            return self._decode8bitOpcode(instruction)
 
         # Check for special opcodes with sub-types
-        if opcode in self.special_opcodes:
-            return self._decode_special_opcode(instruction, opcode, upper_nibble)
+        if opcode in self.specialOpcodes:
+            return self._decodeSpecialOpcode(instruction, opcode, upperNibble)
 
         # Check for regular 4-bit opcodes
         if opcode in self.opcodes:
-            return self._decode_4bit_opcode(instruction, opcode, upper_nibble)
+            return self._decode4bitOpcode(instruction, opcode, upperNibble)
 
         # Unknown instruction
         return ('UNKNOWN', {}, 1)
 
-    def _decode_8bit_opcode(self, instruction):
+    def _decode8bitOpcode(self, instruction):
         """Decode 8-bit opcodes (NOP, OUT, HLT, RST)"""
-        opcode_name = self.opcodes.get(instruction, 'UNKNOWN')
-        return (opcode_name, {}, 1)
+        opcodeName = self.opcodes.get(instruction, 'UNKNOWN')
+        return (opcodeName, {}, 1)
 
-    def _decode_special_opcode(self, instruction, opcode, upper_nibble):
+    def _decodeSpecialOpcode(self, instruction, opcode, upperNibble):
         """Decode special opcodes with sub-types"""
-        sub_opcodes = self.special_opcodes[opcode]
+        subOpcodes = self.specialOpcodes[opcode]
 
         if opcode == 0b0011:  # INC/DEC: RR10_0011 or RR11_0011
-            sub_type = upper_nibble & 0b11  # Bottom 2 bits of upper nibble
-            register = (upper_nibble >> 2) & 0b11  # Top 2 bits of upper nibble
-            if sub_type in sub_opcodes:
-                return (sub_opcodes[sub_type], {'register': register}, 1)
+            subType = upperNibble & 0b11  # Bottom 2 bits of upper nibble
+            register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
+            if subType in subOpcodes:
+                return (subOpcodes[subType], {'register': register}, 1)
 
         elif opcode == 0b0100:  # LDI/LDM/SAV: RRTT_0100
-            sub_type = upper_nibble & 0b11  # Bottom 2 bits of upper nibble
-            register = (upper_nibble >> 2) & 0b11  # Top 2 bits of upper nibble
-            if sub_type in sub_opcodes:
-                return (sub_opcodes[sub_type], {'register': register}, 2)  # Has immediate/address
+            subType = upperNibble & 0b11  # Bottom 2 bits of upper nibble
+            register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
+            if subType in subOpcodes:
+                return (subOpcodes[subType], {'register': register}, 2)  # Has immediate/address
 
         elif opcode == 0b0101:  # Jump instructions: TTTT_0101
-            if upper_nibble in sub_opcodes:
-                return (sub_opcodes[upper_nibble], {}, 3)  # 11-bit address (2 bytes)
+            if upperNibble in subOpcodes:
+                return (subOpcodes[upperNibble], {}, 3)  # 11-bit address (2 bytes)
 
         elif opcode == 0b1010:  # NOT: RR00_1010
-            register = (upper_nibble >> 2) & 0b11
-            sub_type = upper_nibble & 0b11
-            if sub_type in sub_opcodes:
-                return (sub_opcodes[sub_type], {'register': register}, 1)
+            register = (upperNibble >> 2) & 0b11
+            subType = upperNibble & 0b11
+            if subType in subOpcodes:
+                return (subOpcodes[subType], {'register': register}, 1)
 
         elif opcode == 0b1100:  # CMI: RR00_1100
-            register = (upper_nibble >> 2) & 0b11
-            sub_type = upper_nibble & 0b11
-            if sub_type in sub_opcodes:
-                return (sub_opcodes[sub_type], {'register': register}, 2)  # Has immediate
+            register = (upperNibble >> 2) & 0b11
+            subType = upperNibble & 0b11
+            if subType in subOpcodes:
+                return (subOpcodes[subType], {'register': register}, 2)  # Has immediate
 
         return ('UNKNOWN', {}, 1)
 
-    def _decode_4bit_opcode(self, instruction, opcode, upper_nibble):
+    def _decode4bitOpcode(self, instruction, opcode, upperNibble):
         """Decode 4-bit opcodes (ADD, SUB, MOV, AND, OR, XOR, CMP)"""
-        opcode_name = self.opcodes[opcode]
+        opcodeName = self.opcodes[opcode]
 
         # These instructions have SSDD format (source, destination registers)
-        dest_reg = upper_nibble & 0b11        # Bottom 2 bits
-        source_reg = (upper_nibble >> 2) & 0b11  # Top 2 bits
+        destReg = upperNibble & 0b11        # Bottom 2 bits
+        sourceReg = (upperNibble >> 2) & 0b11  # Top 2 bits
 
-        return (opcode_name, {
-            'source_register': source_reg,
-            'destination_register': dest_reg
+        return (opcodeName, {
+            'sourceRegister': sourceReg,
+            'destinationRegister': destReg
         }, 1)
 
-    def decodeProgram(self, binaryData, start_pc=0):
+    def decodeProgram(self, binaryData, startPc=0):
         """
         Decode an entire program
-        Returns: list of (address, opcode, operands, raw_bytes)
+        Returns: list of (address, opcode, operands, rawBytes)
         """
         instructions = []
-        pc = start_pc
+        pc = startPc
 
         while pc < len(binaryData):
             if pc >= len(binaryData):
                 break
 
             # Get first instruction byte
-            inst_byte = binaryData[pc]
-            opcode, operands, size = self.decode(inst_byte)
+            instByte = binaryData[pc]
+            opcode, operands, size = self.decode(instByte)
 
             # Collect all bytes for this instruction
-            raw_bytes = [inst_byte]
+            rawBytes = [instByte]
 
             # Get additional bytes if needed
             if size > 1 and pc + size <= len(binaryData):
                 for i in range(1, size):
                     if pc + i < len(binaryData):
-                        raw_bytes.append(binaryData[pc + i])
+                        rawBytes.append(binaryData[pc + i])
 
                 # Add immediate/address values to operands
                 if size == 2:  # Has immediate or memory address
-                    operands['immediate'] = raw_bytes[1] if len(raw_bytes) > 1 else 0
+                    operands['immediate'] = rawBytes[1] if len(rawBytes) > 1 else 0
                 elif size == 3:  # Has 11-bit address (high, low)
-                    if len(raw_bytes) >= 3:
-                        high_addr = raw_bytes[1]
-                        low_addr = raw_bytes[2]
-                        operands['address'] = (high_addr << 8) | low_addr
+                    if len(rawBytes) >= 3:
+                        highAddr = rawBytes[1]
+                        lowAddr = rawBytes[2]
+                        operands['address'] = (highAddr << 8) | lowAddr
                     else:
                         operands['address'] = 0
 
-            instructions.append((pc, opcode, operands, raw_bytes))
+            instructions.append((pc, opcode, operands, rawBytes))
             pc += size
 
         return instructions
 
-    def register_name(self, regCode):
+    def registerName(self, regCode):
         """Convert register code to name"""
         regMap = {0b00: 'A', 0b01: 'B', 0b10: 'C', 0b11: 'D'}
         return regMap.get(regCode, f'R{regCode}')

@@ -49,9 +49,9 @@ class CPU8Bit:
         self.instructionCount = 0
         self.cycleCount = 0
 
-    def loadProgram(self, binaryData, start_address=0):
+    def loadProgram(self, binaryData, startAddress=0):
         """Load binary program into ROM"""
-        self.memory.loadRom(binaryData, start_address)
+        self.memory.loadRom(binaryData, startAddress)
         self.reset()  # Reset CPU after loading new program
 
     def fetch(self):
@@ -85,7 +85,7 @@ class CPU8Bit:
 
         return success
 
-    def execute(self, opcode, operands, instruction_size):
+    def execute(self, opcode, operands, instructionSize):
         """Execute decoded instruction"""
         try:
             if opcode == 'NOP':
@@ -128,12 +128,12 @@ class CPU8Bit:
                 self._executeJump(opcode, operands)
             else:
                 print(f"Unknown instruction: {opcode}")
-                self.programCounter += instruction_size
+                self.programCounter += instructionSize
                 return False
 
             # Advance PC for non-jump instructions
             if opcode not in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JNG', 'JML', 'HLT']:
-                self.programCounter += instruction_size
+                self.programCounter += instructionSize
 
             return True
 
@@ -162,39 +162,39 @@ class CPU8Bit:
 
     def _executeAdd(self, operands):
         """ADD D S - Add source to destination"""
-        src_val = self.registers.read(operands['source_register'])
-        dst_val = self.registers.read(operands['destination_register'])
-        result, carry = self.alu.add(dst_val, src_val)
-        self.registers.write(operands['destination_register'], result)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        result, carry = self.alu.add(dstVal, srcVal)
+        self.registers.write(operands['destinationRegister'], result)
 
     def _executeSub(self, operands):
         """SUB D S - Subtract source from destination"""
-        src_val = self.registers.read(operands['source_register'])
-        dst_val = self.registers.read(operands['destination_register'])
-        result, borrow = self.alu.subtract(dst_val, src_val)
-        self.registers.write(operands['destination_register'], result)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        result, borrow = self.alu.subtract(dstVal, srcVal)
+        self.registers.write(operands['destinationRegister'], result)
 
     def _executeInc(self, operands):
         """INC R - Increment register"""
-        current_val = self.registers.read(operands['register'])
-        result = self.alu.increment(current_val)
+        currentVal = self.registers.read(operands['register'])
+        result = self.alu.increment(currentVal)
         self.registers.write(operands['register'], result)
 
     def _executeDec(self, operands):
         """DEC R - Decrement register"""
-        current_val = self.registers.read(operands['register'])
-        result = self.alu.decrement(current_val)
+        currentVal = self.registers.read(operands['register'])
+        result = self.alu.decrement(currentVal)
         self.registers.write(operands['register'], result)
 
     def _executeMov(self, operands):
         """MOV D S - Move source to destination"""
-        src_val = self.registers.read(operands['source_register'])
-        self.registers.write(operands['destination_register'], src_val)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        self.registers.write(operands['destinationRegister'], srcVal)
 
     def _executeLdi(self, operands):
         """LDI R VV - Load immediate value into register"""
-        immediate_val = operands.get('immediate', self._getNextByte())
-        self.registers.write(operands['register'], immediate_val)
+        immediateVal = operands.get('immediate', self._getNextByte())
+        self.registers.write(operands['register'], immediateVal)
 
     def _executeLdm(self, operands):
         """LDM R AA - Load from memory into register"""
@@ -210,89 +210,89 @@ class CPU8Bit:
 
     def _executeAnd(self, operands):
         """AND D S - Bitwise AND"""
-        src_val = self.registers.read(operands['source_register'])
-        dst_val = self.registers.read(operands['destination_register'])
-        result = self.alu.logicalAnd(dst_val, src_val)
-        self.registers.write(operands['destination_register'], result)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        result = self.alu.logicalAnd(dstVal, srcVal)
+        self.registers.write(operands['destinationRegister'], result)
 
     def _executeOr(self, operands):
         """OR D S - Bitwise OR"""
-        src_val = self.registers.read(operands['source_register'])
-        dst_val = self.registers.read(operands['destination_register'])
-        result = self.alu.logicalOr(dst_val, src_val)
-        self.registers.write(operands['destination_register'], result)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        result = self.alu.logicalOr(dstVal, srcVal)
+        self.registers.write(operands['destinationRegister'], result)
 
     def _executeXor(self, operands):
         """XOR D S - Bitwise XOR"""
-        src_val = self.registers.read(operands['source_register'])
-        dst_val = self.registers.read(operands['destination_register'])
-        result = self.alu.logicalXor(dst_val, src_val)
-        self.registers.write(operands['destination_register'], result)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        result = self.alu.logicalXor(dstVal, srcVal)
+        self.registers.write(operands['destinationRegister'], result)
 
     def _executeNot(self, operands):
         """NOT R - Bitwise NOT (complement)"""
-        current_val = self.registers.read(operands['register'])
-        result = self.alu.logicalNot(current_val)
+        currentVal = self.registers.read(operands['register'])
+        result = self.alu.logicalNot(currentVal)
         self.registers.write(operands['register'], result)
 
     def _executeCmp(self, operands):
         """CMP D S - Compare destination with source"""
-        src_val = self.registers.read(operands['source_register'])
-        dst_val = self.registers.read(operands['destination_register'])
-        self.alu.compare(dst_val, src_val)
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        self.alu.compare(dstVal, srcVal)
 
     def _executeCmi(self, operands):
         """CMI R VV - Compare register with immediate value"""
-        immediate_val = operands.get('immediate', self._getNextByte())
-        reg_val = self.registers.read(operands['register'])
-        self.alu.compare(reg_val, immediate_val)
+        immediateVal = operands.get('immediate', self._getNextByte())
+        regVal = self.registers.read(operands['register'])
+        self.alu.compare(regVal, immediateVal)
 
     def _executeJump(self, opcode, operands):
         """Execute jump instructions"""
-        target_address = operands.get('address', self._getJumpAddress())
+        targetAddress = operands.get('address', self._getJumpAddress())
 
-        should_jump = False
+        shouldJump = False
         flags = self.alu.getFlags()
 
         if opcode == 'JMP':
-            should_jump = True
+            shouldJump = True
         elif opcode == 'JMZ':
-            should_jump = flags['zero']
+            shouldJump = flags['zero']
         elif opcode == 'JNZ':
-            should_jump = not flags['zero']
+            shouldJump = not flags['zero']
         elif opcode == 'JMC':
-            should_jump = flags['carry']
+            shouldJump = flags['carry']
         elif opcode == 'JME':
-            should_jump = flags['zero']  # Equal means zero flag set
+            shouldJump = flags['zero']  # Equal means zero flag set
         elif opcode == 'JNG':  # Jump Not Greater (<=)
-            should_jump = flags['zero'] or flags['negative']
+            shouldJump = flags['zero'] or flags['negative']
         elif opcode == 'JML':  # Jump Less
-            should_jump = flags['negative'] and not flags['zero']
+            shouldJump = flags['negative'] and not flags['zero']
 
-        if should_jump:
-            self.programCounter = target_address
+        if shouldJump:
+            self.programCounter = targetAddress
         else:
             self.programCounter += 3  # Skip the 3-byte jump instruction
 
     def _getNextByte(self):
         """Get next byte from ROM (for immediate values)"""
-        next_pc = self.programCounter + 1
-        if next_pc < self.memory.ROM_SIZE:
-            return self.memory.readRom(next_pc)
+        nextPc = self.programCounter + 1
+        if nextPc < self.memory.ROM_SIZE:
+            return self.memory.readRom(nextPc)
         return 0
 
     def _getJumpAddress(self):
         """Get 11-bit jump address from next two bytes"""
-        high_byte = self._getNextByte()  # PC + 1
-        low_byte = self.memory.readRom(self.programCounter + 2)  # PC + 2
-        return (high_byte << 8) | low_byte
+        highByte = self._getNextByte()  # PC + 1
+        lowByte = self.memory.readRom(self.programCounter + 2)  # PC + 2
+        return (highByte << 8) | lowByte
 
-    def run(self, max_instructions=10000):
+    def run(self, maxInstructions=10000):
         """Run program until halt or max instructions"""
         self.running = True
         executed = 0
 
-        while self.running and not self.halted and executed < max_instructions:
+        while self.running and not self.halted and executed < maxInstructions:
             if not self.step():
                 break
             executed += 1

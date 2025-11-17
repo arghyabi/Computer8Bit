@@ -18,19 +18,19 @@ class Memory:
         for i in range(self.ROM_SIZE):
             self.rom[i] = 0x00  # NOP instruction
 
-    def loadRom(self, binaryData, start_address=0):
+    def loadRom(self, binaryData, startAddress=0):
         """
         Load binary program into ROM
         binaryData: bytearray of compiled program
-        start_address: starting address to load at
+        startAddress: starting address to load at
         """
-        if start_address >= self.ROM_SIZE:
-            raise ValueError(f"Start address {start_address} exceeds ROM size")
+        if startAddress >= self.ROM_SIZE:
+            raise ValueError(f"Start address {startAddress} exceeds ROM size")
 
         # Load data into ROM
         for i, byte in enumerate(binaryData):
-            if start_address + i < self.ROM_SIZE:
-                self.rom[start_address + i] = byte
+            if startAddress + i < self.ROM_SIZE:
+                self.rom[startAddress + i] = byte
             else:
                 break  # Don't overflow ROM
 
@@ -65,6 +65,6 @@ class Memory:
 
     def __str__(self):
         """String representation for debugging"""
-        rom_info = f"ROM: {len([b for b in self.rom[:100] if b != 0])} non-zero bytes"
-        ram_info = f"RAM: {self.ram[:8].hex().upper()}"
-        return f"{rom_info}, {ram_info}"
+        romInfo = f"ROM: {len([b for b in self.rom[:100] if b != 0])} non-zero bytes"
+        ramInfo = f"RAM: {self.ram[:8].hex().upper()}"
+        return f"{romInfo}, {ramInfo}"

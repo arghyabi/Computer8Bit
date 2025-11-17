@@ -16,22 +16,22 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
         self.signedMode = True  # Default to signed mode (matching assembler default)
 
         # Create main frame
-        main_frame = tk.Frame(self)
-        main_frame.pack()
+        mainFrame = tk.Frame(self)
+        mainFrame.pack()
 
         # Mode selection
-        mode_frame = tk.Frame(main_frame)
-        mode_frame.pack(pady=(0, 10))
+        modeFrame = tk.Frame(mainFrame)
+        modeFrame.pack(pady=(0, 10))
 
-        tk.Label(mode_frame, text="Display Mode:", font=("Arial", 10, "bold")).pack(side="left")
-        self.mode_var = tk.StringVar(value="Signed")  # Default to signed mode
-        mode_combo = ttk.Combobox(mode_frame, textvariable=self.mode_var,
+        tk.Label(modeFrame, text="Display Mode:", font=("Arial", 10, "bold")).pack(side="left")
+        self.modeVar = tk.StringVar(value="Signed")  # Default to signed mode
+        modeCombo = ttk.Combobox(modeFrame, textvariable=self.modeVar,
                                  values=["Unsigned", "Signed"], width=10, state="readonly")
-        mode_combo.pack(side="left", padx=(5, 0))
-        mode_combo.bind("<<ComboboxSelected>>", self.onModeChange)
+        modeCombo.pack(side="left", padx=(5, 0))
+        modeCombo.bind("<<ComboboxSelected>>", self.onModeChange)
 
         # Create canvas for 4-digit display
-        self.canvas = tk.Canvas(main_frame, width=320, height=100, bg='black', highlightthickness=1)
+        self.canvas = tk.Canvas(mainFrame, width=320, height=100, bg='black', highlightthickness=1)
         self.canvas.pack()
 
         # 7-segment patterns (a,b,c,d,e,f,g)
@@ -51,15 +51,15 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
         }
 
         # Info label
-        self.infoLabel = tk.Label(main_frame, text="Value: 0 (0x00)",
+        self.infoLabel = tk.Label(mainFrame, text="Value: 0 (0x00)",
                                   font=("Courier", 10), fg="green")
         self.infoLabel.pack(pady=(5, 0))
 
         self.drawDisplay()
 
     def onModeChange(self, event=None):
-        """Handle mode change"""
-        self.signedMode = (self.mode_var.get() == "Signed")
+        """Handle mode change from combobox"""
+        self.signedMode = (self.modeVar.get() == "Signed")
         self.drawDisplay()
 
     def drawDisplay(self):
@@ -138,10 +138,10 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
         }
 
         # Draw segments
-        seg_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-        for i, seg_name in enumerate(seg_names):
+        segNames = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+        for i, segName in enumerate(segNames):
             color = onColor if pattern[i] else offColor
-            self.canvas.create_polygon(segments[seg_name], fill=color, outline=color)
+            self.canvas.create_polygon(segments[segName], fill=color, outline=color)
 
     def setValue(self, value, enabled=True):
         """Update the display value"""
@@ -152,7 +152,7 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
     def setMode(self, signedMode):
         """Set display mode programmatically"""
         self.signedMode = signedMode
-        self.mode_var.set("Signed" if signedMode else "Unsigned")
+        self.modeVar.set("Signed" if signedMode else "Unsigned")
         self.drawDisplay()
 
 
@@ -171,39 +171,39 @@ class RegisterDisplay(tk.Frame):
         title.pack()
 
         # Register frame
-        reg_frame = tk.Frame(self)
-        reg_frame.pack(fill="both", expand=True)
+        regFrame = tk.Frame(self)
+        regFrame.pack(fill="both", expand=True)
 
         # Create register displays
-        self.register_vars = {}
-        self.register_labels = {}
+        self.registerVars = {}
+        self.registerLabels = {}
 
         for i, regName in enumerate(['A', 'B', 'C', 'D']):
             # Register name
-            tk.Label(reg_frame, text=f"{regName}:", font=("Courier", 10, "bold")).grid(
+            tk.Label(regFrame, text=f"{regName}:", font=("Courier", 10, "bold")).grid(
                 row=i, column=0, sticky="e", padx=(5,2))
 
             # Hex value
-            self.register_vars[regName] = tk.StringVar(value="00")
-            hex_label = tk.Label(reg_frame, textvariable=self.register_vars[regName],
+            self.registerVars[regName] = tk.StringVar(value="00")
+            hexLabel = tk.Label(regFrame, textvariable=self.registerVars[regName],
                                 font=("Courier", 10), fg="blue", width=4)
-            hex_label.grid(row=i, column=1, padx=2)
+            hexLabel.grid(row=i, column=1, padx=2)
 
             # Binary value
-            self.register_labels[regName] = tk.Label(reg_frame, text="00000000",
+            self.registerLabels[regName] = tk.Label(regFrame, text="00000000",
                                                      font=("Courier", 8), fg="gray", width=10)
-            self.register_labels[regName].grid(row=i, column=2, padx=2)
+            self.registerLabels[regName].grid(row=i, column=2, padx=2)
 
             # Decimal value
-            tk.Label(reg_frame, text="(0)", font=("Arial", 8), fg="green", width=6).grid(
+            tk.Label(regFrame, text="(0)", font=("Arial", 8), fg="green", width=6).grid(
                 row=i, column=3, padx=2)
 
     def updateRegisters(self, registers):
         """Update register display"""
         for regName, value in registers.items():
-            if regName in self.register_vars:
-                self.register_vars[regName].set(f"{value:02X}")
-                self.register_labels[regName].config(text=f"{value:08b}")
+            if regName in self.registerVars:
+                self.registerVars[regName].set(f"{value:02X}")
+                self.registerLabels[regName].config(text=f"{value:08b}")
                 # Update decimal display
                 for widget in self.winfo_children()[1].winfo_children():
                     if isinstance(widget, tk.Label) and widget.grid_info()['column'] == 3:
@@ -221,33 +221,33 @@ class FlagsDisplay(tk.Frame):
         tk.Label(self, text="ALU Flags", font=("Arial", 12, "bold")).pack()
 
         # Flags frame
-        flags_frame = tk.Frame(self)
-        flags_frame.pack()
+        flagsFrame = tk.Frame(self)
+        flagsFrame.pack()
 
         # Flag indicators
-        self.flag_vars = {}
-        flag_names = [('Z', 'Zero'), ('C', 'Carry'), ('N', 'Negative')]
+        self.flagVars = {}
+        flagNames = [('Z', 'Zero'), ('C', 'Carry'), ('N', 'Negative')]
 
-        for i, (short, full) in enumerate(flag_names):
-            frame = tk.Frame(flags_frame)
+        for i, (short, full) in enumerate(flagNames):
+            frame = tk.Frame(flagsFrame)
             frame.grid(row=0, column=i, padx=5)
 
             tk.Label(frame, text=short, font=("Arial", 8, "bold")).pack()
 
-            self.flag_vars[short.lower()] = tk.StringVar(value="0")
-            flag_label = tk.Label(frame, textvariable=self.flag_vars[short.lower()],
+            self.flagVars[short.lower()] = tk.StringVar(value="0")
+            flagLabel = tk.Label(frame, textvariable=self.flagVars[short.lower()],
                                  font=("Courier", 16, "bold"), fg="red", width=2)
-            flag_label.pack()
+            flagLabel.pack()
 
             tk.Label(frame, text=full, font=("Arial", 7)).pack()
 
     def updateFlags(self, flags):
         """Update flag display"""
-        flag_map = {'zero': 'z', 'carry': 'c', 'negative': 'n'}
-        for flag_name, value in flags.items():
-            short_name = flag_map.get(flag_name)
-            if short_name in self.flag_vars:
-                self.flag_vars[short_name].set("1" if value else "0")
+        flagMap = {'zero': 'z', 'carry': 'c', 'negative': 'n'}
+        for flagName, value in flags.items():
+            shortName = flagMap.get(flagName)
+            if shortName in self.flagVars:
+                self.flagVars[shortName].set("1" if value else "0")
 
 
 class MemoryDisplay(tk.Frame):
@@ -260,37 +260,37 @@ class MemoryDisplay(tk.Frame):
         tk.Label(self, text="RAM (16 bytes)", font=("Arial", 12, "bold")).pack()
 
         # Memory frame with scrollbar
-        mem_frame = tk.Frame(self)
-        mem_frame.pack(fill="both", expand=True)
+        memFrame = tk.Frame(self)
+        memFrame.pack(fill="both", expand=True)
 
         # Create text widget for memory display
-        self.mem_text = tk.Text(mem_frame, width=50, height=10, font=("Courier", 9))
-        scrollbar = tk.Scrollbar(mem_frame, orient="vertical", command=self.mem_text.yview)
-        self.mem_text.configure(yscrollcommand=scrollbar.set)
+        self.memText = tk.Text(memFrame, width=50, height=10, font=("Courier", 9))
+        scrollbar = tk.Scrollbar(memFrame, orient="vertical", command=self.memText.yview)
+        self.memText.configure(yscrollcommand=scrollbar.set)
 
-        self.mem_text.pack(side="left", fill="both", expand=True)
+        self.memText.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-    def updateMemory(self, ram_data):
+    def updateMemory(self, ramData):
         """Update memory display"""
-        self.mem_text.delete(1.0, tk.END)
+        self.memText.delete(1.0, tk.END)
 
         # Display RAM in hex dump format
-        for i in range(0, len(ram_data), 8):
+        for i in range(0, len(ramData), 8):
             line = f"{i:02X}: "
-            hex_part = ""
-            ascii_part = ""
+            hexPart = ""
+            asciiPart = ""
 
             for j in range(8):
-                if i + j < len(ram_data):
-                    byte_val = ram_data[i + j]
-                    hex_part += f"{byte_val:02X} "
-                    ascii_part += chr(byte_val) if 32 <= byte_val <= 126 else "."
+                if i + j < len(ramData):
+                    byteVal = ramData[i + j]
+                    hexPart += f"{byteVal:02X} "
+                    asciiPart += chr(byteVal) if 32 <= byteVal <= 126 else "."
                 else:
-                    hex_part += "   "
-                    ascii_part += " "
+                    hexPart += "   "
+                    asciiPart += " "
 
-            self.mem_text.insert(tk.END, f"{line}{hex_part} {ascii_part}\n")
+            self.memText.insert(tk.END, f"{line}{hexPart} {asciiPart}\n")
 
 
 class StatusDisplay(tk.Frame):
@@ -303,29 +303,29 @@ class StatusDisplay(tk.Frame):
         tk.Label(self, text="CPU Status", font=("Arial", 12, "bold")).pack()
 
         # Status frame
-        status_frame = tk.Frame(self)
-        status_frame.pack()
+        statusFrame = tk.Frame(self)
+        statusFrame.pack()
 
         # PC display
-        pc_frame = tk.Frame(status_frame)
+        pc_frame = tk.Frame(statusFrame)
         pc_frame.grid(row=0, column=0, columnspan=2, pady=2)
         tk.Label(pc_frame, text="PC:", font=("Arial", 10)).pack(side="left")
         self.pc_var = tk.StringVar(value="0000")
         tk.Label(pc_frame, textvariable=self.pc_var, font=("Courier", 12, "bold"), fg="blue").pack(side="left")
 
         # Instruction count
-        tk.Label(status_frame, text="Instructions:", font=("Arial", 9)).grid(row=1, column=0, sticky="e")
+        tk.Label(statusFrame, text="Instructions:", font=("Arial", 9)).grid(row=1, column=0, sticky="e")
         self.inst_var = tk.StringVar(value="0")
-        tk.Label(status_frame, textvariable=self.inst_var, font=("Courier", 9)).grid(row=1, column=1, sticky="w")
+        tk.Label(statusFrame, textvariable=self.inst_var, font=("Courier", 9)).grid(row=1, column=1, sticky="w")
 
         # Cycle count
-        tk.Label(status_frame, text="Cycles:", font=("Arial", 9)).grid(row=2, column=0, sticky="e")
+        tk.Label(statusFrame, text="Cycles:", font=("Arial", 9)).grid(row=2, column=0, sticky="e")
         self.cycle_var = tk.StringVar(value="0")
-        tk.Label(status_frame, textvariable=self.cycle_var, font=("Courier", 9)).grid(row=2, column=1, sticky="w")
+        tk.Label(statusFrame, textvariable=self.cycle_var, font=("Courier", 9)).grid(row=2, column=1, sticky="w")
 
         # Halted status
         self.halted_var = tk.StringVar(value="Ready")
-        halted_label = tk.Label(status_frame, textvariable=self.halted_var, font=("Arial", 10, "bold"))
+        halted_label = tk.Label(statusFrame, textvariable=self.halted_var, font=("Arial", 10, "bold"))
         halted_label.grid(row=3, column=0, columnspan=2, pady=2)
 
     def updateStatus(self, state):

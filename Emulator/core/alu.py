@@ -19,38 +19,38 @@ class ALU:
         self.temp1 = 0  # Temporary register 1
         self.temp2 = 0  # Temporary register 2
 
-    def set_temps(self, val1, val2):
+    def setTemps(self, val1, val2):
         """Set temporary registers for operations"""
         self.temp1 = val1 & 0xFF
         self.temp2 = val2 & 0xFF
 
-    def add(self, a, b, carry_in=0):
+    def add(self, a, b, carryIn=0):
         """
         8-bit addition with carry
-        Returns: (result, carry_out)
+        Returns: (result, carryOut)
         """
-        result = (a + b + carry_in) & 0x1FF  # 9-bit result
-        carry_out = (result > 0xFF)
+        result = (a + b + carryIn) & 0x1FF  # 9-bit result
+        carryOut = (result > 0xFF)
         result = result & 0xFF
 
-        self._updateFlags(result, carry_out)
-        return result, carry_out
+        self._updateFlags(result, carryOut)
+        return result, carryOut
 
-    def subtract(self, a, b, borrow_in=0):
+    def subtract(self, a, b, borrowIn=0):
         """
         8-bit subtraction with borrow (a - b)
-        Returns: (result, borrow_out)
+        Returns: (result, borrowOut)
         """
-        result = a - b - borrow_in
-        borrow_out = (result < 0)
+        result = a - b - borrowIn
+        borrowOut = (result < 0)
 
         if result < 0:
             result = (result + 256) & 0xFF  # Two's complement
         else:
             result = result & 0xFF
 
-        self._updateFlags(result, borrow_out)
-        return result, borrow_out
+        self._updateFlags(result, borrowOut)
+        return result, borrowOut
 
     def increment(self, value):
         """Increment 8-bit value"""
@@ -104,15 +104,15 @@ class ALU:
         """Get current flag state"""
         return self.flags.copy()
 
-    def setFlag(self, flag_name, value):
+    def setFlag(self, flagName, value):
         """Set specific flag"""
-        if flag_name in self.flags:
-            self.flags[flag_name] = bool(value)
+        if flagName in self.flags:
+            self.flags[flagName] = bool(value)
 
     def __str__(self):
         """String representation for debugging"""
-        flags_str = ""
-        flags_str += "Z" if self.flags['zero'] else "-"
-        flags_str += "C" if self.flags['carry'] else "-"
-        flags_str += "N" if self.flags['negative'] else "-"
-        return f"ALU Flags: {flags_str}"
+        flagsStr = ""
+        flagsStr += "Z" if self.flags['zero'] else "-"
+        flagsStr += "C" if self.flags['carry'] else "-"
+        flagsStr += "N" if self.flags['negative'] else "-"
+        return f"ALU Flags: {flagsStr}"

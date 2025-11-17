@@ -56,42 +56,42 @@ def instructionCycles(opcode):
     Return approximate cycle count for instruction
     (Simplified - real hardware would have different timing)
     """
-    cycle_map = {
+    cycleMap = {
         'NOP': 1, 'HLT': 1, 'OUT': 2, 'RST': 1,
         'ADD': 3, 'SUB': 3, 'AND': 3, 'OR': 3, 'XOR': 3, 'CMP': 3,
         'INC': 2, 'DEC': 2, 'NOT': 2,
         'MOV': 2, 'LDI': 3, 'LDM': 4, 'SAV': 4, 'CMI': 3,
         'JMP': 3, 'JMZ': 3, 'JNZ': 3, 'JMC': 3, 'JME': 3, 'JNG': 3, 'JML': 3
     }
-    return cycle_map.get(opcode, 1)
+    return cycleMap.get(opcode, 1)
 
 def formatInstruction(opcode, operands, decoder=None):
     """Format instruction for display"""
-    inst_str = opcode
+    instStr = opcode
 
-    if 'source_register' in operands and 'destination_register' in operands:
+    if 'sourceRegister' in operands and 'destinationRegister' in operands:
         if decoder:
-            src = decoder.register_name(operands['source_register'])
-            dst = decoder.register_name(operands['destination_register'])
+            src = decoder.registerName(operands['sourceRegister'])
+            dst = decoder.registerName(operands['destinationRegister'])
         else:
-            src = f"R{operands['source_register']}"
-            dst = f"R{operands['destination_register']}"
-        inst_str += f" {dst} {src}"
+            src = f"R{operands['sourceRegister']}"
+            dst = f"R{operands['destinationRegister']}"
+        instStr += f" {dst} {src}"
 
     elif 'register' in operands:
         if decoder:
-            reg = decoder.register_name(operands['register'])
+            reg = decoder.registerName(operands['register'])
         else:
             reg = f"R{operands['register']}"
-        inst_str += f" {reg}"
+        instStr += f" {reg}"
 
         if 'immediate' in operands:
-            inst_str += f" 0x{operands['immediate']:02X}"
+            instStr += f" 0x{operands['immediate']:02X}"
 
     elif 'address' in operands:
-        inst_str += f" 0x{operands['address']:04X}"
+        instStr += f" 0x{operands['address']:04X}"
 
-    return inst_str
+    return instStr
 
 def createHexDump(data, startAddress=0, bytesPerLine=16):
     """Create a hex dump display of binary data"""
