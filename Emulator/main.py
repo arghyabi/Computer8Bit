@@ -22,12 +22,11 @@ from gui.main_window import EmulatorMainWindow
 from utils.loader import autoLoadProgram
 
 def main():
-    """Main entry point"""
-    parser = argparse.ArgumentParser(description="8-bit Computer Emulator")
-    parser.add_argument("program", nargs="?", help="Binary program file to load (.bin)")
-    parser.add_argument("--no-gui", action="store_true", help="Run without GUI (command line only)")
-    parser.add_argument("--debug", action="store_true", help="Enable debug output")
-    parser.add_argument("-u", "--unsigned", action="store_true", help="Start in unsigned mode (0 to 255)")
+    parser = argparse.ArgumentParser(description = "8-bit Computer Emulator")
+    parser.add_argument("program", nargs = "?", help = "Binary program file to load (.bin)")
+    parser.add_argument("-ng", "--no-gui",   action = "store_true", help = "Run without GUI (command line only)")
+    parser.add_argument("-d",  "--debug",    action = "store_true", help = "Enable debug output")
+    parser.add_argument("-u",  "--unsigned", action = "store_true", help = "Start in unsigned mode (0 to 255)")
 
     args = parser.parse_args()
 
@@ -86,11 +85,11 @@ def main():
                         # Show disassembly
                         app.showDisassembly(programData['binaryData'])
 
-                    app.statusLabel.config(text=f"Loaded: {os.path.basename(args.program)}")
+                    app.statusLabel.config(text = f"Loaded: {os.path.basename(args.program)}")
 
                 except Exception as e:
                     print(f"Error loading program: {e}")
-                    app.statusLabel.config(text=f"Failed to load: {os.path.basename(args.program)}")
+                    app.statusLabel.config(text = f"Failed to load: {os.path.basename(args.program)}")
             else:
                 print(f"Program file not found: {args.program}")
 

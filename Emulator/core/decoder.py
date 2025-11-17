@@ -1,11 +1,4 @@
-"""
-Instruction Decoder Implementation
-Decodes binary instructions according to the 8-bit computer ISA
-"""
-
 class InstructionDecoder:
-    """Decodes binary instructions into opcode and operands"""
-
     def __init__(self):
         # Instruction opcodes (bottom 4 bits or full 8 bits)
         self.opcodes = {
@@ -50,12 +43,9 @@ class InstructionDecoder:
             }
         }
 
+
     def decode(self, instruction):
-        """
-        Decode a single instruction byte
-        Returns: (opcode, operandInfo, instructionSize)
-        """
-        opcode = instruction & 0x0F  # Bottom 4 bits
+        opcode      = instruction & 0x0F  # Bottom 4 bits
         upperNibble = (instruction >> 4) & 0x0F  # Top 4 bits
 
         # Check for 8-bit opcodes first
@@ -73,23 +63,23 @@ class InstructionDecoder:
         # Unknown instruction
         return ('UNKNOWN', {}, 1)
 
+
     def _decode8bitOpcode(self, instruction):
-        """Decode 8-bit opcodes (NOP, OUT, HLT, RST)"""
         opcodeName = self.opcodes.get(instruction, 'UNKNOWN')
         return (opcodeName, {}, 1)
 
+
     def _decodeSpecialOpcode(self, instruction, opcode, upperNibble):
-        """Decode special opcodes with sub-types"""
         subOpcodes = self.specialOpcodes[opcode]
 
         if opcode == 0b0011:  # INC/DEC: RR10_0011 or RR11_0011
-            subType = upperNibble & 0b11  # Bottom 2 bits of upper nibble
+            subType  = upperNibble & 0b11  # Bottom 2 bits of upper nibble
             register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 1)
 
         elif opcode == 0b0100:  # LDI/LDM/SAV: RRTT_0100
-            subType = upperNibble & 0b11  # Bottom 2 bits of upper nibble
+            subType  = upperNibble & 0b11  # Bottom 2 bits of upper nibble
             register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 2)  # Has immediate/address
@@ -100,20 +90,20 @@ class InstructionDecoder:
 
         elif opcode == 0b1010:  # NOT: RR00_1010
             register = (upperNibble >> 2) & 0b11
-            subType = upperNibble & 0b11
+            subType  = upperNibble & 0b11
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 1)
 
         elif opcode == 0b1100:  # CMI: RR00_1100
             register = (upperNibble >> 2) & 0b11
-            subType = upperNibble & 0b11
+            subType  = upperNibble & 0b11
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 2)  # Has immediate
 
         return ('UNKNOWN', {}, 1)
 
+
     def _decode4bitOpcode(self, instruction, opcode, upperNibble):
-        """Decode 4-bit opcodes (ADD, SUB, MOV, AND, OR, XOR, CMP)"""
         opcodeName = self.opcodes[opcode]
 
         # These instructions have SSDD format (source, destination registers)
@@ -125,11 +115,8 @@ class InstructionDecoder:
             'destinationRegister': destReg
         }, 1)
 
-    def decodeProgram(self, binaryData, startPc=0):
-        """
-        Decode an entire program
-        Returns: list of (address, opcode, operands, rawBytes)
-        """
+
+    def decodeProgram(self, binaryData, startPc = 0):
         instructions = []
         pc = startPc
 
@@ -166,7 +153,7 @@ class InstructionDecoder:
 
         return instructions
 
+
     def registerName(self, regCode):
-        """Convert register code to name"""
         regMap = {0b00: 'A', 0b01: 'B', 0b10: 'C', 0b11: 'D'}
         return regMap.get(regCode, f'R{regCode}')

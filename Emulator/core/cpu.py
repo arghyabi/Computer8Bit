@@ -1,16 +1,10 @@
-"""
-Main CPU Implementation
-Complete 8-bit computer emulation with all components
-"""
-
+from .decoder   import InstructionDecoder
 from .registers import RegisterFile
-from .memory import Memory
-from .alu import ALU
-from .decoder import InstructionDecoder
+from .memory    import Memory
+from .alu       import ALU
+
 
 class CPU8Bit:
-    """Complete 8-bit CPU emulator"""
-
     def __init__(self):
         # Initialize components
         self.registers = RegisterFile()
@@ -33,8 +27,8 @@ class CPU8Bit:
         self.instructionCount = 0
         self.cycleCount = 0
 
+
     def reset(self):
-        """Reset CPU to initial state"""
         self.registers.reset()
         self.memory.resetRam()  # Keep ROM loaded
         self.alu.reset()
@@ -49,13 +43,13 @@ class CPU8Bit:
         self.instructionCount = 0
         self.cycleCount = 0
 
-    def loadProgram(self, binaryData, startAddress=0):
-        """Load binary program into ROM"""
+
+    def loadProgram(self, binaryData, startAddress = 0):
         self.memory.loadRom(binaryData, startAddress)
         self.reset()  # Reset CPU after loading new program
 
+
     def fetch(self):
-        """Fetch instruction from ROM at current PC"""
         if self.programCounter >= self.memory.ROM_SIZE:
             self.halted = True
             return 0
@@ -64,8 +58,8 @@ class CPU8Bit:
         self.instructionRegister = instruction
         return instruction
 
+
     def step(self):
-        """Execute one instruction"""
         if self.halted:
             return False
 
@@ -85,8 +79,8 @@ class CPU8Bit:
 
         return success
 
+
     def execute(self, opcode, operands, instructionSize):
-        """Execute decoded instruction"""
         try:
             if opcode == 'NOP':
                 self._executeNop()
@@ -142,113 +136,113 @@ class CPU8Bit:
             self.halted = True
             return False
 
+
     # Instruction implementations
     def _executeNop(self):
-        """No operation"""
         pass
 
+
     def _executeHlt(self):
-        """Halt execution"""
         self.halted = True
 
+
     def _executeOut(self):
-        """Output register A to 7-segment display"""
         self.sevenSegmentValue = self.registers.readByName('A')
         self.outputEnabled = True
 
+
     def _executeRst(self):
-        """Reset CPU"""
         self.reset()
 
+
     def _executeAdd(self, operands):
-        """ADD D S - Add source to destination"""
         srcVal = self.registers.read(operands['sourceRegister'])
         dstVal = self.registers.read(operands['destinationRegister'])
         result, carry = self.alu.add(dstVal, srcVal)
         self.registers.write(operands['destinationRegister'], result)
 
+
     def _executeSub(self, operands):
-        """SUB D S - Subtract source from destination"""
         srcVal = self.registers.read(operands['sourceRegister'])
         dstVal = self.registers.read(operands['destinationRegister'])
         result, borrow = self.alu.subtract(dstVal, srcVal)
         self.registers.write(operands['destinationRegister'], result)
 
+
     def _executeInc(self, operands):
-        """INC R - Increment register"""
         currentVal = self.registers.read(operands['register'])
         result = self.alu.increment(currentVal)
         self.registers.write(operands['register'], result)
 
+
     def _executeDec(self, operands):
-        """DEC R - Decrement register"""
         currentVal = self.registers.read(operands['register'])
         result = self.alu.decrement(currentVal)
         self.registers.write(operands['register'], result)
 
+
     def _executeMov(self, operands):
-        """MOV D S - Move source to destination"""
         srcVal = self.registers.read(operands['sourceRegister'])
         self.registers.write(operands['destinationRegister'], srcVal)
 
+
     def _executeLdi(self, operands):
-        """LDI R VV - Load immediate value into register"""
         immediateVal = operands.get('immediate', self._getNextByte())
         self.registers.write(operands['register'], immediateVal)
 
+
     def _executeLdm(self, operands):
-        """LDM R AA - Load from memory into register"""
         address = operands.get('immediate', self._getNextByte())
         value = self.memory.readRam(address)
         self.registers.write(operands['register'], value)
 
+
     def _executeSav(self, operands):
-        """SAV R AA - Save register to memory"""
         address = operands.get('immediate', self._getNextByte())
         value = self.registers.read(operands['register'])
         self.memory.writeRam(address, value)
 
+
     def _executeAnd(self, operands):
-        """AND D S - Bitwise AND"""
         srcVal = self.registers.read(operands['sourceRegister'])
         dstVal = self.registers.read(operands['destinationRegister'])
         result = self.alu.logicalAnd(dstVal, srcVal)
         self.registers.write(operands['destinationRegister'], result)
 
+
     def _executeOr(self, operands):
-        """OR D S - Bitwise OR"""
         srcVal = self.registers.read(operands['sourceRegister'])
         dstVal = self.registers.read(operands['destinationRegister'])
         result = self.alu.logicalOr(dstVal, srcVal)
         self.registers.write(operands['destinationRegister'], result)
 
+
     def _executeXor(self, operands):
-        """XOR D S - Bitwise XOR"""
         srcVal = self.registers.read(operands['sourceRegister'])
         dstVal = self.registers.read(operands['destinationRegister'])
         result = self.alu.logicalXor(dstVal, srcVal)
         self.registers.write(operands['destinationRegister'], result)
 
+
     def _executeNot(self, operands):
-        """NOT R - Bitwise NOT (complement)"""
         currentVal = self.registers.read(operands['register'])
         result = self.alu.logicalNot(currentVal)
         self.registers.write(operands['register'], result)
 
+
     def _executeCmp(self, operands):
-        """CMP D S - Compare destination with source"""
         srcVal = self.registers.read(operands['sourceRegister'])
         dstVal = self.registers.read(operands['destinationRegister'])
         self.alu.compare(dstVal, srcVal)
 
+
     def _executeCmi(self, operands):
-        """CMI R VV - Compare register with immediate value"""
         immediateVal = operands.get('immediate', self._getNextByte())
         regVal = self.registers.read(operands['register'])
         self.alu.compare(regVal, immediateVal)
 
+
     def _executeJump(self, opcode, operands):
-        """Execute jump instructions"""
         targetAddress = operands.get('address', self._getJumpAddress())
 
         shouldJump = False
@@ -274,21 +268,21 @@ class CPU8Bit:
         else:
             self.programCounter += 3  # Skip the 3-byte jump instruction
 
+
     def _getNextByte(self):
-        """Get next byte from ROM (for immediate values)"""
         nextPc = self.programCounter + 1
         if nextPc < self.memory.ROM_SIZE:
             return self.memory.readRom(nextPc)
         return 0
 
+
     def _getJumpAddress(self):
-        """Get 11-bit jump address from next two bytes"""
         highByte = self._getNextByte()  # PC + 1
-        lowByte = self.memory.readRom(self.programCounter + 2)  # PC + 2
+        lowByte  = self.memory.readRom(self.programCounter + 2)  # PC + 2
         return (highByte << 8) | lowByte
 
-    def run(self, maxInstructions=10000):
-        """Run program until halt or max instructions"""
+
+    def run(self, maxInstructions = 10000):
         self.running = True
         executed = 0
 
@@ -300,27 +294,27 @@ class CPU8Bit:
         self.running = False
         return executed
 
+
     def getState(self):
-        """Get complete CPU state for debugging"""
         return {
-            'registers': self.registers.getAllRegisters(),
-            'pc': self.programCounter,
-            'ir': self.instructionRegister,
-            'halted': self.halted,
-            'alu_flags': self.alu.getFlags(),
-            'seven_segment': self.sevenSegmentValue,
-            'outputEnabled': self.outputEnabled,
-            'signedMode': self.signedMode,
+            'registers'       : self.registers.getAllRegisters(),
+            'pc'              : self.programCounter,
+            'ir'              : self.instructionRegister,
+            'halted'          : self.halted,
+            'alu_flags'       : self.alu.getFlags(),
+            'seven_segment'   : self.sevenSegmentValue,
+            'outputEnabled'   : self.outputEnabled,
+            'signedMode'      : self.signedMode,
             'instructionCount': self.instructionCount,
-            'cycleCount': self.cycleCount,
-            'ram': self.memory.getRamDump()
+            'cycleCount'      : self.cycleCount,
+            'ram'             : self.memory.getRamDump()
         }
 
+
     def setSignedMode(self, signedMode):
-        """Set signed/unsigned display mode"""
         self.signedMode = signedMode
 
+
     def __str__(self):
-        """String representation for debugging"""
         state = self.getState()
         return f"PC:{state['pc']:04X} {self.registers} {self.alu} 7SEG:{state['seven_segment']:02X}"

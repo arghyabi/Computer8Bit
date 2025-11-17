@@ -1,19 +1,8 @@
-"""
-Binary File Loader Utilities
-Handles loading compiled assembly programs
-"""
-
 import os
 
 class BinaryLoader:
-    """Loads binary files compiled by the assembler"""
-
     @staticmethod
     def loadFile(filename):
-        """
-        Load binary file and return data
-        Returns: (binaryData, fileInfo)
-        """
         if not os.path.exists(filename):
             raise FileNotFoundError(f"File not found: {filename}")
 
@@ -33,12 +22,9 @@ class BinaryLoader:
         except Exception as e:
             raise Exception(f"Failed to load file: {e}")
 
+
     @staticmethod
-    def validateProgram(binaryData, maxSize=2048):
-        """
-        Validate binary program
-        Returns: (isValid, issues)
-        """
+    def validateProgram(binaryData, maxSize = 2048):
         issues = []
 
         if len(binaryData) == 0:
@@ -56,11 +42,9 @@ class BinaryLoader:
 
         return len(issues) == 0, issues
 
+
     @staticmethod
     def getProgramInfo(binaryData):
-        """
-        Analyze program and return information
-        """
         if not binaryData:
             return {"instructions": 0, "size": 0, "nonZeroBytes": 0}
 
@@ -97,11 +81,8 @@ class BinaryLoader:
 
 
 class AssemblyLoader:
-    """Loads assembly source files"""
-
     @staticmethod
     def loadAssembly(filename):
-        """Load assembly source file"""
         if not os.path.exists(filename):
             raise FileNotFoundError(f"Assembly file not found: {filename}")
 
@@ -114,9 +95,9 @@ class AssemblyLoader:
         except Exception as e:
             raise Exception(f"Failed to load assembly file: {e}")
 
+
     @staticmethod
     def findAssemblyForBinary(binaryFilename):
-        """Find corresponding assembly file for binary"""
         baseName = os.path.splitext(binaryFilename)[0]
 
         # Try common assembly extensions
@@ -129,10 +110,6 @@ class AssemblyLoader:
 
 
 def autoLoadProgram(filename):
-    """
-    Convenience function to automatically load a program
-    Handles both binary and assembly files
-    """
     if not os.path.exists(filename):
         raise FileNotFoundError(f"File not found: {filename}")
 
