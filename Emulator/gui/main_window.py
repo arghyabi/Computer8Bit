@@ -95,16 +95,30 @@ class EmulatorMainWindow:
         # Connect display mode change to CPU mode
         self.sevenSegDisplay.modeVar.trace('w', self._on_display_mode_change)
 
+        # code display section
+        codeFrame = tk.Frame(centerFrame)
+        codeFrame.pack(fill = "both", expand = True)
+
         # Assembly code display
-        codeFrame = tk.LabelFrame(centerFrame, text = "Assembly Code", font = ("Arial", 10, "bold"))
-        codeFrame.pack(fill = "both", expand = True, pady = 10)
+        assemblyCodeFrame = tk.LabelFrame(codeFrame, text = "Assembly Code", font = ("Arial", 10, "bold"))
+        assemblyCodeFrame.pack(fill = "both",side = "right", expand = True, pady = 10)
 
-        self.codeText = tk.Text(codeFrame, width = 50, height = 15, font = ("Courier", 9))
-        codeScrollbar = tk.Scrollbar(codeFrame, orient = "vertical", command = self.codeText.yview)
-        self.codeText.configure(yscrollcommand = codeScrollbar.set)
+        self.assemblyTextbox = tk.Text(assemblyCodeFrame, width = 10, height = 15, font = ("Courier", 9))
+        assemblyCodeScrollbar = tk.Scrollbar(assemblyCodeFrame, orient = "vertical", command = self.assemblyTextbox.yview)
+        self.assemblyTextbox.configure(yscrollcommand = assemblyCodeScrollbar.set)
 
-        self.codeText.pack(side = "left", fill = "both", expand = True)
-        codeScrollbar.pack(side = "right", fill = "y")
+        self.assemblyTextbox.pack(side = "left", fill = "both", expand = True)
+        assemblyCodeScrollbar.pack(side = "right", fill = "y")
+
+        # Disassembly code display
+        disassemblyCodeFrame = tk.LabelFrame(codeFrame, text = "Disassembly Code", font = ("Arial", 10, "bold"))
+        disassemblyCodeFrame.pack(fill = "both", side = "right", expand = True, pady = 10)
+        self.disassemblyTextbox = tk.Text(disassemblyCodeFrame, width = 10, height = 15, font = ("Courier", 9))
+        disassemblyCodeScrollbar = tk.Scrollbar(disassemblyCodeFrame, orient = "vertical", command = self.disassemblyTextbox.yview)
+        self.disassemblyTextbox.configure(yscrollcommand = disassemblyCodeScrollbar.set)
+
+        self.disassemblyTextbox.pack(side = "left", fill = "both", expand = True)
+        disassemblyCodeScrollbar.pack(side = "right", fill = "y")
 
 
     def createControls(self):
@@ -160,9 +174,8 @@ class EmulatorMainWindow:
                 asmFile = filename.replace('.bin', '.s')
                 if os.path.exists(asmFile):
                     self.loadAssemblyDisplay(asmFile)
-                else:
-                    # Show disassembly
-                    self.showDisassembly(binaryData)
+                # Show disassembly
+                self.showDisassembly(binaryData)
 
                 self.statusLabel.config(text = f"Loaded: {os.path.basename(filename)}")
 
@@ -174,8 +187,8 @@ class EmulatorMainWindow:
         try:
             with open(filename, 'r') as f:
                 content = f.read()
-            self.codeText.delete(1.0, tk.END)
-            self.codeText.insert(1.0, content)
+            self.assemblyTextbox.delete(1.0, tk.END)
+            self.assemblyTextbox.insert(tk.END, content)
         except:
             pass
 
@@ -183,10 +196,24 @@ class EmulatorMainWindow:
     def showDisassembly(self, binaryData):
         try:
             instructions = self.cpu.decoder.decodeProgram(binaryData)
-            self.codeText.delete(1.0, tk.END)
+            self.disassemblyTextbox.delete(1.0, tk.END)
 
-            self.codeText.insert(tk.END, "; Disassembly\n")
-            for addr, opcode, operands, rawBytes in instructions:
+            self.disassemblyTextbox.insert(tk.END, "; Disassembly\n")
+            lastRaw = []
+            codeFound = False
+            lines = ""
+            for addr, opcode, operands, rawBytes in instructions[::-1]:
+                if rawBytes == [0xff] and not codeFound:
+                    lastRaw = rawBytes
+                    continue
+                else:
+                    codeFound = True
+                    if lastRaw != []:
+                        hex_bytes = " ".join(f"{b:02X}" for b in lastRaw)
+                        line = f"{(addr+len(rawBytes)):04X}: {hex_bytes:<8} RST\n"
+                        lines = line + lines
+                        lastRaw = []
+
                 hex_bytes = " ".join(f"{b:02X}" for b in rawBytes)
 
                 # Format instruction
@@ -204,11 +231,12 @@ class EmulatorMainWindow:
                     instStr += f" 0x{operands['address']:04X}"
 
                 line = f"{addr:04X}: {hex_bytes:<8} {instStr}\n"
-                self.codeText.insert(tk.END, line)
+                lines = line + lines
+            self.disassemblyTextbox.insert(tk.END, lines)
 
         except Exception as e:
-            self.codeText.delete(1.0, tk.END)
-            self.codeText.insert(1.0, f"Disassembly failed: {e}")
+            self.disassemblyTextbox.delete(1.0, tk.END)
+            self.disassemblyTextbox.insert(1.0, f"Disassembly failed: {e}")
 
 
     def toggleRun(self):
@@ -266,7 +294,8 @@ class EmulatorMainWindow:
         self.runButton.config(text = "Run", bg = "green")
         self.cpu = CPU8Bit()  # Create new CPU instance
         self.updateDisplay()
-        self.codeText.delete(1.0, tk.END)
+        self.assemblyTextbox.delete(1.0, tk.END)
+        self.disassemblyTextbox.delete(1.0, tk.END)
         self.statusLabel.config(text = "Hard reset - ready to load program")
 
 
