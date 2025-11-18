@@ -79,11 +79,10 @@ def main():
 
                     # Load assembly source if available
                     if programData['assemblySource']:
-                        app.codeText.delete(1.0, 'end')
-                        app.codeText.insert(1.0, programData['assemblySource'])
-                    else:
-                        # Show disassembly
-                        app.showDisassembly(programData['binaryData'])
+                        app.assemblyTextbox.delete(1.0, 'end')
+                        app.assemblyTextbox.insert(1.0, programData['assemblySource'])
+                    # Show disassembly
+                    app.showDisassembly(programData['binaryData'])
 
                     app.statusLabel.config(text = f"Loaded: {os.path.basename(args.program)}")
 
