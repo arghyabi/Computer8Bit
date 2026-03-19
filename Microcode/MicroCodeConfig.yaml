@@ -63,10 +63,10 @@ PinConfig:
   Extra:
     PCL  : null
     PCC  : null
-    SpC  : null
-    SpUd : null
     AdSu : null
     Cin  : null
+    SpC  : null
+    SpUd : null
     FlSe0: null
     FlSe1: null
     FlSe2: null

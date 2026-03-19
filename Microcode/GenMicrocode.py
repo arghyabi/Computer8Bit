@@ -28,6 +28,10 @@ def main():
             genMicrocode(int(chipNumber), eachChipMicrocode)
         else:
             print("Microcode index is null!!")
+
+    print("Microcode generation completed successfully.")
+    print("Creating Hardware Pin Map...")
+    autoGen.genHardwarePinMap()
     print("Done!")
 
 
