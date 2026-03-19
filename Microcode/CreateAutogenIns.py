@@ -46,6 +46,10 @@ class GenAutoInstructions:
         self.instructionParsedData = {}
 
 
+    def genHardwarePinMap(self):
+        ParseConfig.genHardwarePinMap(self.uCodeConfig)
+
+
     def autogenEachInstruction(self):
         allInsFromConfig    = ParseConfig.getAllInstructions(self.uCodeConfig)
         allSignalFromConfig = ParseConfig.getAllSignalList(self.uCodeConfig)
@@ -174,7 +178,7 @@ class GenAutoInstructions:
                         index = index >> 1
             if not highFound:
                 for signal in virtualPins["InputControlPins"]:
-                    autogenSignalDict[signal].append(0)
+                    autogenSignalDict[signal].append(1) # Default all are HIGH
 
         return autogenSignalDict
 
@@ -208,7 +212,7 @@ class GenAutoInstructions:
                         index = index >> 1
             if not highFound:
                 for signal in virtualPins["OutputControlPins"]:
-                    autogenSignalDict[signal].append(0)
+                    autogenSignalDict[signal].append(1) # Default all are HIGH
 
         return autogenSignalDict
 
@@ -234,6 +238,14 @@ class GenAutoInstructions:
         for (line, index) in insOtherLineList[:-2]:
             f.write(f"{line}\n")
 
+        halfExtSignalCount = len(insExtSignalLineList) // 2
+
+        for line in insExtSignalLineList[:halfExtSignalCount]:
+            f.write(f"{line}\n")
+        for _ in range(8 - halfExtSignalCount):
+            f.write(f"| O |  -    | " + " | ".join(["-"] * len(insInSignalLineList[0][2:])) + " |\n")
+        f.write(f"|---|-------|" + "|".join(["---"] * len(insInSignalLineList[0][2:])) + "|\n")
+
         for signal in autogenInSignalDict:
             values = autogenInSignalDict[signal]
             f.write(f"| O | {signal} | " + " | ".join([str(v) for v in values]) + " |\n")
@@ -243,15 +255,10 @@ class GenAutoInstructions:
             f.write(f"| O | {signal} | " + " | ".join([str(v) for v in values]) + " |\n")
         f.write(f"|---|-------|" + "|".join(["---"] * len(insInSignalLineList[0][2:])) + "|\n")
 
-        count = 0
-        for line in insExtSignalLineList:
+        for line in insExtSignalLineList[halfExtSignalCount:]:
             f.write(f"{line}\n")
-            count += 1
-            if count == 8:
-                f.write(f"|---|-------|" + "|".join(["---"] * len(insInSignalLineList[0][2:])) + "|\n")
-                count = 0
 
-        for _ in range(8 - count):
+        for _ in range(8 - halfExtSignalCount):
             f.write(f"| O |  -    | " + " | ".join(["-"] * len(insInSignalLineList[0][2:])) + " |\n")
 
         for (line, index) in insOtherLineList[-2:]:
