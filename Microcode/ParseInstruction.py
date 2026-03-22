@@ -71,6 +71,17 @@ class ParseInstructions:
                         chipCount += 1
                         outCount = 0
 
+            # Swap the Instruction index for new PCB support
+            microInsMatrix["in"][-1], microInsMatrix["in"][-8] = microInsMatrix["in"][-8], microInsMatrix["in"][-1]
+            microInsMatrix["in"][-2], microInsMatrix["in"][-7] = microInsMatrix["in"][-7], microInsMatrix["in"][-2]
+            microInsMatrix["in"][-3], microInsMatrix["in"][-6] = microInsMatrix["in"][-6], microInsMatrix["in"][-3]
+            microInsMatrix["in"][-4], microInsMatrix["in"][-5] = microInsMatrix["in"][-5], microInsMatrix["in"][-4]
+
+            addressMatrix[-1], addressMatrix[-8] = addressMatrix[-8], addressMatrix[-1]
+            addressMatrix[-2], addressMatrix[-7] = addressMatrix[-7], addressMatrix[-2]
+            addressMatrix[-3], addressMatrix[-6] = addressMatrix[-6], addressMatrix[-3]
+            addressMatrix[-4], addressMatrix[-5] = addressMatrix[-5], addressMatrix[-4]
+
 
             self.instructionParsedData[instructionName] = {
                 "microInsMatrix": microInsMatrix,
