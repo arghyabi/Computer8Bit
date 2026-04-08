@@ -8,6 +8,7 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
         self.value = 0
         self.enabled = False
         self.signedMode = True  # Default to signed mode (matching assembler default)
+        self.rawPatterns = None
 
         # Create main frame
         mainFrame = tk.Frame(self)
@@ -97,16 +98,23 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
         digitSpacing = 80
         startX = 10
 
-        for i, digitChar in enumerate(digits):
-            xOffset = startX + (i * digitSpacing)
+        if self.rawPatterns is not None:
+            patterns = self.rawPatterns
+            for i, patternByte in enumerate(patterns):
+                xOffset = startX + (i * digitSpacing)
+                pattern = self._patternFromByte(patternByte)
+                self.drawSingleDigit(xOffset, pattern, onColor, offColor)
+        else:
+            for i, digitChar in enumerate(digits):
+                xOffset = startX + (i * digitSpacing)
 
-            if digitChar.isdigit():
-                digitNum = int(digitChar)
-                pattern = self.patterns.get(digitNum, (0,0,0,0,0,0,0))
-            else:
-                pattern = self.patterns.get(digitChar, (0,0,0,0,0,0,0))
+                if digitChar.isdigit():
+                    digitNum = int(digitChar)
+                    pattern = self.patterns.get(digitNum, (0,0,0,0,0,0,0))
+                else:
+                    pattern = self.patterns.get(digitChar, (0,0,0,0,0,0,0))
 
-            self.drawSingleDigit(xOffset, pattern, onColor, offColor)
+                self.drawSingleDigit(xOffset, pattern, onColor, offColor)
 
         # Update info label
         if self.signedMode:
@@ -115,6 +123,23 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
         else:
             self.infoLabel.config(text = f"Value: {self.value} (0x{self.value:02X}) [Unsigned]")
 
+
+    def _patternFromByte(self, patternByte):
+        # Convert 7-segment byte from Gen7segDriver format to a tuple (a,b,c,d,e,f,g)
+        return (
+            bool(patternByte & 0x02),
+            bool(patternByte & 0x04),
+            bool(patternByte & 0x08),
+            bool(patternByte & 0x10),
+            bool(patternByte & 0x20),
+            bool(patternByte & 0x40),
+            bool(patternByte & 0x80)
+        )
+
+    def setPatterns(self, patterns, enabled = True):
+        self.rawPatterns = list(patterns) if patterns is not None else None
+        self.enabled = enabled
+        self.drawDisplay()
 
     def drawSingleDigit(self, xOffset, pattern, onColor, offColor):
         # Segment coordinates relative to xOffset
@@ -136,6 +161,7 @@ class FourDigitSevenSegmentDisplay(tk.Frame):
 
 
     def setValue(self, value, enabled = True):
+        self.rawPatterns = None
         self.value = value & 0xFF  # Ensure 8-bit
         self.enabled = enabled
         self.drawDisplay()
@@ -298,7 +324,8 @@ class StatusDisplay(tk.Frame):
         tk.Label(statusFrame, textvariable = self.inst_var, font = ("Courier", 9)).grid(row = 1, column = 1, sticky = "w")
 
         # Cycle count
-        tk.Label(statusFrame, text = "Cycles:", font = ("Arial", 9)).grid(row = 2, column = 0, sticky = "e")
+        self.cycle_label_var = tk.StringVar(value = "Cycles:")
+        tk.Label(statusFrame, textvariable = self.cycle_label_var, font = ("Arial", 9)).grid(row = 2, column = 0, sticky = "e")
         self.cycle_var = tk.StringVar(value = "0")
         tk.Label(statusFrame, textvariable = self.cycle_var, font = ("Courier", 9)).grid(row = 2, column = 1, sticky = "w")
 
@@ -312,6 +339,15 @@ class StatusDisplay(tk.Frame):
         self.pc_var.set(f"{state['pc']:04X}")
         self.inst_var.set(str(state['instructionCount']))
         self.cycle_var.set(str(state['cycleCount']))
+
+        cycle_type = state.get('cycleType', '')
+        execution_mode = state.get('executionMode', '')
+        if execution_mode == 'hardware' or cycle_type == 'micro':
+            self.cycle_label_var.set("HW Cycles:")
+        elif execution_mode == 'software' or cycle_type == 'instruction':
+            self.cycle_label_var.set("SW Cycles:")
+        else:
+            self.cycle_label_var.set("Cycles:")
 
         status_text = "HALTED" if state['halted'] else "Ready"
         self.halted_var.set(status_text)

@@ -6,18 +6,82 @@ import os
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.cpu    import *
+from core.software_cpu import SoftwareCPU
+from core.hardware_cpu import HardwareCPU
 from gui.widgets import *
 
+
+class ToolTip:
+    def __init__(self, widget, text=""):
+        self.widget = widget
+        self.text = text
+        self.tip_window = None
+        self.widget.bind("<Enter>", self._show)
+        self.widget.bind("<Leave>", self._hide)
+
+    def set_text(self, text):
+        self.text = text
+
+    def _show(self, event=None):
+        if self.tip_window is not None or not self.text:
+            return
+
+        self.tip_window = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+
+        label = tk.Label(
+            tw,
+            text=self.text,
+            justify="left",
+            background="#FFFDE7",
+            foreground="#111111",
+            relief="solid",
+            borderwidth=1,
+            font=("Arial", 9),
+            padx=6,
+            pady=4
+        )
+        label.pack()
+
+        # Ensure tooltip stays within visible screen bounds.
+        tw.update_idletasks()
+
+        screen_w = self.widget.winfo_screenwidth()
+        screen_h = self.widget.winfo_screenheight()
+        tip_w = tw.winfo_width()
+        tip_h = tw.winfo_height()
+
+        x = self.widget.winfo_rootx() + 20
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 8
+
+        # If not enough room below, show above the widget.
+        if y + tip_h > screen_h - 8:
+            y = self.widget.winfo_rooty() - tip_h - 8
+
+        # Clamp within screen margins.
+        x = max(8, min(x, screen_w - tip_w - 8))
+        y = max(8, min(y, screen_h - tip_h - 8))
+
+        tw.wm_geometry(f"+{x}+{y}")
+
+    def _hide(self, event=None):
+        if self.tip_window is not None:
+            self.tip_window.destroy()
+            self.tip_window = None
+
 class EmulatorMainWindow:
-    def __init__(self):
+    def __init__(self, mode='software'):
         self.root = tk.Tk()
         self.root.title("8-bit Computer Emulator")
-        self.root.geometry("1000x700")
+        self.root.geometry("1000x800")
         self.root.resizable(True, True)
 
         # Initialize CPU
-        self.cpu = CPU8Bit()
+        self.mode = mode
+        if self.mode == 'hardware':
+            self.cpu = HardwareCPU(enable_signal_logging=True, log_callback=self.appendConsole)
+        else:
+            self.cpu = SoftwareCPU(enable_execution_logging=True, log_callback=self.appendConsole)
 
         # GUI state
         self.running = False
@@ -27,6 +91,9 @@ class EmulatorMainWindow:
         self.createMenu()
         self.createWidgets()
         self.createControls()
+
+        # Attach GUI console logger
+        self.cpu.setLogCallback(self.appendConsole)
 
         # Update display
         self.updateDisplay()
@@ -109,6 +176,7 @@ class EmulatorMainWindow:
 
         self.assemblyTextbox.pack(side = "left", fill = "both", expand = True)
         assemblyCodeScrollbar.pack(side = "right", fill = "y")
+        self.assemblyTextbox.config(state = "disabled")
 
         # Disassembly code display
         disassemblyCodeFrame = tk.LabelFrame(codeFrame, text = "Disassembly Code", font = ("Arial", 10, "bold"))
@@ -119,6 +187,20 @@ class EmulatorMainWindow:
 
         self.disassemblyTextbox.pack(side = "left", fill = "both", expand = True)
         disassemblyCodeScrollbar.pack(side = "right", fill = "y")
+        self.disassemblyTextbox.config(state = "disabled")
+
+        # Console output
+        consoleFrame = tk.LabelFrame(centerFrame, text = "Console", font = ("Arial", 10, "bold"))
+        consoleFrame.pack(fill = "both", expand = True, pady = 10)
+
+        self.consoleTextbox = tk.Text(consoleFrame, width = 10, height = 10,
+                                      font = ("Courier", 9), bg = "#111", fg = "#eee")
+        consoleScrollbar = tk.Scrollbar(consoleFrame, orient = "vertical", command = self.consoleTextbox.yview)
+        self.consoleTextbox.configure(yscrollcommand = consoleScrollbar.set)
+
+        self.consoleTextbox.pack(side = "left", fill = "both", expand = True)
+        consoleScrollbar.pack(side = "right", fill = "y")
+        self.consoleTextbox.config(state = "disabled")
 
 
     def createControls(self):
@@ -150,8 +232,19 @@ class EmulatorMainWindow:
         speedEntry = tk.Entry(speedFrame, textvariable = self.speedVar, width = 8)
         speedEntry.pack(side = "left", padx = 2)
 
+        # Mode indicator
+        modeFrame = tk.LabelFrame(controlFrame, text = "Mode")
+        modeFrame.pack(side = "left", padx = 5)
+        self.modeIndicator = tk.Label(modeFrame, text = "SOFTWARE",
+                          font = ("Arial", 9, "bold"),
+                          bg = "#1E88E5", fg = "white",
+                          width = 10, relief = "ridge", bd = 2)
+        self.modeIndicator.pack(side = "left", padx = 2, pady = 2)
+        self.modeTooltip = ToolTip(self.modeIndicator)
+
         # Status
-        self.statusLabel = tk.Label(controlFrame, text = "Ready to load program",
+        self.statusLabel = tk.Label(controlFrame,
+                                    text = f"Ready to load program ({self.mode} mode)",
                                     relief = "sunken", anchor = "w")
         self.statusLabel.pack(side = "right", fill = "x", expand = True, padx = 5)
 
@@ -169,6 +262,7 @@ class EmulatorMainWindow:
 
                 self.cpu.loadProgram(binaryData)
                 self.updateDisplay()
+                self.appendConsole(f"Loaded program: {os.path.basename(filename)}")
 
                 # Try to load corresponding assembly file for display
                 asmFile = filename.replace('.bin', '.s')
@@ -183,12 +277,25 @@ class EmulatorMainWindow:
                 messagebox.showerror("Error", f"Failed to load program:\n{e}")
 
 
+    def appendConsole(self, text):
+        self.consoleTextbox.config(state = "normal")
+        self.consoleTextbox.insert(tk.END, text + "\n")
+        self.consoleTextbox.see(tk.END)
+        self.consoleTextbox.config(state = "disabled")
+
+    def clearConsole(self):
+        self.consoleTextbox.config(state = "normal")
+        self.consoleTextbox.delete(1.0, tk.END)
+        self.consoleTextbox.config(state = "disabled")
+
     def loadAssemblyDisplay(self, filename):
         try:
             with open(filename, 'r') as f:
                 content = f.read()
+            self.assemblyTextbox.config(state = "normal")
             self.assemblyTextbox.delete(1.0, tk.END)
             self.assemblyTextbox.insert(tk.END, content)
+            self.assemblyTextbox.config(state = "disabled")
         except:
             pass
 
@@ -196,6 +303,7 @@ class EmulatorMainWindow:
     def showDisassembly(self, binaryData):
         try:
             instructions = self.cpu.decoder.decodeProgram(binaryData)
+            self.disassemblyTextbox.config(state = "normal")
             self.disassemblyTextbox.delete(1.0, tk.END)
 
             self.disassemblyTextbox.insert(tk.END, "; Disassembly\n")
@@ -233,10 +341,13 @@ class EmulatorMainWindow:
                 line = f"{addr:04X}: {hex_bytes:<8} {instStr}\n"
                 lines = line + lines
             self.disassemblyTextbox.insert(tk.END, lines)
+            self.disassemblyTextbox.config(state = "disabled")
 
         except Exception as e:
+            self.disassemblyTextbox.config(state = "normal")
             self.disassemblyTextbox.delete(1.0, tk.END)
             self.disassemblyTextbox.insert(1.0, f"Disassembly failed: {e}")
+            self.disassemblyTextbox.config(state = "disabled")
 
 
     def toggleRun(self):
@@ -244,10 +355,12 @@ class EmulatorMainWindow:
             self.running = False
             self.runButton.config(text = "Run", bg = "green")
             self.statusLabel.config(text = "Stopped")
+            self.appendConsole("Run stopped")
         else:
             self.running = True
             self.runButton.config(text = "Stop", bg = "red")
             self.statusLabel.config(text = "Running...")
+            self.appendConsole(f"Run started ({self.mode} mode)")
             self.runContinuous()
 
 
@@ -268,6 +381,7 @@ class EmulatorMainWindow:
             self.runButton.config(text = "Run", bg = "green")
             if self.cpu.halted:
                 self.statusLabel.config(text = "Program halted")
+                self.appendConsole("Program halted")
             else:
                 self.statusLabel.config(text = "Stopped")
 
@@ -277,6 +391,7 @@ class EmulatorMainWindow:
             self.cpu.step()
             self.updateDisplay()
             self.statusLabel.config(text = f"Stepped - PC: {self.cpu.programCounter:04X}")
+            self.appendConsole(f"Stepped - PC: {self.cpu.programCounter:04X}")
         else:
             self.statusLabel.config(text = "CPU is halted")
 
@@ -287,16 +402,27 @@ class EmulatorMainWindow:
         self.cpu.reset()
         self.updateDisplay()
         self.statusLabel.config(text = "CPU reset")
+        self.appendConsole("CPU reset")
 
 
     def hardReset(self):
         self.running = False
         self.runButton.config(text = "Run", bg = "green")
-        self.cpu = CPU8Bit()  # Create new CPU instance
+        if self.mode == 'hardware':
+            self.cpu = HardwareCPU(enable_signal_logging=True, log_callback=self.appendConsole)
+        else:
+            self.cpu = SoftwareCPU(enable_execution_logging=True, log_callback=self.appendConsole)
+        self.cpu.setSignedMode(self.sevenSegDisplay.signedMode)
         self.updateDisplay()
+        self.assemblyTextbox.config(state = "normal")
         self.assemblyTextbox.delete(1.0, tk.END)
+        self.assemblyTextbox.config(state = "disabled")
+        self.disassemblyTextbox.config(state = "normal")
         self.disassemblyTextbox.delete(1.0, tk.END)
+        self.disassemblyTextbox.config(state = "disabled")
         self.statusLabel.config(text = "Hard reset - ready to load program")
+        self.clearConsole()
+        self.appendConsole("Hard reset - ready to load program")
 
 
     def updateDisplay(self):
@@ -307,9 +433,37 @@ class EmulatorMainWindow:
         self.flagsDisplay.updateFlags(state['alu_flags'])
         self.statusDisplay.updateStatus(state)
         self.memoryDisplay.updateMemory(state['ram'])
-        self.sevenSegDisplay.setValue(state['seven_segment'], state['outputEnabled'])
+        if state.get('seven_segment_patterns'):
+            self.sevenSegDisplay.setPatterns(state['seven_segment_patterns'], state['outputEnabled'])
+        else:
+            self.sevenSegDisplay.setValue(state['seven_segment'], state['outputEnabled'])
+        self._updateModeIndicator(state)
         # Sync display mode with CPU mode
         self.sevenSegDisplay.setMode(state['signedMode'])
+
+
+    def _updateModeIndicator(self, state):
+        mode = state.get('executionMode', self.mode)
+        if mode == 'hardware':
+            self.modeIndicator.config(text = "HARDWARE", bg = "#2E7D32")
+            self.modeTooltip.set_text(
+                "Hardware mode:\n"
+                "- Executes generated microcode step-by-step\n"
+                "- Cycle count = micro-cycles\n"
+                "- Console shows control-signal logs\n\n"
+                "How to switch mode:\n"
+                "Restart emulator with: python main.py -m software"
+            )
+        else:
+            self.modeIndicator.config(text = "SOFTWARE", bg = "#1E88E5")
+            self.modeTooltip.set_text(
+                "Software mode:\n"
+                "- Executes instruction behavior directly\n"
+                "- Cycle count = instruction cycles\n"
+                "- Console shows instruction logs\n\n"
+                "How to switch mode:\n"
+                "Restart emulator with: python main.py -m hardware"
+            )
 
 
     def _on_display_mode_change(self, *args):

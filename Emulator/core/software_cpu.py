@@ -4,8 +4,8 @@ from .memory    import Memory
 from .alu       import ALU
 
 
-class CPU8Bit:
-    def __init__(self):
+class SoftwareCPU:
+    def __init__(self, enable_execution_logging=False, log_callback=None):
         # Initialize components
         self.registers = RegisterFile()
         self.memory = Memory()
@@ -26,6 +26,8 @@ class CPU8Bit:
         self.outputEnabled = False        # Debug/statistics
         self.instructionCount = 0
         self.cycleCount = 0
+        self.enableExecutionLogging = enable_execution_logging
+        self.logCallback = log_callback if log_callback is not None else print
 
 
     def reset(self):
@@ -63,11 +65,16 @@ class CPU8Bit:
         if self.halted:
             return False
 
+        pcBefore = self.programCounter
+
         # Fetch instruction
         instruction = self.fetch()
 
         # Decode instruction
         opcode, operands, size = self.decoder.decode(instruction)
+
+        if self.enableExecutionLogging:
+            self.logCallback(f"{pcBefore:04X}: {self._formatInstructionForLog(opcode, operands)}")
 
         # Execute instruction
         success = self.execute(opcode, operands, size)
@@ -125,8 +132,8 @@ class CPU8Bit:
                 self.programCounter += instructionSize
                 return False
 
-            # Advance PC for non-jump instructions
-            if opcode not in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JNG', 'JML', 'HLT']:
+            # Advance PC for non-jump instructions (including HLT to match hardware fetch behavior)
+            if opcode not in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JNG', 'JML']:
                 self.programCounter += instructionSize
 
             return True
@@ -281,6 +288,26 @@ class CPU8Bit:
         lowByte  = self.memory.readRom(self.programCounter + 2)  # PC + 2
         return (highByte << 8) | lowByte
 
+    def _formatInstructionForLog(self, opcode, operands):
+        if opcode in ['ADD', 'SUB', 'MOV', 'AND', 'OR', 'XOR', 'CMP']:
+            src = self.decoder.registerName(operands.get('sourceRegister', 0))
+            dst = self.decoder.registerName(operands.get('destinationRegister', 0))
+            return f"{opcode} {dst} {src}"
+
+        if opcode in ['INC', 'DEC', 'NOT']:
+            reg = self.decoder.registerName(operands.get('register', 0))
+            return f"{opcode} {reg}"
+
+        if opcode in ['LDI', 'LDM', 'SAV', 'CMI']:
+            reg = self.decoder.registerName(operands.get('register', 0))
+            value = self._getNextByte()
+            return f"{opcode} {reg} {value}"
+
+        if opcode in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JNG', 'JML']:
+            return f"{opcode} {self._getJumpAddress():04X}"
+
+        return opcode
+
 
     def run(self, maxInstructions = 10000):
         self.running = True
@@ -298,6 +325,8 @@ class CPU8Bit:
     def getState(self):
         return {
             'registers'       : self.registers.getAllRegisters(),
+            'executionMode'   : 'software',
+            'cycleType'       : 'instruction',
             'pc'              : self.programCounter,
             'ir'              : self.instructionRegister,
             'halted'          : self.halted,
@@ -313,6 +342,12 @@ class CPU8Bit:
 
     def setSignedMode(self, signedMode):
         self.signedMode = signedMode
+
+    def setLogCallback(self, callback):
+        self.logCallback = callback if callback is not None else print
+
+    def setExecutionLogging(self, enabled):
+        self.enableExecutionLogging = bool(enabled)
 
 
     def __str__(self):
