@@ -4,3 +4,4 @@ Compiler/*.bin
 Microcode/out/
 Gen7segDriver/*.bin
 __pycache__
+.vscode

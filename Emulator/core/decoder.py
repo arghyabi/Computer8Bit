@@ -106,13 +106,14 @@ class InstructionDecoder:
     def _decode4bitOpcode(self, instruction, opcode, upperNibble):
         opcodeName = self.opcodes[opcode]
 
-        # These instructions have SSDD format (source, destination registers)
-        destReg = upperNibble & 0b11        # Bottom 2 bits
-        sourceReg = (upperNibble >> 2) & 0b11  # Top 2 bits
+        # These instructions use DDSS in upper nibble:
+        # destination in bits [7:6], source in bits [5:4]
+        destinationReg = (upperNibble >> 2) & 0b11  # Top 2 bits
+        sourceReg = upperNibble & 0b11              # Bottom 2 bits
 
         return (opcodeName, {
             'sourceRegister': sourceReg,
-            'destinationRegister': destReg
+            'destinationRegister': destinationReg
         }, 1)
 
 

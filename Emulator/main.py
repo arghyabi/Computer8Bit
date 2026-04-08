@@ -27,6 +27,8 @@ def main():
     parser.add_argument("-ng", "--no-gui",   action = "store_true", help = "Run without GUI (command line only)")
     parser.add_argument("-d",  "--debug",    action = "store_true", help = "Enable debug output")
     parser.add_argument("-u",  "--unsigned", action = "store_true", help = "Start in unsigned mode (0 to 255)")
+    parser.add_argument("-m",  "--mode", choices=["software", "hardware"], default="software",
+                        help = "Emulator mode: software or hardware")
 
     args = parser.parse_args()
 
@@ -40,18 +42,23 @@ def main():
             return 1
 
         try:
-            from core.cpu import CPU8Bit
-            # autoLoadProgram is already imported at the top
+            if args.mode == 'hardware':
+                from core.hardware_cpu import HardwareCPU
+                cpu = HardwareCPU(enable_signal_logging=True)
+            else:
+                from core.software_cpu import SoftwareCPU
+                cpu = SoftwareCPU()
 
-            # Create CPU and load program
-            cpu = CPU8Bit()
             cpu.setSignedMode(initialSignedMode)
             programData = autoLoadProgram(args.program)
             cpu.loadProgram(programData['binaryData'])
+            executed = cpu.run()
 
             print(f"Loaded program: {args.program}")
             print(f"Mode: {'Signed (-128 to +127)' if initialSignedMode else 'Unsigned (0 to 255)'}")
-            print("Program executed successfully")
+            print(f"Execution mode: {args.mode}")
+            print(f"Executed {executed} instruction cycles")
+            print(f"Program halted: {cpu.halted}")
             return 0
 
         except Exception as e:
@@ -63,7 +70,7 @@ def main():
 
     try:
         # Create and start GUI
-        app = EmulatorMainWindow()
+        app = EmulatorMainWindow(mode=args.mode)
 
         # Set initial display mode
         app.cpu.setSignedMode(initialSignedMode)
