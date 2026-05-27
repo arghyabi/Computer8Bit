@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import sys
 import os
+import platform
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -69,12 +70,14 @@ class ToolTip:
             self.tip_window.destroy()
             self.tip_window = None
 
+
 class EmulatorMainWindow:
     def __init__(self, mode='software'):
         self.root = tk.Tk()
         self.root.title("8-bit Computer Emulator")
         self.root.geometry("1000x800")
         self.root.resizable(True, True)
+        self.is_mac = platform.system() == 'Darwin'
 
         # Initialize CPU
         self.mode = mode
@@ -160,7 +163,7 @@ class EmulatorMainWindow:
         self.sevenSegDisplay.pack(pady = 20)
 
         # Connect display mode change to CPU mode
-        self.sevenSegDisplay.modeVar.trace('w', self._on_display_mode_change)
+        self.sevenSegDisplay.modeVar.trace_add('write', self._on_display_mode_change)
 
         # code display section
         codeFrame = tk.Frame(centerFrame)
@@ -168,7 +171,7 @@ class EmulatorMainWindow:
 
         # Assembly code display
         assemblyCodeFrame = tk.LabelFrame(codeFrame, text = "Assembly Code", font = ("Arial", 10, "bold"))
-        assemblyCodeFrame.pack(fill = "both",side = "right", expand = True, pady = 10)
+        assemblyCodeFrame.pack(fill = "both", side = "right", expand = True, pady = 10)
 
         self.assemblyTextbox = tk.Text(assemblyCodeFrame, width = 10, height = 15, font = ("Courier", 9))
         assemblyCodeScrollbar = tk.Scrollbar(assemblyCodeFrame, orient = "vertical", command = self.assemblyTextbox.yview)
@@ -217,7 +220,12 @@ class EmulatorMainWindow:
         execFrame = tk.LabelFrame(controlFrame, text = "Execution")
         execFrame.pack(side = "left", padx = 5)
 
-        self.runButton = tk.Button(execFrame, text = "Run", command = self.toggleRun, bg = "green", fg = "white")
+        # On macOS the Aqua renderer ignores bg/fg on buttons — fg="white" on a
+        # native-white button makes the label invisible. Use symbols instead.
+        if self.is_mac:
+            self.runButton = tk.Button(execFrame, text = "\u25b6 Run", command = self.toggleRun)
+        else:
+            self.runButton = tk.Button(execFrame, text = "Run", command = self.toggleRun, bg = "green", fg = "white")
         self.runButton.pack(side = "left", padx = 2)
 
         tk.Button(execFrame, text = "Step", command = self.stepCpu).pack(side = "left", padx = 2)
@@ -350,15 +358,29 @@ class EmulatorMainWindow:
             self.disassemblyTextbox.config(state = "disabled")
 
 
+    def _setRunButtonState(self, running):
+        """Update the Run/Stop button in a macOS-compatible way."""
+        if running:
+            if self.is_mac:
+                self.runButton.config(text = "\u25a0 Stop")
+            else:
+                self.runButton.config(text = "Stop", bg = "red", fg = "white")
+        else:
+            if self.is_mac:
+                self.runButton.config(text = "\u25b6 Run")
+            else:
+                self.runButton.config(text = "Run", bg = "green", fg = "white")
+
+
     def toggleRun(self):
         if self.running:
             self.running = False
-            self.runButton.config(text = "Run", bg = "green")
+            self._setRunButtonState(False)
             self.statusLabel.config(text = "Stopped")
             self.appendConsole("Run stopped")
         else:
             self.running = True
-            self.runButton.config(text = "Stop", bg = "red")
+            self._setRunButtonState(True)
             self.statusLabel.config(text = "Running...")
             self.appendConsole(f"Run started ({self.mode} mode)")
             self.runContinuous()
@@ -378,7 +400,7 @@ class EmulatorMainWindow:
             self.root.after(delay, self.runContinuous)
         else:
             self.running = False
-            self.runButton.config(text = "Run", bg = "green")
+            self._setRunButtonState(False)
             if self.cpu.halted:
                 self.statusLabel.config(text = "Program halted")
                 self.appendConsole("Program halted")
@@ -398,7 +420,7 @@ class EmulatorMainWindow:
 
     def resetCpu(self):
         self.running = False
-        self.runButton.config(text = "Run", bg = "green")
+        self._setRunButtonState(False)
         self.cpu.reset()
         self.updateDisplay()
         self.statusLabel.config(text = "CPU reset")
@@ -407,7 +429,7 @@ class EmulatorMainWindow:
 
     def hardReset(self):
         self.running = False
-        self.runButton.config(text = "Run", bg = "green")
+        self._setRunButtonState(False)
         if self.mode == 'hardware':
             self.cpu = HardwareCPU(enable_signal_logging=True, log_callback=self.appendConsole)
         else:
@@ -477,11 +499,11 @@ class EmulatorMainWindow:
 A software emulator for the custom 8-bit computer project.
 
 Features:
-• Complete ISA implementation
-• Real-time register and memory viewing
-• 7-segment display emulation
-• Step-by-step execution
-• Assembly code display
+\u2022 Complete ISA implementation
+\u2022 Real-time register and memory viewing
+\u2022 7-segment display emulation
+\u2022 Step-by-step execution
+\u2022 Assembly code display
 
 Built for the Computer8Bit project
 https://github.com/arghyabi/Computer8Bit
