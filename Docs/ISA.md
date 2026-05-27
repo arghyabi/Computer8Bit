@@ -59,10 +59,10 @@ SUB B C ; Subtract C from B and keep in B
     <tbody>
         <tr>
             <td valign="top"><strong>00TT_0000</strong></td>
-            <td valign="top">0000_0000<br>0001_0000<br>0010_0000</td>
-            <td valign="top">NOP<br>OUT<br>HLT</td>
-            <td valign="top">1 Byte<br>1 Byte<br>1 Byte</td>
-            <td valign="top">No Operation<br>Display a value in 7-Segment<br>Halt the platform</td>
+            <td valign="top">0000_0000<br>0001_0000<br>0010_0000<br>0011_0000</td>
+            <td valign="top">NOP<br>OUT<br>OUTS<br>HLT</td>
+            <td valign="top">1 Byte<br>1 Byte<br>1 Byte<br>1 Byte</td>
+            <td valign="top">No Operation<br>Display unsigned value in 7-Segment<br>Display signed value in 7-Segment<br>Halt the platform</td>
         </tr>
         <tr>
             <td valign="top"><strong>SSDD_0001</strong></td>
@@ -139,28 +139,28 @@ SUB B C ; Subtract C from B and keep in B
             <td valign="top">SSDD_1011</td>
             <td valign="top">CMP R R</td>
             <td valign="top">1 Byte</td>
-            <td valign="top">Compare two register values; update the flag</td>
+            <td valign="top">Compare two register values (unsigned); update the flag</td>
         </tr>
         <tr>
-            <td valign="top"><strong>RR00_1100</strong></td>
-            <td valign="top">RR00_1100</td>
-            <td valign="top">CMI R VV</td>
-            <td valign="top">2 Byte</td>
-            <td valign="top">Compare register with a immediate values</td>
+            <td valign="top"><strong>SSDD_1100</strong></td>
+            <td valign="top">SSDD_1100</td>
+            <td valign="top">CMPS R R</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Compare two register values (signed); update the flag</td>
         </tr>
         <tr>
-            <td valign="top"><strong>RR00_1101</strong></td>
-            <td valign="top">RR00_1101<br>RR01_1101<br>0010_1101</td>
-            <td valign="top">PUSH R<br>POP R<br>RTN</td>
-            <td valign="top">1 Byte<br>1 Byte<br>1 Byte</td>
-            <td valign="top">Push register value to stack<br>Pop from stack and load to register<br>Pop the PC address and restore</td>
-        </tr>
-        <tr>
-            <td valign="top"><strong>00TT_1110</strong></td>
-            <td valign="top">0000_1110<br>0001_1110</td>
-            <td valign="top">PSHV VV<br>CALL AA</td>
+            <td valign="top"><strong>RRTT_1101</strong></td>
+            <td valign="top">RR00_1101<br>RR01_1101</td>
+            <td valign="top">CMI R VV<br>CMIS R VV</td>
             <td valign="top">2 Byte<br>2 Byte</td>
-            <td valign="top">Push register value to stack<br>Push the PC to Stack and load PC with new address</td>
+            <td valign="top">Compare register with immediate value (unsigned)<br>Compare register with immediate value (signed)</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>RRTT_1110</strong></td>
+            <td valign="top">RR00_1110<br>RR01_1110<br>0010_1110<br>0011_1110<br>0111_1110</td>
+            <td valign="top">PUSH R<br>POP R<br>RTN<br>PSHV VV<br>CALL AA</td>
+            <td valign="top">1 Byte<br>1 Byte<br>1 Byte<br>2 Byte<br>2 Byte</td>
+            <td valign="top">Push register value to stack<br>Pop from stack and load to register<br>Pop the PC address and restore<br>Push immediate value to stack<br>Push the PC to Stack and load PC with new address</td>
         </tr>
         <tr>
             <td valign="top"><strong>1111_1111</strong></td>
@@ -500,7 +500,7 @@ This `NOT` instruction is used to do a bitwise NOT operation and keep the output
 ---------------
 
 ### ✅ Instruction: CMP
-This `CMP` instruction is used to do a comparison and set/reset the `Zero` flag
+This `CMP` instruction is used to do an unsigned comparison and set/reset the comparison flags (Eql, Grt, Lst)
 
 #### `Ins. Format: CMP R R`
 #### `Bin. Format: SSDD_1011`
@@ -522,18 +522,122 @@ This `CMP` instruction is used to do a comparison and set/reset the `Zero` flag
 
 ---------------
 
+### ✅ Instruction: CMPS
+This `CMPS` instruction is used to do a signed comparison and set/reset the comparison flags (Eql, Grt, Lst)
+
+#### `Ins. Format: CMPS R R`
+#### `Bin. Format: SSDD_1100`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| CMPS A B     | 0001_1100    |
+| CMPS A C     | 0010_1100    |
+| CMPS A D     | 0011_1100    |
+| CMPS B A     | 0100_1100    |
+| CMPS B C     | 0110_1100    |
+| CMPS B D     | 0111_1100    |
+| CMPS C A     | 1000_1100    |
+| CMPS C B     | 1001_1100    |
+| CMPS C D     | 1011_1100    |
+| CMPS D A     | 1100_1100    |
+| CMPS D B     | 1101_1100    |
+| CMPS D C     | 1110_1100    |
+
+---------------
+
 ### ✅ Instruction: CMI
-This `CMI` instruction is used to do a comparison and set/reset the `Zero` flag
+This `CMI` instruction is used to do an unsigned comparison with an immediate value and set/reset the comparison flags (Eql, Grt, Lst)
 
 #### `Ins. Format: CMI R VV`
-#### `Bin. Format: RR00_1100`
+#### `Bin. Format: RR00_1101`
 
 | Instruction  |     Binary Value      |
 | :---         |        :---:          |
-| CMI A 0xXX   | 0000_1100 xxxx_xxxx   |
-| CMI B 0xXX   | 0100_1100 xxxx_xxxx   |
-| CMI C 0xXX   | 1000_1100 xxxx_xxxx   |
-| CMI D 0xXX   | 1100_1100 xxxx_xxxx   |
+| CMI A 0xXX   | 0000_1101 xxxx_xxxx   |
+| CMI B 0xXX   | 0100_1101 xxxx_xxxx   |
+| CMI C 0xXX   | 1000_1101 xxxx_xxxx   |
+| CMI D 0xXX   | 1100_1101 xxxx_xxxx   |
+
+---------------
+
+### ✅ Instruction: CMIS
+This `CMIS` instruction is used to do a signed comparison with an immediate value and set/reset the comparison flags (Eql, Grt, Lst)
+
+#### `Ins. Format: CMIS R VV`
+#### `Bin. Format: RR01_1101`
+
+| Instruction  |     Binary Value      |
+| :---         |        :---:          |
+| CMIS A 0xXX  | 0001_1101 xxxx_xxxx   |
+| CMIS B 0xXX  | 0101_1101 xxxx_xxxx   |
+| CMIS C 0xXX  | 1001_1101 xxxx_xxxx   |
+| CMIS D 0xXX  | 1101_1101 xxxx_xxxx   |
+
+---------------
+
+### ✅ Instruction: PUSH
+This `PUSH` instruction is used to push a register value onto the stack
+
+#### `Ins. Format: PUSH R`
+#### `Bin. Format: RR00_1110`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| PUSH A       | 0000_1110    |
+| PUSH B       | 0100_1110    |
+| PUSH C       | 1000_1110    |
+| PUSH D       | 1100_1110    |
+
+---------------
+
+### ✅ Instruction: POP
+This `POP` instruction is used to pop a value from the stack and load it into a register
+
+#### `Ins. Format: POP R`
+#### `Bin. Format: RR01_1110`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| POP A        | 0001_1110    |
+| POP B        | 0101_1110    |
+| POP C        | 1001_1110    |
+| POP D        | 1101_1110    |
+
+---------------
+
+### ✅ Instruction: RTN
+This `RTN` instruction is used to return from a subroutine by popping the PC address from the stack
+
+#### `Ins. Format: RTN`
+#### `Bin. Format: 0010_1110`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| RTN          | 0010_1110    |
+
+---------------
+
+### ✅ Instruction: PSHV
+This `PSHV` instruction is used to push an immediate value onto the stack
+
+#### `Ins. Format: PSHV VV`
+#### `Bin. Format: 0011_1110`
+
+| Instruction  |     Binary Value      |
+| :---         |        :---:          |
+| PSHV 0xXX    | 0011_1110 xxxx_xxxx   |
+
+---------------
+
+### ✅ Instruction: CALL
+This `CALL` instruction is used to call a subroutine by pushing the current PC to the stack and jumping to a new address
+
+#### `Ins. Format: CALL AA`
+#### `Bin. Format: 0111_1110`
+
+| Instruction  |     Binary Value      |
+| :---         |        :---:          |
+| CALL 0xXX    | 0111_1110 xxxx_xxxx   |
 
 
 ---------------

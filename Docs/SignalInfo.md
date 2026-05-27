@@ -105,16 +105,19 @@ Instruction Register.
 * <a id="signal-flse2"></a>`FlSe2`: Flag Select Signal 2; FlSe0, FlSe1, and FlSe2 combined point to a maximum of 8 flag bits.
 
 ## Flag Signal
-* `Flag`: This is the common input from the flag register. according to the combination of FlSe0 FlSe1 FlSe2 one falg will be selected and come to the Flag signal.
+* <a id="signal-flg"></a>`Flg`: This is the common output to the flag register. Based on the combination of FlSe0, FlSe1, and FlSe2, one flag 
+will be selected and sent to the Flag signal.
 
-| FlSe2 | FlSe1 | FlSe0 | Flag       | Description              |
-| :---: | :---: | :---: | :----------| :------------------------|
-|   0   |   0   |   0   | **Zero**   | Temp1 is zero            |
-|   0   |   0   |   1   | **Carry**  | Add/Sub have carryout    |
-|   0   |   1   |   0   | **Grt**    | A > B                    |
-|   0   |   1   |   1   | **Lst**    | A < B                    |
-|   1   |   0   |   0   | **Eql**    | A = B                    |
-|   1   |   0   |   1   | Reserved   | -                        |
-|   1   |   1   |   0   | Reserved   | -                        |
-|   1   |   1   |   1   | Reserved   | -                        |
+## Sign Signals
+* <a id="signal-sgn"></a>`Sgn`: This is the sign signal. It is used to indicate the sign of the result of an operation. 0 for positive and 1 for negative. Mainly, it is used for comparison and to show the output on a 7-segment display.
 
+| FlSe2 | FlSe1 | FlSe0 | Flag | Meaning       | Description              |
+| :---: | :---: | :---: | :----| :-------------| :------------------------|
+|   0   |   0   |   0   | Z    | Zero Flag     | Final Output is Zero     |
+|   0   |   0   |   1   | C    | Carry Flag    | Add/Sub have carryout    |
+|   0   |   1   |   0   | N    | Negative Flag | BUS[7]                   |
+|   0   |   1   |   1   | EQ   | Equal Compare | Temp1 and Temp2 Equal    |
+|   1   |   0   |   0   | GT   | Greater Than  | Temp1 > Temp2            |
+|   1   |   0   |   1   | LT   | Less Than     | Temp1 < Temp2            |
+|   1   |   1   |   0   | RSV  | Reserved      | -                        |
+|   1   |   1   |   1   | RSV  | Reserved      | -                        |

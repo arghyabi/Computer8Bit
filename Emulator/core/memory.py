@@ -6,6 +6,7 @@ class Memory:
         # Initialize memory
         self.rom = bytearray(self.ROM_SIZE)  # Program ROM
         self.ram = bytearray(self.RAM_SIZE)  # Data RAM
+        self.stackPointer = self.RAM_SIZE - 1
 
         # Fill ROM with NOP instructions initially
         for i in range(self.ROM_SIZE):
@@ -40,6 +41,16 @@ class Memory:
         self.ram[address] = value & 0xFF  # Ensure 8-bit value
 
 
+    def pushStack(self, value):
+        self.ram[self.stackPointer] = value & 0xFF
+        self.stackPointer = (self.stackPointer - 1) & 0x0F
+
+
+    def popStack(self):
+        self.stackPointer = (self.stackPointer + 1) & 0x0F
+        return self.ram[self.stackPointer]
+
+
     def getRomDump(self, start = 0, length = 32):
         end = min(start + length, self.ROM_SIZE)
         return list(self.rom[start:end])
@@ -51,6 +62,7 @@ class Memory:
 
     def resetRam(self):
         self.ram = bytearray(self.RAM_SIZE)
+        self.stackPointer = self.RAM_SIZE - 1
 
 
     def __str__(self):

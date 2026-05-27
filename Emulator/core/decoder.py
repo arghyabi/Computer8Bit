@@ -5,6 +5,10 @@ class InstructionDecoder:
             0b0000_0000: 'NOP',     # 8-bit opcode
             0b0001_0000: 'OUT',     # 8-bit opcode
             0b0010_0000: 'HLT',     # 8-bit opcode
+            0b0011_0000: 'OUTS',    # 8-bit opcode
+            0b0010_1110: 'RTN',     # 8-bit opcode
+            0b0011_1110: 'PSHV',    # 8-bit opcode prefix with immediate
+            0b0111_1110: 'CALL',    # 8-bit opcode prefix with address
             0b1111_1111: 'RST',     # 8-bit opcode
             0b0001: 'ADD',          # 4-bit opcode
             0b0010: 'SUB',          # 4-bit opcode
@@ -13,6 +17,7 @@ class InstructionDecoder:
             0b1000: 'OR',           # 4-bit opcode
             0b1001: 'XOR',          # 4-bit opcode
             0b1011: 'CMP',          # 4-bit opcode
+            0b1100: 'CMPS',         # 4-bit opcode
         }
 
         # Special opcodes with sub-types
@@ -32,14 +37,19 @@ class InstructionDecoder:
                 0b0010: 'JNZ', # 0010_0101
                 0b0011: 'JMC', # 0011_0101
                 0b0100: 'JME', # 0100_0101
-                0b0101: 'JNG', # 0101_0101 (JMG)
+                0b0101: 'JMG', # 0101_0101
                 0b0110: 'JML'  # 0110_0101
             },
             0b1010: {  # NOT
                 0b00: 'NOT'   # RR00_1010
             },
-            0b1100: {  # CMI
-                0b00: 'CMI'   # RR00_1100
+            0b1101: {  # CMI/CMIS
+                0b00: 'CMI',   # RR00_1101
+                0b01: 'CMIS'   # RR01_1101
+            },
+            0b1110: {  # PUSH/POP
+                0b00: 'PUSH',  # RR00_1110
+                0b01: 'POP'    # RR01_1110
             }
         }
 
@@ -49,7 +59,7 @@ class InstructionDecoder:
         upperNibble = (instruction >> 4) & 0x0F  # Top 4 bits
 
         # Check for 8-bit opcodes first
-        if instruction in [0x00, 0x10, 0x20, 0xFF]:
+        if instruction in [0x00, 0x10, 0x20, 0x30, 0x2E, 0x3E, 0x7E, 0xFF]:
             return self._decode8bitOpcode(instruction)
 
         # Check for special opcodes with sub-types
@@ -94,11 +104,16 @@ class InstructionDecoder:
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 1)
 
-        elif opcode == 0b1100:  # CMI: RR00_1100
+        elif opcode == 0b1101:  # CMI/CMIS: RRTT_1101
             register = (upperNibble >> 2) & 0b11
             subType  = upperNibble & 0b11
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 2)  # Has immediate
+        elif opcode == 0b1110:  # PUSH/POP: RRTT_1110
+            register = (upperNibble >> 2) & 0b11
+            subType  = upperNibble & 0b11
+            if subType in subOpcodes:
+                return (subOpcodes[subType], {'register': register}, 1)
 
         return ('UNKNOWN', {}, 1)
 

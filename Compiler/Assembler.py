@@ -1,6 +1,10 @@
 import argparse
 import os
-import hexdump
+
+try:
+    import hexdump
+except ModuleNotFoundError:
+    hexdump = None
 
 MAX_VAL_UNSIGNED_8_BIT = 255
 MIN_VAL_UNSIGNED_8_BIT = 0
@@ -78,72 +82,89 @@ class Compiler:
         }
         self.instructionDict = {
             # 0000
-            'NOP': 0b0000_0000,
-            'OUT': 0b0001_0000,
-            'HLT': 0b0010_0000,
+            'NOP' : 0b0000_0000,
+            'OUT' : 0b0001_0000,
+            'OUTS': 0b0011_0000,
+            'HLT' : 0b0010_0000,
             # 0001
-            'ADD':     0b_0001,
+            'ADD' :     0b_0001,
             # 0010
-            'SUB':     0b_0010,
+            'SUB' :     0b_0010,
             # 0011
-            'INC':   0b10_0011,
-            'DEC':   0b11_0011,
+            'INC' :   0b10_0011,
+            'DEC' :   0b11_0011,
             # 0100
-            'LDI':   0b00_0100,
-            'LDM':   0b01_0100,
-            'SAV':   0b10_0100,
+            'LDI' :   0b00_0100,
+            'LDM' :   0b01_0100,
+            'SAV' :   0b10_0100,
             # 0101
-            'JMP': 0b0000_0101,
-            'JMZ': 0b0001_0101,
-            'JNZ': 0b0010_0101,
-            'JMC': 0b0011_0101,
-            'JME': 0b0100_0101,
-            'JNG': 0b0101_0101,
-            'JML': 0b0110_0101,
+            'JMP' : 0b0000_0101,
+            'JMZ' : 0b0001_0101,
+            'JNZ' : 0b0010_0101,
+            'JMC' : 0b0011_0101,
+            'JME' : 0b0100_0101,
+            'JMG' : 0b0101_0101,
+            'JML' : 0b0110_0101,
             # 0110
-            'MOV':     0b_0110,
+            'MOV' :     0b_0110,
             # 0111
-            'AND':     0b_0111,
+            'AND' :     0b_0111,
             # 1000
-            'OR' :     0b_1000,
+            'OR'  :     0b_1000,
             # 1001
-            'XOR':     0b_1001,
+            'XOR' :     0b_1001,
             # 1010
-            'NOT':   0b00_1010,
+            'NOT' :   0b00_1010,
             # 1011
-            'CMP':     0b_1011,
-            # 1100
-            'CMI':   0b00_1100,
+            'CMP' :     0b_1011,
+            'CMPS':     0b_1100,
+            # 1101
+            'CMI' :   0b00_1101,
+            'CMIS':   0b01_1101,
+            # 1110
+            'PUSH':   0b00_1110,
+            'POP' :   0b01_1110,
+            'RTN' : 0b0010_1110,
+            'PSHV': 0b0011_1110,
+            'CALL': 0b0111_1110,
             # 1111
             'RST': 0b1111_1111,
         }
 
         self.instructionSizeDict = {
-            'NOP': 1,
-            'ADD': 1,
-            'SUB': 1,
-            'INC': 1,
-            'DEC': 1,
-            'MOV': 1,
-            'LDI': 2,
-            'LDM': 2,
-            'SAV': 2,
-            'JMP': 3,
-            'JMZ': 3,
-            'JNZ': 3,
-            'JMC': 3,
-            'JME': 3,
-            'JNG': 3,
-            'JML': 3,
-            'AND': 1,
-            'OR' : 1,
-            'XOR': 1,
-            'NOT': 1,
-            'CMP': 1,
-            'CMI': 2,
-            'OUT': 1,
-            'HLT': 1,
-            'RST': 1,
+            'NOP' : 1,
+            'ADD' : 1,
+            'SUB' : 1,
+            'INC' : 1,
+            'DEC' : 1,
+            'MOV' : 1,
+            'LDI' : 2,
+            'LDM' : 2,
+            'SAV' : 2,
+            'JMP' : 3,
+            'JMZ' : 3,
+            'JNZ' : 3,
+            'JMC' : 3,
+            'JME' : 3,
+            'JMG' : 3,
+            'JML' : 3,
+            'AND' : 1,
+            'OR'  : 1,
+            'XOR' : 1,
+            'NOT' : 1,
+            'CMP' : 1,
+            'CMPS': 1,
+            'CMI' : 2,
+            'CMIS': 2,
+            'OUT' : 1,
+            'OUTS': 1,
+            'PUSH': 1,
+            'POP' : 1,
+            'RTN' : 1,
+            'PSHV': 2,
+            'CALL': 2,
+            'HLT' : 1,
+            'RST' : 1,
         }
 
         if self.support8BitAddress:
@@ -153,7 +174,8 @@ class Compiler:
             self.instructionSizeDict['JMC'] = 2
             self.instructionSizeDict['JME'] = 2
             self.instructionSizeDict['JMG'] = 2
-            self.instructionSizeDict['JNL'] = 2
+            self.instructionSizeDict['JML'] = 2
+            self.instructionSizeDict['CALL'] = 2
 
         self.preProcess()
         self.compile()
@@ -181,7 +203,8 @@ class Compiler:
                 align16andOneLine = ((originalLen + 15) // 16 * 16) + 16
                 paddingBytes = bytearray([PADDING_CHAR] * (align16andOneLine - originalLen))
                 tmpArr.extend(paddingBytes)
-                hexdump.hexdump(tmpArr)
+                if hexdump is not None:
+                    hexdump.hexdump(tmpArr)
                 print()
                 print(".... .... [elided middle padding bytes] .... ....")
                 print()
@@ -193,7 +216,8 @@ class Compiler:
                 ascii_col = "." * 16
                 print(f"{last_line_addr:08X}: {hex_left}  {hex_right}  {ascii_col}")
             else:
-                hexdump.hexdump(self.binArr)
+                if hexdump is not None:
+                    hexdump.hexdump(self.binArr)
 
 
     def preProcess(self):
@@ -369,9 +393,9 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse JMP, JMZ, JNZ, JMC, JME, JNG, JML command | Format: 0TTT_0101
+            ## Parse JMP, JMZ, JNZ, JMC, JME, JMG, JML command | Format: 0TTT_0101
             elif opcode == "JMP" or opcode == "JMZ" or opcode == "JNZ" or \
-                opcode == "JMC" or opcode == "JME" or opcode == "JNG" or opcode == "JML":
+                opcode == "JMC" or opcode == "JME" or opcode == "JMG" or opcode == "JML":
                 if payloadLen != 1:
                     errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 
@@ -420,8 +444,8 @@ class Compiler:
                     self.addressIndex += 2
 
 
-            ## Parse LDI, CMI command | Format: RRTT_0100, RR00_1100
-            elif opcode == "LDI" or opcode == "CMI":
+            ## Parse LDI, CMI, CMIS command | Format: RRTT_0100, RRTT_1101
+            elif opcode == "LDI" or opcode == "CMI" or opcode == "CMIS":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
 
@@ -458,7 +482,7 @@ class Compiler:
 
                 bitVal = bitVal | self.registerDict[destReg]
 
-                bitVal = bitVal << 6 # LDI, CMI is 6 bit
+                bitVal = bitVal << 6 # LDI, CMI, CMIS are 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
@@ -509,8 +533,120 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse HLT, NOP, OUT, RST commands | Format: 00TT_0000, 1111_1111
-            elif opcode == "HLT" or opcode == "NOP" or opcode == "OUT" or opcode == "RST":
+            ## Parse PUSH, POP command | Format: RRTT_1110
+            elif opcode == "PUSH" or opcode == "POP":
+                if payloadLen != 1:
+                    errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
+
+                reg = payloadList[0]
+                if reg not in self.registerList:
+                    errorPrint(index, f"'{reg}' is not a register!!")
+
+                bitVal = bitVal | self.registerDict[reg]
+                bitVal = bitVal << 6
+                bitVal = bitVal | self.instructionDict[opcode]
+
+                if not self.silent:
+                    self.printCompiledLine(line, bitVal)
+
+                self.binArr.append(bitVal)
+                self.addressIndex += 1
+
+
+            ## Parse PSHV command | Format: 0011_1110 VV
+            elif opcode == "PSHV":
+                if payloadLen != 1:
+                    errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
+
+                immediateVal = payloadList[0]
+                if isInt(immediateVal):
+                    immediateVal = int(immediateVal)
+                elif isBinary(immediateVal):
+                    immediateVal = int(immediateVal, 2)
+                elif isHex(immediateVal):
+                    immediateVal = int(immediateVal, 16)
+                else:
+                    errorPrint(index, f"{immediateVal} is not a valid value!!")
+                    immediateVal = 0
+
+                if self.unsigned:
+                    if not (MIN_VAL_UNSIGNED_8_BIT <= immediateVal <= MAX_VAL_UNSIGNED_8_BIT):
+                        errorPrint(index, "Value out of unsigned 8-bit range!")
+                    if immediateVal < 0:
+                        errorPrint(index, "Negative value not allowed in unsigned mode!")
+                else:
+                    if immediateVal < 0:
+                        if immediateVal < MIN_VAL_SIGNED_8_BIT:
+                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
+                        else:
+                            immediateVal = get2sComplement(immediateVal)
+                    else:
+                        if immediateVal > MAX_VAL_UNSIGNED_8_BIT:
+                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
+
+                bitVal = self.instructionDict[opcode]
+
+                if not self.silent:
+                    self.printCompiledLine(line, bitVal, immediateVal)
+
+                self.binArr.append(bitVal)
+                self.addressIndex += 1
+
+                self.binArr.append(immediateVal)
+                self.addressIndex += 1
+
+
+            ## Parse CALL command | Format: 0111_1110 AA
+            elif opcode == "CALL":
+                if payloadLen != 1:
+                    errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
+
+                payload = payloadList[0]
+                address = 0xFF
+                if isInt(payload):
+                    address = int(payload)
+                elif isBinary(payload):
+                    address = int(payload, 2)
+                elif isHex(payload):
+                    address = int(payload, 16)
+                elif payload in self.tagDict:
+                    address = self.tagDict[payload]
+                else:
+                    errorPrint(index, f"'{payload}' is not a proper address")
+
+                if self.support8BitAddress:
+                    if address > MAX_ROM_ADDRESS_8_BIT:
+                        errorPrint(index, "Max ROM address limit cross!!")
+                else:
+                    if address > MAX_ROM_ADDRESS_11_BIT:
+                        errorPrint(index, "Max ROM address limit cross!!")
+
+                bitVal = self.instructionDict[opcode]
+
+                if not self.silent:
+                    if self.support8BitAddress:
+                        self.printCompiledLine(line, bitVal, address)
+                    else:
+                        highAddress = address >> 8
+                        lowAddress = address & 0xff
+                        self.printCompiledLine(line, bitVal, highAddress, lowAddress)
+
+                self.binArr.append(bitVal)
+                self.addressIndex += 1
+
+                if self.support8BitAddress:
+                    self.binArr.append(address)
+                    self.addressIndex += 1
+                else:
+                    highAddress = address >> 8
+                    lowAddress = address & 0xff
+                    self.binArr.append(highAddress)
+                    self.binArr.append(lowAddress)
+                    self.addressIndex += 2
+
+
+            ## Parse HLT, NOP, OUT, OUTS, RTN, RST commands | Format: 00TT_0000, 00TT_1110, 1111_1111
+            elif opcode == "HLT" or opcode == "NOP" or opcode == "OUT" or opcode == "OUTS" or opcode == "RTN" or opcode == "RST":
                 if payloadLen != 0:
                     errorPrint(index, f"No payload expected!! but found {payloadLen}")
 
@@ -523,8 +659,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse AND, OR, XOR, CMP command | Format: SSDD_0111, SSDD_1000, SSDD_1001, SSDD_1011
-            elif opcode == "AND" or opcode == "OR" or opcode == "XOR" or opcode == "CMP":
+            ## Parse AND, OR, XOR, CMP, CMPS command | Format: SSDD_0111, SSDD_1000, SSDD_1001, SSDD_1011, SSDD_1100
+            elif opcode == "AND" or opcode == "OR" or opcode == "XOR" or opcode == "CMP" or opcode == "CMPS":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
 

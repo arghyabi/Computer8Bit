@@ -8,7 +8,7 @@
 
 | Card Pin | Base Pin |  Signal                              | \| |  Signal                              | Base Pin | Card Pin |
 |  :----:  |  :----:  |  :--------------------------------:  |:--:|  :--------------------------------:  |  :----:  |  :----:  |
-|    80    |     1    |   -                                  | \| |  BUS0                                |    80    |     1    |
+|    80    |     1    |  [Flg](SignalInfo.md#signal-flg)     | \| |  BUS0                                |    80    |     1    |
 |    79    |     2    |   -                                  | \| |  BUS1                                |    79    |     2    |
 |    78    |     3    |   -                                  | \| |  BUS2                                |    78    |     3    |
 |    77    |     4    |   -                                  | \| |  BUS3                                |    77    |     4    |
@@ -39,7 +39,7 @@
  |   60    |    21    |  [SpC](SignalInfo.md#signal-spc)     | \| |   -                                  |    60    |    21    |
  |   59    |    22    |  [SpUd](SignalInfo.md#signal-spud)   | \| |   -                                  |    59    |    22    |
  |   58    |    23    |  [HLT](SignalInfo.md#signal-hlt)     | \| |   -                                  |    58    |    23    |
- |   57    |    24    |   -                                  | \| |   -                                  |    57    |    24    |
+ |   57    |    24    |  [Sgn] (SignalInfo.md#signal-sgn)    | \| |   -                                  |    57    |    24    |
 
 
 | Card Pin | Base Pin |  Signal                              | \| |  Signal                              | Base Pin | Card Pin |
