@@ -7,6 +7,7 @@ InsConfig:
   Instructions:
     - NOP
     - OUT
+    - OUTS
     - HLT
     - ADD
     - SUB
@@ -27,6 +28,16 @@ InsConfig:
     - CMP
     - CMI
     - RST
+    - CALL
+    - CMIS
+    - CMPS
+    - JME
+    - JMG
+    - JML
+    - POP
+    - PSHV
+    - PUSH
+    - RTN
 
 PinConfig:
   InputControl:
@@ -60,26 +71,30 @@ PinConfig:
     PCO  : 0b1100
     SqR  : 0b1101
     RESRV: 0b1111 # Reserved if no Pin need to be enabled
-  Extra:
-    PCL  : null
-    PCC  : null
-    AdSu : null
-    Cin  : null
-    SpC  : null
-    SpUd : null
+
+MicrocodeChips:
+  uCode0:
     FlSe0: null
     FlSe1: null
     FlSe2: null
+  uCode1:
+    InputVirCtrlPins:
+      ViIn0: null
+      ViIn1: null
+      ViIn2: null
+      ViIn3: null
+    OutputVirCtrlPins:
+      ViOt0: null
+      ViOt1: null
+      ViOt2: null
+      ViOt3: null
+  uCode2:
+    PCL  : null
+    PCC  : null
+    AdSu : null
     HLT  : null
+    SpUd : null
+    SpC  : null
+    Cin  : null
+    Sgn  : null
 
-VirtualPins:
-  InputControlPins:
-    ViIn0: null
-    ViIn1: null
-    ViIn2: null
-    ViIn3: null
-  OutputControlPins:
-    ViOt0: null
-    ViOt1: null
-    ViOt2: null
-    ViOt3: null

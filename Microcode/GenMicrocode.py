@@ -1,39 +1,40 @@
+import logging
 import os
 import shutil
 
-import CreateAutogenIns
-import ParseInstruction
+import GenerateAutogenInstructions
+import CompileAutogenInstructions
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+LOGGER = logging.getLogger(__name__)
 
 
-def genMicrocode(chipNumer, data):
-    with open(os.path.join("out", f"Microcode_{chipNumer}.bin"), "wb") as f:
-        # write the binary data to a file
-        f.write(bytes(data))
+def GenMicrocode(chipName, data):
+    """Write one generated microcode image to its chip-specific binary file."""
+    with open(os.path.join("out", f"{chipName}.bin"), "wb") as filePointer:
+        filePointer.write(bytes(data))
 
 
-def main():
+def Main():
+    """Run the full microcode generation pipeline from instruction sources to ROM images."""
     if os.path.exists("out"):
         shutil.rmtree("out")
 
-    autoGen = CreateAutogenIns.GenAutoInstructions()
-    autoGen.autogenEachInstruction()
+    autoGen = GenerateAutogenInstructions.GenAutoInstructions()
+    autoGen.AutogenEachInstruction()
 
-    insParser = ParseInstruction.ParseInstructions()
-    insParser.parseEachInstruction()
-    microcodeBank, microInsMatrix = insParser.generateAddressDataMap()
-    for chipNumber in microcodeBank:
-        print(f"Creating Microcode for Chip: {chipNumber}")
-        eachChipMicrocode = microcodeBank[chipNumber]
-        if microInsMatrix:
-            genMicrocode(int(chipNumber), eachChipMicrocode)
+    insParser = CompileAutogenInstructions.ParseInstructions()
+    insParser.ParseEachInstruction()
+    generationResult = insParser.GenerateAddressDataMap()
+    for chipName, eachChipMicrocode in generationResult.MicrocodeByChip.items():
+        LOGGER.info(f"Creating Microcode for Chip: {chipName}")
+        if generationResult.LastMicroInstructionMatrix:
+            GenMicrocode(chipName, eachChipMicrocode)
         else:
-            print("Microcode index is null!!")
+            LOGGER.warning("Microcode index is null!!")
 
-    print("Microcode generation completed successfully.")
-    print("Creating Hardware Pin Map...")
-    autoGen.genHardwarePinMap()
-    print("Done!")
+    LOGGER.info("Microcode generation completed successfully.")
 
 
 if __name__ == "__main__":
-    main()
+    Main()

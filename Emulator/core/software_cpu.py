@@ -123,17 +123,33 @@ class SoftwareCPU:
                 self._executeNot(operands)
             elif opcode == 'CMP':
                 self._executeCmp(operands)
+            elif opcode == 'CMPS':
+                self._executeCmps(operands)
             elif opcode == 'CMI':
                 self._executeCmi(operands)
-            elif opcode in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JNG', 'JML']:
+            elif opcode == 'CMIS':
+                self._executeCmis(operands)
+            elif opcode == 'OUTS':
+                self._executeOuts()
+            elif opcode == 'PUSH':
+                self._executePush(operands)
+            elif opcode == 'POP':
+                self._executePop(operands)
+            elif opcode == 'RTN':
+                self._executeRtn()
+            elif opcode == 'PSHV':
+                self._executePshv(operands)
+            elif opcode == 'CALL':
+                self._executeCall(operands)
+            elif opcode in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JMG', 'JML']:
                 self._executeJump(opcode, operands)
             else:
                 print(f"Unknown instruction: {opcode}")
                 self.programCounter += instructionSize
                 return False
 
-            # Advance PC for non-jump instructions (including HLT to match hardware fetch behavior)
-            if opcode not in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JNG', 'JML']:
+            # Advance PC for non-jump instructions
+            if opcode not in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JMG', 'JML', 'HLT', 'RTN', 'CALL']:
                 self.programCounter += instructionSize
 
             return True
@@ -154,6 +170,11 @@ class SoftwareCPU:
 
 
     def _executeOut(self):
+        self.sevenSegmentValue = self.registers.readByName('A')
+        self.outputEnabled = True
+
+
+    def _executeOuts(self):
         self.sevenSegmentValue = self.registers.readByName('A')
         self.outputEnabled = True
 
@@ -243,10 +264,50 @@ class SoftwareCPU:
         self.alu.compare(dstVal, srcVal)
 
 
+    def _executeCmps(self, operands):
+        srcVal = self.registers.read(operands['sourceRegister'])
+        dstVal = self.registers.read(operands['destinationRegister'])
+        self.alu.compare(dstVal, srcVal)
+
+
     def _executeCmi(self, operands):
         immediateVal = operands.get('immediate', self._getNextByte())
         regVal = self.registers.read(operands['register'])
         self.alu.compare(regVal, immediateVal)
+
+
+    def _executeCmis(self, operands):
+        immediateVal = operands.get('immediate', self._getNextByte())
+        regVal = self.registers.read(operands['register'])
+        self.alu.compare(regVal, immediateVal)
+
+
+    def _executePush(self, operands):
+        value = self.registers.read(operands['register'])
+        self.memory.pushStack(value)
+
+
+    def _executePop(self, operands):
+        value = self.memory.popStack()
+        self.registers.write(operands['register'], value)
+
+
+    def _executeRtn(self):
+        lowByte = self.memory.popStack()
+        highByte = self.memory.popStack()
+        self.programCounter = (highByte << 8) | lowByte
+
+
+    def _executePshv(self, operands):
+        immediateVal = operands.get('immediate', self._getNextByte())
+        self.memory.pushStack(immediateVal)
+
+
+    def _executeCall(self, operands):
+        returnAddress = self.programCounter + 2
+        self.memory.pushStack((returnAddress >> 8) & 0xFF)
+        self.memory.pushStack(returnAddress & 0xFF)
+        self.programCounter = operands.get('address', self._getJumpAddress())
 
 
     def _executeJump(self, opcode, operands):
@@ -265,8 +326,8 @@ class SoftwareCPU:
             shouldJump = flags['carry']
         elif opcode == 'JME':
             shouldJump = flags['zero']  # Equal means zero flag set
-        elif opcode == 'JNG':  # Jump Not Greater (<=)
-            shouldJump = flags['zero'] or flags['negative']
+        elif opcode == 'JMG':  # Jump Greater
+            shouldJump = not flags['zero'] and not flags['negative']
         elif opcode == 'JML':  # Jump Less
             shouldJump = flags['negative'] and not flags['zero']
 
