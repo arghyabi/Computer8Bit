@@ -80,10 +80,10 @@ SUB B C ; Subtract C from B and keep in B
         </tr>
         <tr>
             <td valign="top"><strong>RRTT_0011</strong></td>
-            <td valign="top">RR10_0011<br>RR11_0011</td>
-            <td valign="top">INC R<br>DEC R</td>
-            <td valign="top">1 Byte<br>1 Byte</td>
-            <td valign="top">Increment register<br>Decrement register</td>
+            <td valign="top">RR00_0011<br>RR01_0011<br>RR10_0011<br>RR11_0011</td>
+            <td valign="top">SHL R<br>SHR R<br>INC R<br>DEC R</td>
+            <td valign="top">1 Byte<br>1 Byte<br>1 Byte<br>1 Byte</td>
+            <td valign="top">Shift register left by 1 bit<br>Shift register right by 1 bit<br>Increment register<br>Decrement register</td>
         </tr>
         <tr>
             <td valign="top"><strong>RRTT_0100</strong></td>
@@ -230,6 +230,36 @@ This `SUB` instruction is used to subtract one number from another and save the 
 | SUB D A      | 1100_0010    |
 | SUB D B      | 1101_0010    |
 | SUB D C      | 1110_0010    |
+
+---------------
+
+### ✅ Instruction: SHL
+This `SHL` instruction shifts the register value left by 1 bit.
+
+#### `Ins. Format: SHL R`
+#### `Bin. Format: RR00_0011`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| SHL A        | 0000_0011    |
+| SHL B        | 0100_0011    |
+| SHL C        | 1000_0011    |
+| SHL D        | 1100_0011    |
+
+---------------
+
+### ✅ Instruction: SHR
+This `SHR` instruction shifts the register value right by 1 bit.
+
+#### `Ins. Format: SHR R`
+#### `Bin. Format: RR01_0011`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| SHR A        | 0001_0011    |
+| SHR B        | 0101_0011    |
+| SHR C        | 1001_0011    |
+| SHR D        | 1101_0011    |
 
 ---------------
 

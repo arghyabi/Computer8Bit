@@ -22,7 +22,9 @@ class InstructionDecoder:
 
         # Special opcodes with sub-types
         self.specialOpcodes = {
-            0b0011: {  # INC/DEC
+            0b0011: {  # SHL/SHR/INC/DEC
+                0b00: 'SHL',  # RR00_0011
+                0b01: 'SHR',  # RR01_0011
                 0b10: 'INC',  # RR10_0011
                 0b11: 'DEC'   # RR11_0011
             },
@@ -82,7 +84,7 @@ class InstructionDecoder:
     def _decodeSpecialOpcode(self, instruction, opcode, upperNibble):
         subOpcodes = self.specialOpcodes[opcode]
 
-        if opcode == 0b0011:  # INC/DEC: RR10_0011 or RR11_0011
+        if opcode == 0b0011:  # SHL/SHR/INC/DEC: RRTT_0011
             subType  = upperNibble & 0b11  # Bottom 2 bits of upper nibble
             register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
             if subType in subOpcodes:

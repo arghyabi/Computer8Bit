@@ -50,6 +50,20 @@ class ALU:
         return result
 
 
+    def shiftLeft(self, value):
+        result = (value << 1) & 0xFF
+        carryOut = (value & 0x80) != 0
+        self._updateFlags(result, carryOut)
+        return result
+
+
+    def shiftRight(self, value):
+        result = (value >> 1) & 0xFF
+        carryOut = (value & 0x01) != 0
+        self._updateFlags(result, carryOut)
+        return result
+
+
     def logicalAnd(self, a, b):
         result = (a & b) & 0xFF
         self._updateFlags(result, False)

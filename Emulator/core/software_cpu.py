@@ -101,6 +101,10 @@ class SoftwareCPU:
                 self._executeAdd(operands)
             elif opcode == 'SUB':
                 self._executeSub(operands)
+            elif opcode == 'SHL':
+                self._executeShl(operands)
+            elif opcode == 'SHR':
+                self._executeShr(operands)
             elif opcode == 'INC':
                 self._executeInc(operands)
             elif opcode == 'DEC':
@@ -195,6 +199,18 @@ class SoftwareCPU:
         dstVal = self.registers.read(operands['destinationRegister'])
         result, borrow = self.alu.subtract(dstVal, srcVal)
         self.registers.write(operands['destinationRegister'], result)
+
+
+    def _executeShl(self, operands):
+        currentVal = self.registers.read(operands['register'])
+        result = self.alu.shiftLeft(currentVal)
+        self.registers.write(operands['register'], result)
+
+
+    def _executeShr(self, operands):
+        currentVal = self.registers.read(operands['register'])
+        result = self.alu.shiftRight(currentVal)
+        self.registers.write(operands['register'], result)
 
 
     def _executeInc(self, operands):
@@ -355,7 +371,7 @@ class SoftwareCPU:
             dst = self.decoder.registerName(operands.get('destinationRegister', 0))
             return f"{opcode} {dst} {src}"
 
-        if opcode in ['INC', 'DEC', 'NOT']:
+        if opcode in ['SHL', 'SHR', 'INC', 'DEC', 'NOT']:
             reg = self.decoder.registerName(operands.get('register', 0))
             return f"{opcode} {reg}"
 
