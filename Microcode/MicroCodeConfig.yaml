@@ -71,7 +71,7 @@ PinConfig:
     OrO   : 0b1000
     AndO  : 0b1001
     XorO  : 0b1010
-    FlgU  : 0b1011
+    NtO   : 0b1011
     PCO   : 0b1100
     SqR   : 0b1101
     RESRV1: 0b1110
@@ -84,7 +84,7 @@ MicrocodeChips:
     FlSe2 : null
     T2IS0 : null
     T2IS1 : null
-    RESRV3: null
+    FlgU  : null
     RESRV4: null
     RESRV5: null
   uCode1:
