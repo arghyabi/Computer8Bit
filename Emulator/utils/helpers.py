@@ -48,7 +48,7 @@ def instructionCycles(opcode):
     cycleMap = {
         'NOP': 1, 'HLT': 1, 'OUT': 2, 'OUTS': 2, 'RST': 1,
         'ADD': 3, 'SUB': 3, 'AND': 3, 'OR': 3, 'XOR': 3, 'CMP': 3, 'CMPS': 3,
-        'INC': 2, 'DEC': 2, 'NOT': 2,
+        'SHL': 2, 'SHR': 2, 'INC': 2, 'DEC': 2, 'NOT': 2,
         'MOV': 2, 'LDI': 3, 'LDM': 4, 'SAV': 4, 'CMI': 3, 'CMIS': 3,
         'PUSH': 4, 'POP': 4, 'RTN': 4, 'PSHV': 4, 'CALL': 4,
         'JMP': 3, 'JMZ': 3, 'JNZ': 3, 'JMC': 3, 'JME': 3, 'JMG': 3, 'JML': 3

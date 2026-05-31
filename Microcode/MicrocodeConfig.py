@@ -145,16 +145,20 @@ def GetAllSignalIndex(sectionName: str, config: Dict[str, Any]) -> Dict[str, Any
     return {}
 
 
+def IsReservedSignal(signalName: str) -> bool:
+    return signalName.startswith(CFG_RESERVED_SIGNAL)
+
+
 def GetAllSignalList(config: Dict[str, Any]) -> List[str]:
     parsedConfig = GetParsedConfigView(config)
 
     signalList: List[str] = []
     for signal in parsedConfig.InputControlSignals:
-        if signal == CFG_RESERVED_SIGNAL:
+        if IsReservedSignal(signal):
             continue
         signalList.append(signal)
     for signal in parsedConfig.OutputControlSignals:
-        if signal == CFG_RESERVED_SIGNAL:
+        if IsReservedSignal(signal):
             continue
         signalList.append(signal)
     return signalList

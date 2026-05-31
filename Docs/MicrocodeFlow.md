@@ -32,6 +32,7 @@ Defines:
 - input control signal encoding
 - output control signal encoding
 - chip-specific extra signals
+- reserved signal slots used to preserve stable physical bit positions
 - virtual control pins for `uCode1`
 
 ### Stage 1: Autogen builder
@@ -133,9 +134,14 @@ The encoding width is 4 bits, so each group supports up to 16 logical signals.
 ```yaml
 MicrocodeChips:
   uCode0:
-    FlSe0: null
-    FlSe1: null
-    FlSe2: null
+    FlSe0 : null
+    FlSe1 : null
+    FlSe2 : null
+    T2IS0 : null
+    T2IS1 : null
+    RESRV3: null
+    RESRV4: null
+    RESRV5: null
   uCode1:
     InputVirCtrlPins:
       ViIn0: null
@@ -160,7 +166,7 @@ MicrocodeChips:
 
 This is the physical chip-oriented output layout.
 
-- `uCode0` contains extra direct control signals
+- `uCode0` contains extra direct control signals, including `T2IS0` and `T2IS1`
 - `uCode1` contains virtual encoded control pins
 - `uCode2` contains another block of direct control signals
 
@@ -185,14 +191,23 @@ The table contains:
 - separators and headers
 
 ### Important rule
-Every instruction file must declare **every configured signal row**, even if unused.
+Every instruction file must declare **every configured logical signal row**, even if unused.
 
 That means:
 - all configured input control signals must appear
 - all configured output control signals must appear
 - all configured extra signals must appear
+- reserved placeholder rows may still exist in the physical layout to preserve EEPROM bit positions
 
 Unused rows are still required so every instruction table stays complete and uniform.
+
+### Reserved-slot note
+Some configured names beginning with `RESRV` are intentionally reserved placeholders. They exist to keep the physical
+microcode bit layout stable when a logical signal is removed or split. These reserved names are part of the chip layout,
+but they are not treated as active logical control signals by the generator.
+
+A recent example is the removal of legacy `T2I`. Instead of shifting later bit positions, the design now uses
+`T2IS0` and `T2IS1` on `uCode0`, while reserved slots keep the remaining physical layout stable.
 
 ---
 
@@ -280,7 +295,7 @@ This method reads the raw instruction table and separates rows into buckets:
 ### How rows are classified
 
 For output rows:
-- if the signal belongs to `Extra`, it is stored separately
+- if the signal belongs to chip-specific extra/direct signals, it is stored separately
 - if the signal belongs to `OutputControl`, it goes into output-control rows
 - if the signal belongs to `InputControl`, it goes into input-control rows
 
@@ -289,9 +304,9 @@ some rows written as `O` in the source table are later encoded into virtual inpu
 
 ### Completeness enforcement
 
-`validateInstructionSignalCompleteness()` ensures every configured signal row exists in every instruction file.
+`validateInstructionSignalCompleteness()` ensures every configured logical signal row exists in every instruction file.
 
-If any signal is missing, generation stops with an error.
+If any non-reserved logical signal is missing, generation stops with an error.
 
 ---
 
@@ -305,7 +320,7 @@ This determines how many micro-timing columns an instruction has.
 It checks the first available row from:
 - input rows
 - output rows
-- `uCode0` extra rows
+- `uCode0` extra rows such as `FlSe*` and `T2IS*`
 - `uCode2` extra rows
 
 The returned width is used for:
@@ -725,7 +740,7 @@ Make sure it still has:
 Check whether generated `ViIn*` and `ViOt*` rows have the same number of columns as the instruction.
 
 ### Wrong chip grouping
-Check whether extra signals are still assigned to the correct chip:
+Check whether extra/direct signals are still assigned to the correct chip:
 - `uCode0`
 - `uCode2`
 

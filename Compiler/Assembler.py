@@ -91,6 +91,8 @@ class Compiler:
             # 0010
             'SUB' :     0b_0010,
             # 0011
+            'SHL' :   0b00_0011,
+            'SHR' :   0b01_0011,
             'INC' :   0b10_0011,
             'DEC' :   0b11_0011,
             # 0100
@@ -135,6 +137,8 @@ class Compiler:
             'NOP' : 1,
             'ADD' : 1,
             'SUB' : 1,
+            'SHL' : 1,
+            'SHR' : 1,
             'INC' : 1,
             'DEC' : 1,
             'MOV' : 1,
@@ -371,8 +375,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse INC, DEC, NOT commands  | Format: RRTT_0011, RRTT_0011, RR00_1010
-            elif opcode == "INC" or opcode == "DEC" or opcode == "NOT":
+            ## Parse SHL, SHR, INC, DEC, NOT commands  | Format: RRTT_0011, RR00_1010
+            elif opcode == "SHL" or opcode == "SHR" or opcode == "INC" or opcode == "DEC" or opcode == "NOT":
                 if payloadLen != 1:
                     errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 

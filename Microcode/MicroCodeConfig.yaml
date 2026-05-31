@@ -38,45 +38,55 @@ InsConfig:
     - PSHV
     - PUSH
     - RTN
+    - SHL
+    - SHR
 
 PinConfig:
   InputControl:
-    rAI  : 0b0000
-    rBI  : 0b0001
-    rCI  : 0b0010
-    rDI  : 0b0011
-    PCLI : 0b0100
-    PCHI : 0b0101
-    MdI  : 0b0110
-    MeI  : 0b0111
-    IRI  : 0b1000
-    T1I  : 0b1001
-    T2I  : 0b1010
-    Seg7E: 0b1011
-    SpL  : 0b1100
-    RESRV: 0b1111 # Reserved if no Pin need to be enabled
+    rAI   : 0b0000
+    rBI   : 0b0001
+    rCI   : 0b0010
+    rDI   : 0b0011
+    PCLI  : 0b0100
+    PCHI  : 0b0101
+    MdI   : 0b0110
+    MeI   : 0b0111
+    IRI   : 0b1000
+    T1I   : 0b1001
+    RESRV1: 0b1010
+    Seg7E : 0b1011
+    SpL   : 0b1100
+    RESRV2: 0b1101
+    RESRV3: 0b1110
+    RESRV4: 0b1111 # Reserved if no Pin need to be enabled
   OutputControl:
-    rAO  : 0b0000
-    rBO  : 0b0001
-    rCO  : 0b0010
-    rDO  : 0b0011
-    RomO : 0b0100
-    SpO  : 0b0101
-    MeO  : 0b0110
-    AdSuO: 0b0111
-    OrO  : 0b1000
-    AndO : 0b1001
-    XorO : 0b1010
-    FlgU : 0b1011
-    PCO  : 0b1100
-    SqR  : 0b1101
-    RESRV: 0b1111 # Reserved if no Pin need to be enabled
+    rAO   : 0b0000
+    rBO   : 0b0001
+    rCO   : 0b0010
+    rDO   : 0b0011
+    RomO  : 0b0100
+    SpO   : 0b0101
+    MeO   : 0b0110
+    AdSuO : 0b0111
+    OrO   : 0b1000
+    AndO  : 0b1001
+    XorO  : 0b1010
+    FlgU  : 0b1011
+    PCO   : 0b1100
+    SqR   : 0b1101
+    RESRV1: 0b1110
+    RESRV2: 0b1111 # Reserved if no Pin need to be enabled
 
 MicrocodeChips:
   uCode0:
-    FlSe0: null
-    FlSe1: null
-    FlSe2: null
+    FlSe0 : null
+    FlSe1 : null
+    FlSe2 : null
+    T2IS0 : null
+    T2IS1 : null
+    RESRV3: null
+    RESRV4: null
+    RESRV5: null
   uCode1:
     InputVirCtrlPins:
       ViIn0: null
@@ -97,4 +107,3 @@ MicrocodeChips:
     SpC  : null
     Cin  : null
     Sgn  : null
-

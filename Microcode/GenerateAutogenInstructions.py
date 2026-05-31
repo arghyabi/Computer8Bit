@@ -110,6 +110,8 @@ class GenAutoInstructions:
         for signalName in MicrocodeConfig.GetAllSignalList(self.UCodeConfig):
             signalPresenceMap[signalName] = False
         for signalName in self.GetConfiguredExtraSignals():
+            if MicrocodeConfig.IsReservedSignal(signalName):
+                continue
             signalPresenceMap[signalName] = False
         return signalPresenceMap
 
@@ -162,6 +164,8 @@ class GenAutoInstructions:
                     raise Exception(f"ERROR: Duplicate signal '{signalName}' found in instruction '{instructionName}'.")
                 parsedRows.SeenSignals.add(signalName)
 
+                if MicrocodeConfig.IsReservedSignal(signalName):
+                    continue
                 if sectionType == SIGNAL_CFG_EXTRA:
                     parsedRows.ExtraSignalLineMap[signalName] = line
                 elif sectionType == SIGNAL_CFG_OUTPUT:
@@ -182,6 +186,8 @@ class GenAutoInstructions:
         microcodeChips = self.UCodeConfig.get(CFG_MICROCODE_CHIPS, {})
         for chipName in [UCODE_0, UCODE_2]:
             for signalName in microcodeChips.get(chipName, {}):
+                if MicrocodeConfig.IsReservedSignal(signalName):
+                    continue
                 if signalName in parsedRows.ExtraSignalLineMap:
                     parsedRows.ExtraSignalLinesByChip[chipName].append(parsedRows.ExtraSignalLineMap[signalName])
 
@@ -263,6 +269,8 @@ class GenAutoInstructions:
         extraSignals = []
         for chipName in [UCODE_0, UCODE_2]:
             for signalName in microcodeChips.get(chipName, {}):
+                if MicrocodeConfig.IsReservedSignal(signalName):
+                    continue
                 extraSignals.append(signalName)
         return extraSignals
 

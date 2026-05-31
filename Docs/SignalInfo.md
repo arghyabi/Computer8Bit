@@ -36,8 +36,16 @@ onto the bus.
 * <a id="signal-t1i"></a>`T1I`: The T1I signal is used for Temp-Register 1 Input. When this signal is high, the value on the bus is copied into
 Temp-Register 1.
 
-* <a id="signal-t2i"></a>`T2I`: The T2I signal is used for Temp-Register 2 Input. When this signal is high, the value on the bus is copied into
-Temp-Register 2.
+* <a id="signal-t2is0"></a>`T2IS0`: Shift-register control signal bit 0.
+
+* <a id="signal-t2is1"></a>`T2IS1`: Shift-register control signal bit 1.
+
+`T2IS0` and `T2IS1` control the shared shift-register path in the ALU section. This shift register is reused both as
+the Temp-Register 2 data path and for shifting operations such as left-shift and right-shift. Together, these two
+signals replace the older single `T2I` control signal with a more flexible 2-bit control scheme.
+
+In handwritten instruction tables, the legacy `T2I` row is no longer used. The corresponding behavior is now expressed
+through the `T2IS0` and `T2IS1` rows while preserving the physical microcode bit positions allocated on `uCode0`.
 
 * <a id="signal-adsu"></a>`AdSu`: The AdSu signal is used to select the operation between addition and subtraction in the Adder/Subtractor
 module.

@@ -22,7 +22,7 @@
 |  :----:  |  :----:  |  :--------------------------------:  |:--:|  :--------------------------------:  |  :----:  |  :----:  |
 |    72    |     9    |  [rAI](SignalInfo.md#signal-rai)     | \| |  [IRI](SignalInfo.md#signal-iri)     |    72    |     9    |
 |    71    |    10    |  [rBI](SignalInfo.md#signal-rbi)     | \| |  [T1I](SignalInfo.md#signal-t1i)     |    71    |    10    |
-|    70    |    11    |  [rCI](SignalInfo.md#signal-rci)     | \| |  [T2I](SignalInfo.md#signal-t2i)     |    70    |    11    |
+|    70    |    11    |  [rCI](SignalInfo.md#signal-rci)     | \| |  -                                   |    70    |    11    |
 |    69    |    12    |  [rDI](SignalInfo.md#signal-rdi)     | \| |  [Seg7E](SignalInfo.md#signal-seg7e) |    69    |    12    |
 |    68    |    13    |  [PCLI](SignalInfo.md#signal-pcli)   | \| |  [SpI](SignalInfo.md#signal-spi)     |    68    |    13    |
 |    67    |    14    |  [PCHI](SignalInfo.md#signal-pchi)   | \| |   -                                  |    67    |    14    |
@@ -35,11 +35,11 @@
  |   64    |    17    |  [PCL](SignalInfo.md#signal-pcl)     | \| |  [FlSe0](SignalInfo.md#signal-flse0) |    64    |    17    |
  |   63    |    18    |  [PCC](SignalInfo.md#signal-pcc)     | \| |  [FlSe1](SignalInfo.md#signal-flse1) |    63    |    18    |
  |   62    |    19    |  [AdSu](SignalInfo.md#signal-adsu)   | \| |  [FlSe2](SignalInfo.md#signal-flse2) |    62    |    19    |
- |   61    |    20    |  [Cin](SignalInfo.md#signal-cin)     | \| |   -                                  |    61    |    20    |
- |   60    |    21    |  [SpC](SignalInfo.md#signal-spc)     | \| |   -                                  |    60    |    21    |
+ |   61    |    20    |  [Cin](SignalInfo.md#signal-cin)     | \| |  [T2IS0](SignalInfo.md#signal-t2is0) |    61    |    20    |
+ |   60    |    21    |  [SpC](SignalInfo.md#signal-spc)     | \| |  [T2IS1](SignalInfo.md#signal-t2is1) |    60    |    21    |
  |   59    |    22    |  [SpUd](SignalInfo.md#signal-spud)   | \| |   -                                  |    59    |    22    |
  |   58    |    23    |  [HLT](SignalInfo.md#signal-hlt)     | \| |   -                                  |    58    |    23    |
- |   57    |    24    |  [Sgn](SignalInfo.md#signal-sgn)    | \| |   -                                  |    57    |    24    |
+ |   57    |    24    |  [Sgn](SignalInfo.md#signal-sgn)     | \| |   -                                  |    57    |    24    |
 
 
 | Card Pin | Base Pin |  Signal                              | \| |  Signal                              | Base Pin | Card Pin |
@@ -72,3 +72,6 @@
 |    87    |    82    |  VCC                                 | \| |  VCC                                 |    87    |    82    |
 |    86    |    83    |   -                                  | \| |   -                                  |    86    |    83    |
 |    85    |    84    |  GND                                 | \| |  GND                                 |    85    |    84    |
+
+
+
