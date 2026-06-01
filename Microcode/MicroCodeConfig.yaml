@@ -5,44 +5,157 @@
 
 InsConfig:
   Instructions:
-    - NOP
-    - OUT
-    - OUTS
-    - HLT
-    - ADD
-    - SUB
-    - INC
-    - DEC
-    - LDI
-    - LDM
-    - SAV
-    - JMP
-    - JMZ
-    - JNZ
-    - JMC
-    - MOV
-    - AND
-    - OR
-    - XOR
-    - NOT
-    - CMP
-    - CMI
-    - RST
-    - CALL
-    - CMIS
-    - CMPS
-    - JME
-    - JMG
-    - JML
-    - POP
-    - PSHV
-    - PUSH
-    - RTN
-    - SHL
-    - SHR
+    # Format for instructions:
+    # - opcode: base opcode value or mask pattern
+    # - size: instruction size in bytes (default mode)
+    # - size_8bit: instruction size in 8-bit address mode (optional, defaults to size)
+    #
+    # Notation:
+    # - 'x' in binary means "don't care" bit (will be filled by operands)
+    # - For SSDD format: SS=source register, DD=destination register
+    # - For RRTT format: RR=register, TT=type/subtype
+    
+    # ===== Static instructions (00TT_0000 format) =====
+    NOP:
+      opcode: "0b0000_0000"  # No operands
+      size: 1
+    OUT:
+      opcode: "0b0001_0000"  # No operands
+      size: 1
+    OUTS:
+      opcode: "0b0011_0000"  # No operands (signed output)
+      size: 1
+    HLT:
+      opcode: "0b0010_0000"  # No operands
+      size: 1
+    
+    # ===== Two-operand instructions (SSDD_XXXX format) =====
+    # Upper 4 bits: SS=source[7:6], DD=dest[5:4]
+    ADD:
+      opcode: "0bxxxx_0001"  # SSDD_0001
+      size: 1
+    SUB:
+      opcode: "0bxxxx_0010"  # SSDD_0010
+      size: 1
+    MOV:
+      opcode: "0bxxxx_0110"  # SSDD_0110
+      size: 1
+    AND:
+      opcode: "0bxxxx_0111"  # SSDD_0111
+      size: 1
+    OR:
+      opcode: "0bxxxx_1000"  # SSDD_1000
+      size: 1
+    XOR:
+      opcode: "0bxxxx_1001"  # SSDD_1001
+      size: 1
+    CMP:
+      opcode: "0bxxxx_1011"  # SSDD_1011
+      size: 1
+    CMPS:
+      opcode: "0bxxxx_1100"  # SSDD_1100
+      size: 1
+    
+    # ===== Single-operand with type (RRTT_0011 format) =====
+    # Upper 4 bits: RR=register[7:6], TT=type[5:4]
+    SHL:
+      opcode: "0bxx00_0011"  # RR00_0011
+      size: 1
+    SHR:
+      opcode: "0bxx01_0011"  # RR01_0011
+      size: 1
+    INC:
+      opcode: "0bxx10_0011"  # RR10_0011
+      size: 1
+    DEC:
+      opcode: "0bxx11_0011"  # RR11_0011
+      size: 1
+    
+    # ===== Load/Store instructions (RRTT_0100 format) =====
+    # Upper 4 bits: RR=register[7:6], TT=type[5:4]
+    LDI:
+      opcode: "0bxx00_0100"  # RR00_0100 + immediate byte
+      size: 2
+    LDM:
+      opcode: "0bxx01_0100"  # RR01_0100 + address byte
+      size: 2
+    SAV:
+      opcode: "0bxx10_0100"  # RR10_0100 + address byte
+      size: 2
+    
+    # ===== Jump instructions (0TTT_0101 format) =====
+    # Upper 4 bits: 0TTT where TTT=jump type[6:4]
+    JMP:
+      opcode: "0b0000_0101"  # Unconditional jump
+      size: 3
+      size_8bit: 2
+    JMZ:
+      opcode: "0b0001_0101"  # Jump if Zero
+      size: 3
+      size_8bit: 2
+    JNZ:
+      opcode: "0b0010_0101"  # Jump if Not Zero
+      size: 3
+      size_8bit: 2
+    JMC:
+      opcode: "0b0011_0101"  # Jump if Carry
+      size: 3
+      size_8bit: 2
+    JME:
+      opcode: "0b0100_0101"  # Jump if Equal
+      size: 3
+      size_8bit: 2
+    JMG:
+      opcode: "0b0101_0101"  # Jump if Greater
+      size: 3
+      size_8bit: 2
+    JML:
+      opcode: "0b0110_0101"  # Jump if Less
+      size: 3
+      size_8bit: 2
+    
+    # ===== Bitwise NOT (RR00_1010 format) =====
+    NOT:
+      opcode: "0bxx00_1010"  # RR00_1010
+      size: 1
+    
+    # ===== Compare immediate (RRTT_1101 format) =====
+    CMI:
+      opcode: "0bxx00_1101"  # RR00_1101 + immediate byte (unsigned)
+      size: 2
+    CMIS:
+      opcode: "0bxx01_1101"  # RR01_1101 + immediate byte (signed)
+      size: 2
+    
+    # ===== Stack instructions (RRTT_1110 format) =====
+    PUSH:
+      opcode: "0bxx00_1110"  # RR00_1110
+      size: 1
+    POP:
+      opcode: "0bxx01_1110"  # RR01_1110
+      size: 1
+    RTN:
+      opcode: "0b0010_1110"  # Return from subroutine
+      size: 1
+    PSHV:
+      opcode: "0b0011_1110"  # Push immediate value
+      size: 2
+    CALL:
+      opcode: "0b0111_1110"  # Call subroutine
+      size: 2
+      size_8bit: 2
+    
+    # ===== Reset instruction =====
+    RST:
+      opcode: "0b1111_1111"  # System reset
+      size: 1
 
-PinConfig:
+
+VirtualPinConfig:
   InputControl:
+    # 4 virtual pins for input control.
+    # format [ViInD, ViInC, ViInB, ViInA] 
+    #         DCBA
     rAI   : 0b0000
     rBI   : 0b0001
     rCI   : 0b0010
@@ -60,6 +173,9 @@ PinConfig:
     RESRV3: 0b1110
     RESRV4: 0b1111 # Reserved if no Pin need to be enabled
   OutputControl:
+    # 4 virtual pins for output control.
+    # format [ViOtD, ViOtC, ViOtB, ViOtA] 
+    #         DCBA
     rAO   : 0b0000
     rBO   : 0b0001
     rCO   : 0b0010
@@ -77,33 +193,52 @@ PinConfig:
     RESRV1: 0b1110
     RESRV2: 0b1111 # Reserved if no Pin need to be enabled
 
-MicrocodeChips:
-  uCode0:
-    FlSe0 : null
-    FlSe1 : null
-    FlSe2 : null
-    T2IS0 : null
-    T2IS1 : null
-    FlgU  : null
-    RESRV4: null
-    RESRV5: null
-  uCode1:
-    InputVirCtrlPins:
-      ViIn0: null
-      ViIn1: null
-      ViIn2: null
-      ViIn3: null
-    OutputVirCtrlPins:
-      ViOt0: null
-      ViOt1: null
-      ViOt2: null
-      ViOt3: null
-  uCode2:
-    PCL  : null
-    PCC  : null
-    AdSu : null
-    HLT  : null
-    SpUd : null
-    SpC  : null
-    Cin  : null
-    Sgn  : null
+
+MicrocodeChipsPinMap:
+  InputPinMap:
+    A14: Ukwn0
+    A13: Ukwn1
+    A12: Flag
+    A11: Seqn3
+    A10: Seqn2
+    A9:  Seqn1
+    A8:  Seqn0
+    A7:  InsR0
+    A6:  InsR1
+    A5:  InsR2
+    A4:  InsR3
+    A3:  InsR4
+    A2:  InsR5
+    A1:  InsR6
+    A0:  InsR7
+
+  OutputPinMap:
+    uCode0:
+      IO0: FlSe2
+      IO1: FlSe1
+      IO2: FlSe0
+      IO3: T2IS0
+      IO4: T2IS1
+      IO5: FlgU
+      IO6: RESRV4
+      IO7: RESRV5
+
+    uCode1:
+      IO0: ViInA
+      IO1: ViInB
+      IO2: ViInC
+      IO3: ViInD
+      IO4: ViOtA
+      IO5: ViOtB
+      IO6: ViOtC
+      IO7: ViOtD
+
+    uCode2:
+      IO0: PCL
+      IO1: PCC
+      IO2: AdSu
+      IO3: HLT
+      IO4: SpUd
+      IO5: SpC
+      IO6: Cin
+      IO7: Sgn
