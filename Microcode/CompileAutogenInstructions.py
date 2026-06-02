@@ -260,7 +260,7 @@ class ParseInstructions:
                     mapFilePointer.write(f"------------------------------------------------------------------------------\n")
                     mapFilePointer.write(f"                                   |       |  uu f ssss iiii iiii |  iiii iiii\n")
                     mapFilePointer.write(f"                           Address |  Val  |  nn l qqqq nnnn nnnn |  oooo oooo\n")
-                    mapFilePointer.write(f"                                   |       |  10 g 3210 0123 4567 |  7654 3210\n")
+                    mapFilePointer.write(f"                                   |       |  01 g 3210 0123 4567 |  7654 3210\n")
                     mapFilePointer.write(f"------------------------------------------------------------------------------\n")
                     mapIndex = 1
                     for columnIndex, addressColumn in enumerate(addressColumns):

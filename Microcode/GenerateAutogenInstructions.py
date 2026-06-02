@@ -376,8 +376,8 @@ class GenAutoInstructions:
     def AutogenVirtualSignalLines(self, signalLineList, instructionName, totalColumnNo, signalConfigKey, virtualPinConfigKey):
         """
         Auto-generate virtual control signal rows from the selected physical signal group.
-        Since signals are pre-normalized and in correct order, we can directly use
-        their row position as the encoding index (0-15).
+        Read the index from the microcode yaml and generate virtual signals based on the
+        selected physical signal's index.
         """
         virtualPins = MicrocodeConfig.GetAllVirtualPins(self.UCodeConfig)
         virtualPinNames = virtualPins[virtualPinConfigKey]
@@ -388,16 +388,14 @@ class GenAutoInstructions:
             selectedIndex = None
 
             # Find which signal is HIGH in this column
-            # Signals are already in order (0-15), so row position = encoding index
-            for rowIndex, line in enumerate(signalLineList):
+            for line in signalLineList:
                 item = line[columnNo + 2]  # +2 to skip signal type and name columns
                 if item == SIGNAL_VALUE_HIGH:
                     if selectedIndex is not None:
                         LOGGER.warning(
                             f"Multiple HIGH signals found in column {columnNo} of {instructionName}. "
-                            f"Using signal at row {rowIndex}."
                         )
-                    selectedIndex = rowIndex
+                    selectedIndex, _ = MicrocodeConfig.GetSignalIndex(line[1], self.UCodeConfig)
 
             # If no signal is HIGH, use default (all pins HIGH = 15)
             if selectedIndex is None:
@@ -481,12 +479,12 @@ class GenAutoInstructions:
 
             # Write output signals first (bits 0-3), then input signals (bits 4-7)
             # This matches the uCode1 byte format: upper nibble=input, lower nibble=output
-            for signal in autogenOutSignalDict:
-                values = autogenOutSignalDict[signal]
-                filePointer.write(f"| O | {signal} | " + " | ".join([str(value) for value in values]) + " |\n")
-
             for signal in autogenInSignalDict:
                 values = autogenInSignalDict[signal]
+                filePointer.write(f"| O | {signal} | " + " | ".join([str(value) for value in values]) + " |\n")
+
+            for signal in autogenOutSignalDict:
+                values = autogenOutSignalDict[signal]
                 filePointer.write(f"| O | {signal} | " + " | ".join([str(value) for value in values]) + " |\n")
             filePointer.write(f"|---|-------|" + "|".join(["---"] * totalColumnNo) + "|\n")
 
