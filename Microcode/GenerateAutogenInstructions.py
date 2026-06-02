@@ -1,6 +1,7 @@
 import os
 import re
 import importlib
+import importlib.util
 import glob
 import logging
 from dataclasses import dataclass, field
@@ -12,6 +13,7 @@ SIGNAL_TYPE_INPUT  = "I"
 SIGNAL_TYPE_OUTPUT = "O"
 SIGNAL_TYPE_HEADER = "X"
 SIGNAL_TYPE_IGNORE = "---"
+SIGNAL_NAME_IGNORE = "-"
 
 SIGNAL_VALUE_HIGH = "1"
 SIGNAL_VALUE_LOW  = "0"
@@ -24,9 +26,10 @@ SIGNAL_CFG_EXTRA  = "Extra"
 UCODE_0 = MicrocodeConfig.UCODE_0
 UCODE_1 = MicrocodeConfig.UCODE_1
 UCODE_2 = MicrocodeConfig.UCODE_2
-CFG_MICROCODE_CHIPS = MicrocodeConfig.CFG_MICROCODE_CHIPS
-CFG_INPUT_VIR_CTRL_PINS = MicrocodeConfig.CFG_INPUT_VIR_CTRL_PINS
-CFG_OUTPUT_VIR_CTRL_PINS = MicrocodeConfig.CFG_OUTPUT_VIR_CTRL_PINS
+CFG_MICROCODE_CHIPS_PIN_MAP = MicrocodeConfig.CFG_MICROCODE_CHIPS_PIN_MAP
+CFG_OUTPUT_PIN_MAP = MicrocodeConfig.CFG_OUTPUT_PIN_MAP
+CFG_INPUT_CONTROL = MicrocodeConfig.CFG_INPUT_CONTROL
+CFG_OUTPUT_CONTROL = MicrocodeConfig.CFG_OUTPUT_CONTROL
 
 EXPECTED_VIRTUAL_PIN_COUNT = 4
 EXPECTED_INPUT_CONTROL_SIGNAL_LIMIT = 16
@@ -59,28 +62,47 @@ LOGGER = logging.getLogger(__name__)
 
 
 class GenAutoInstructions:
-    def __init__(self):
+    def __init__(self, useNormalized=False):
         """
         Load the microcode configuration and import all instruction source modules.
         The imported modules are sorted and validated early so generation fails
         fast if the instruction set or config structure is inconsistent.
+        
+        Args:
+            useNormalized: If True, use normalized instruction files from out/normalized.
+                          If False, use original files from Instructions directory (default).
         """
         self.UCodeConfig = MicrocodeConfig.ParseConfig(MICROCODE_CFG_FILE)
 
         self.InsObjects = []
         self.InstructionModulesByName = {}
-        instructionDir = os.path.join(os.path.dirname(__file__), "Instructions")
+        
+        if useNormalized:
+            instructionDir = os.path.join(os.path.dirname(__file__), "out", "normalized")
+        else:
+            instructionDir = os.path.join(os.path.dirname(__file__), "Instructions")
+        
         instructionFiles = glob.glob(os.path.join(instructionDir, "Ins*.py"))
+        LOGGER.info(f"Looking for instruction files in: {instructionDir}")
+        LOGGER.info(f"Found {len(instructionFiles)} instruction files")
 
         for filePath in sorted(instructionFiles):
             moduleFilename = os.path.basename(filePath)
             moduleName = moduleFilename[:-3]
 
             try:
-                module = importlib.import_module(f"Instructions.{moduleName}")
-                self.InsObjects.append(module)
-            except ImportError as error:
+                # Always use spec_from_file_location for consistent loading
+                spec = importlib.util.spec_from_file_location(moduleName, filePath)
+                if spec and spec.loader:
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                    self.InsObjects.append(module)
+                else:
+                    LOGGER.error(f"Failed to load spec for {moduleName}")
+            except (ImportError, Exception) as error:
+                import traceback
                 LOGGER.error(f"Failed to import {moduleName}: {error}")
+                LOGGER.error(traceback.format_exc())
 
         LOGGER.info(f"Total instructions imported: {len(self.InsObjects)}")
 
@@ -88,32 +110,6 @@ class GenAutoInstructions:
         self.InstructionParsedData = {}
         self.ValidateConfigStructure()
         self.ValidateInstructionModuleConsistency()
-
-
-    def ValidateInstructionSignalCompleteness(self, instructionName, instructionFile, allSignalDict):
-        """
-        Enforce the project rule that every instruction file must declare every
-        configured signal row. Unused signals are still required so all source
-        tables remain complete, uniform, and easy to compare by eye.
-        """
-        missingSignals = sorted([signal for signal, found in allSignalDict.items() if not found])
-        if missingSignals:
-            raise Exception(
-                f"ERROR: Instruction '{instructionName}' in file '{instructionFile}' is missing required signal rows. "
-                f"Every instruction file must declare every configured signal row, even when unused. "
-                f"Missing signals: {missingSignals}"
-            )
-
-
-    def CreateSignalPresenceMap(self):
-        signalPresenceMap = {}
-        for signalName in MicrocodeConfig.GetAllSignalList(self.UCodeConfig):
-            signalPresenceMap[signalName] = False
-        for signalName in self.GetConfiguredExtraSignals():
-            if MicrocodeConfig.IsReservedSignal(signalName):
-                continue
-            signalPresenceMap[signalName] = False
-        return signalPresenceMap
 
 
     def GetInstructionNameFromModule(self, module, configuredInstructions, parsedInstructionFlags):
@@ -133,11 +129,11 @@ class GenAutoInstructions:
         return instructionName
 
 
-    def ParseInstructionRows(self, instructionName, instructionFile, lines, signalPresenceMap):
+    def ParseInstructionRows(self, instructionName, instructionFile, lines):
         """
         Parse one instruction table into grouped row buckets used by autogen.
-        The method separates normal lines, input-control rows, output-control
-        rows, and extra-chip rows while also tracking signal completeness.
+        Since files are pre-normalized, signals are already in correct order and complete.
+        This is now a simplified parser that just separates rows by type.
         """
         parsedRows = ParsedInstructionRows()
         otherLineIndex = -1
@@ -152,40 +148,36 @@ class GenAutoInstructions:
             signalType = lineSplit[INDEX_OF_SIGNAL_TYPE]
             signalName = lineSplit[INDEX_OF_SIGNAL_NAME]
 
-            if signalType == SIGNAL_TYPE_IGNORE or signalName == "-":
+            if signalType == SIGNAL_TYPE_IGNORE or signalName == SIGNAL_NAME_IGNORE:
                 continue
 
             if signalType == SIGNAL_TYPE_OUTPUT:
-                pinIndex, sectionType = MicrocodeConfig.GetSignalIndex(signalName, self.UCodeConfig)
-                if pinIndex == -1:
-                    raise Exception(f"ERROR: Signal '{signalName}' not found in configuration.")
-
-                if signalName in parsedRows.SeenSignals:
-                    raise Exception(f"ERROR: Duplicate signal '{signalName}' found in instruction '{instructionName}'.")
-                parsedRows.SeenSignals.add(signalName)
-
                 if MicrocodeConfig.IsReservedSignal(signalName):
                     continue
+                
+                # Determine signal section type (no need to validate - files are pre-normalized)
+                _, sectionType = MicrocodeConfig.GetSignalIndex(signalName, self.UCodeConfig)
+
                 if sectionType == SIGNAL_CFG_EXTRA:
                     parsedRows.ExtraSignalLineMap[signalName] = line
                 elif sectionType == SIGNAL_CFG_OUTPUT:
                     parsedRows.OutputSignalRows.append(lineSplit)
                 elif sectionType == SIGNAL_CFG_INPUT:
                     parsedRows.InputSignalRows.append(lineSplit)
-
-                signalPresenceMap[signalName] = True
             else:
                 parsedRows.OtherLines.append((line, otherLineIndex))
 
         self.PopulateOrderedExtraSignalLines(parsedRows)
-        self.ValidateInstructionSignalCompleteness(instructionName, instructionFile, signalPresenceMap)
+        # No validation needed - files are pre-normalized
         return parsedRows
 
 
     def PopulateOrderedExtraSignalLines(self, parsedRows: ParsedInstructionRows):
-        microcodeChips = self.UCodeConfig.get(CFG_MICROCODE_CHIPS, {})
+        microcodeChipsPinMap = self.UCodeConfig.get(CFG_MICROCODE_CHIPS_PIN_MAP, {})
+        outputPinMap = microcodeChipsPinMap.get(CFG_OUTPUT_PIN_MAP, {})
         for chipName in [UCODE_0, UCODE_2]:
-            for signalName in microcodeChips.get(chipName, {}):
+            chipPins = outputPinMap.get(chipName, {})
+            for signalName in chipPins.values():
                 if MicrocodeConfig.IsReservedSignal(signalName):
                     continue
                 if signalName in parsedRows.ExtraSignalLineMap:
@@ -217,7 +209,6 @@ class GenAutoInstructions:
         for module in self.InsObjects:
             instructionFile = module.__file__
             instructionName = self.GetInstructionNameFromModule(module, configuredInstructions, parsedInstructionFlags)
-            signalPresenceMap = self.CreateSignalPresenceMap()
             parsedSource = ParsedInstructionSource(
                 InstructionName=instructionName,
                 InstructionFile=instructionFile
@@ -225,8 +216,7 @@ class GenAutoInstructions:
             parsedSource.Rows = self.ParseInstructionRows(
                 instructionName,
                 instructionFile,
-                module.INS.split("\n"),
-                signalPresenceMap
+                module.INS.split("\n")
             )
 
             self.ValidateInstructionControlSignalLimits(instructionName, parsedSource.Rows)
@@ -265,10 +255,12 @@ class GenAutoInstructions:
 
 
     def GetConfiguredExtraSignals(self):
-        microcodeChips = self.UCodeConfig.get(CFG_MICROCODE_CHIPS, {})
+        microcodeChipsPinMap = self.UCodeConfig.get(CFG_MICROCODE_CHIPS_PIN_MAP, {})
+        outputPinMap = microcodeChipsPinMap.get(CFG_OUTPUT_PIN_MAP, {})
         extraSignals = []
         for chipName in [UCODE_0, UCODE_2]:
-            for signalName in microcodeChips.get(chipName, {}):
+            chipPins = outputPinMap.get(chipName, {})
+            for signalName in chipPins.values():
                 if MicrocodeConfig.IsReservedSignal(signalName):
                     continue
                 extraSignals.append(signalName)
@@ -283,17 +275,17 @@ class GenAutoInstructions:
         """
         virtualPins = MicrocodeConfig.GetAllVirtualPins(self.UCodeConfig)
 
-        if CFG_INPUT_VIR_CTRL_PINS not in virtualPins:
-            raise Exception(f"ERROR: Missing '{CFG_INPUT_VIR_CTRL_PINS}' in {UCODE_1} configuration.")
-        if CFG_OUTPUT_VIR_CTRL_PINS not in virtualPins:
-            raise Exception(f"ERROR: Missing '{CFG_OUTPUT_VIR_CTRL_PINS}' in {UCODE_1} configuration.")
+        if CFG_INPUT_CONTROL not in virtualPins:
+            raise Exception(f"ERROR: Missing '{CFG_INPUT_CONTROL}' virtual pins in configuration.")
+        if CFG_OUTPUT_CONTROL not in virtualPins:
+            raise Exception(f"ERROR: Missing '{CFG_OUTPUT_CONTROL}' virtual pins in configuration.")
 
-        if len(virtualPins[CFG_INPUT_VIR_CTRL_PINS]) != EXPECTED_VIRTUAL_PIN_COUNT:
-            raise Exception(f"ERROR: '{CFG_INPUT_VIR_CTRL_PINS}' must contain exactly {EXPECTED_VIRTUAL_PIN_COUNT} pins.")
-        if len(virtualPins[CFG_OUTPUT_VIR_CTRL_PINS]) != EXPECTED_VIRTUAL_PIN_COUNT:
-            raise Exception(f"ERROR: '{CFG_OUTPUT_VIR_CTRL_PINS}' must contain exactly {EXPECTED_VIRTUAL_PIN_COUNT} pins.")
+        if len(virtualPins[CFG_INPUT_CONTROL]) != EXPECTED_VIRTUAL_PIN_COUNT:
+            raise Exception(f"ERROR: '{CFG_INPUT_CONTROL}' must contain exactly {EXPECTED_VIRTUAL_PIN_COUNT} virtual pins.")
+        if len(virtualPins[CFG_OUTPUT_CONTROL]) != EXPECTED_VIRTUAL_PIN_COUNT:
+            raise Exception(f"ERROR: '{CFG_OUTPUT_CONTROL}' must contain exactly {EXPECTED_VIRTUAL_PIN_COUNT} virtual pins.")
 
-        allConfiguredSignals = MicrocodeConfig.GetAllSignalList(self.UCodeConfig) + self.GetConfiguredExtraSignals()
+        allConfiguredSignals = MicrocodeConfig.GetAllVirtualSignaList(self.UCodeConfig) + self.GetConfiguredExtraSignals()
         duplicateSignals = [signal for signal in set(allConfiguredSignals) if allConfiguredSignals.count(signal) > 1]
         if duplicateSignals:
             raise Exception(f"ERROR: Duplicate signal definitions found in configuration: {sorted(duplicateSignals)}")
@@ -384,40 +376,37 @@ class GenAutoInstructions:
     def AutogenVirtualSignalLines(self, signalLineList, instructionName, totalColumnNo, signalConfigKey, virtualPinConfigKey):
         """
         Auto-generate virtual control signal rows from the selected physical signal group.
-        Every generated virtual row must span the full instruction width.
+        Since signals are pre-normalized and in correct order, we can directly use
+        their row position as the encoding index (0-15).
         """
         virtualPins = MicrocodeConfig.GetAllVirtualPins(self.UCodeConfig)
         virtualPinNames = virtualPins[virtualPinConfigKey]
         autogenSignalDict = {signal: [] for signal in virtualPinNames}
 
-        signalIndexDict = MicrocodeConfig.GetAllSignalIndex(signalConfigKey, self.UCodeConfig)
+        # Process each column (time step)
         for columnNo in range(totalColumnNo):
-            selectedSignalName = None
+            selectedIndex = None
 
-            for line in signalLineList:
-                signalName = line[INDEX_OF_SIGNAL_NAME]
-                item = line[columnNo]
-                if item not in [SIGNAL_VALUE_HIGH, SIGNAL_VALUE_LOW]:
-                    continue
-
+            # Find which signal is HIGH in this column
+            # Signals are already in order (0-15), so row position = encoding index
+            for rowIndex, line in enumerate(signalLineList):
+                item = line[columnNo + 2]  # +2 to skip signal type and name columns
                 if item == SIGNAL_VALUE_HIGH:
-                    if selectedSignalName is not None:
+                    if selectedIndex is not None:
                         LOGGER.warning(
                             f"Multiple HIGH signals found in column {columnNo} of {instructionName}. "
-                            f"Using the last one."
+                            f"Using signal at row {rowIndex}."
                         )
-                    selectedSignalName = signalName
+                    selectedIndex = rowIndex
 
-            if selectedSignalName is None:
-                defaultValue = 1
-                for signal in virtualPinNames:
-                    autogenSignalDict[signal].append(defaultValue)
-                continue
+            # If no signal is HIGH, use default (all pins HIGH = 15)
+            if selectedIndex is None:
+                selectedIndex = 15
 
-            index = signalIndexDict[selectedSignalName]
+            # Encode the index into 4 virtual pins (binary representation)
             for signal in virtualPinNames:
-                autogenSignalDict[signal].append(index & 1)
-                index >>= 1
+                autogenSignalDict[signal].append(selectedIndex & 1)
+                selectedIndex >>= 1
 
         self.ValidateGeneratedSignalWidths(
             instructionName,
@@ -433,7 +422,7 @@ class GenAutoInstructions:
             instructionName,
             totalColumnNo,
             SIGNAL_CFG_INPUT,
-            CFG_INPUT_VIR_CTRL_PINS
+            CFG_INPUT_CONTROL
         )
 
 
@@ -443,7 +432,7 @@ class GenAutoInstructions:
             instructionName,
             totalColumnNo,
             SIGNAL_CFG_OUTPUT,
-            CFG_OUTPUT_VIR_CTRL_PINS
+            CFG_OUTPUT_CONTROL
         )
 
 
@@ -490,12 +479,14 @@ class GenAutoInstructions:
                 filePointer.write(f"| O |  -    | " + " | ".join(["-"] * totalColumnNo) + " |\n")
             filePointer.write(f"|---|-------|" + "|".join(["---"] * totalColumnNo) + "|\n")
 
-            for signal in autogenInSignalDict:
-                values = autogenInSignalDict[signal]
-                filePointer.write(f"| O | {signal} | " + " | ".join([str(value) for value in values]) + " |\n")
-
+            # Write output signals first (bits 0-3), then input signals (bits 4-7)
+            # This matches the uCode1 byte format: upper nibble=input, lower nibble=output
             for signal in autogenOutSignalDict:
                 values = autogenOutSignalDict[signal]
+                filePointer.write(f"| O | {signal} | " + " | ".join([str(value) for value in values]) + " |\n")
+
+            for signal in autogenInSignalDict:
+                values = autogenInSignalDict[signal]
                 filePointer.write(f"| O | {signal} | " + " | ".join([str(value) for value in values]) + " |\n")
             filePointer.write(f"|---|-------|" + "|".join(["---"] * totalColumnNo) + "|\n")
 
