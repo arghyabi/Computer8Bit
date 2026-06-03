@@ -1,5 +1,10 @@
 import argparse
 import os
+import sys
+
+# Add parent directory to path to import MicrocodeConfig
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Microcode'))
+from MicrocodeConfig import ParseConfig, GetAllInstructionOpcodes, GetAllInstructionSizes
 
 try:
     import hexdump
@@ -80,106 +85,12 @@ class Compiler:
             'C': 0b10,
             'D': 0b11
         }
-        self.instructionDict = {
-            # 0000
-            'NOP' : 0b0000_0000,
-            'OUT' : 0b0001_0000,
-            'OUTS': 0b0011_0000,
-            'HLT' : 0b0010_0000,
-            # 0001
-            'ADD' :     0b_0001,
-            # 0010
-            'SUB' :     0b_0010,
-            # 0011
-            'SHL' :   0b00_0011,
-            'SHR' :   0b01_0011,
-            'INC' :   0b10_0011,
-            'DEC' :   0b11_0011,
-            # 0100
-            'LDI' :   0b00_0100,
-            'LDM' :   0b01_0100,
-            'SAV' :   0b10_0100,
-            # 0101
-            'JMP' : 0b0000_0101,
-            'JMZ' : 0b0001_0101,
-            'JNZ' : 0b0010_0101,
-            'JMC' : 0b0011_0101,
-            'JME' : 0b0100_0101,
-            'JMG' : 0b0101_0101,
-            'JML' : 0b0110_0101,
-            # 0110
-            'MOV' :     0b_0110,
-            # 0111
-            'AND' :     0b_0111,
-            # 1000
-            'OR'  :     0b_1000,
-            # 1001
-            'XOR' :     0b_1001,
-            # 1010
-            'NOT' :   0b00_1010,
-            # 1011
-            'CMP' :     0b_1011,
-            'CMPS':     0b_1100,
-            # 1101
-            'CMI' :   0b00_1101,
-            'CMIS':   0b01_1101,
-            # 1110
-            'PUSH':   0b00_1110,
-            'POP' :   0b01_1110,
-            'RTN' : 0b0010_1110,
-            'PSHV': 0b0011_1110,
-            'CALL': 0b0111_1110,
-            # 1111
-            'RST': 0b1111_1111,
-        }
 
-        self.instructionSizeDict = {
-            'NOP' : 1,
-            'ADD' : 1,
-            'SUB' : 1,
-            'SHL' : 1,
-            'SHR' : 1,
-            'INC' : 1,
-            'DEC' : 1,
-            'MOV' : 1,
-            'LDI' : 2,
-            'LDM' : 2,
-            'SAV' : 2,
-            'JMP' : 3,
-            'JMZ' : 3,
-            'JNZ' : 3,
-            'JMC' : 3,
-            'JME' : 3,
-            'JMG' : 3,
-            'JML' : 3,
-            'AND' : 1,
-            'OR'  : 1,
-            'XOR' : 1,
-            'NOT' : 1,
-            'CMP' : 1,
-            'CMPS': 1,
-            'CMI' : 2,
-            'CMIS': 2,
-            'OUT' : 1,
-            'OUTS': 1,
-            'PUSH': 1,
-            'POP' : 1,
-            'RTN' : 1,
-            'PSHV': 2,
-            'CALL': 2,
-            'HLT' : 1,
-            'RST' : 1,
-        }
-
-        if self.support8BitAddress:
-            self.instructionSizeDict['JMP'] = 2
-            self.instructionSizeDict['JMZ'] = 2
-            self.instructionSizeDict['JNZ'] = 2
-            self.instructionSizeDict['JMC'] = 2
-            self.instructionSizeDict['JME'] = 2
-            self.instructionSizeDict['JMG'] = 2
-            self.instructionSizeDict['JML'] = 2
-            self.instructionSizeDict['CALL'] = 2
+        # Load instruction opcodes and sizes from centralized config
+        configPath = os.path.join(os.path.dirname(__file__), '..', 'Microcode', 'MicroCodeConfig.yaml')
+        config = ParseConfig(configPath)
+        self.instructionDict = GetAllInstructionOpcodes(config)
+        self.instructionSizeDict = GetAllInstructionSizes(config, self.support8BitAddress)
 
         self.preProcess()
         self.compile()

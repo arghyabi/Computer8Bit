@@ -1,59 +1,55 @@
+import os
+import sys
+
+# Add parent directory to path to import MicrocodeConfig
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'Microcode'))
+from MicrocodeConfig import ParseConfig, GetAllInstructionOpcodes, GetAllInstructionSizes
+
+
 class InstructionDecoder:
     def __init__(self):
-        # Instruction opcodes (bottom 4 bits or full 8 bits)
-        self.opcodes = {
-            0b0000_0000: 'NOP',     # 8-bit opcode
-            0b0001_0000: 'OUT',     # 8-bit opcode
-            0b0010_0000: 'HLT',     # 8-bit opcode
-            0b0011_0000: 'OUTS',    # 8-bit opcode
-            0b0010_1110: 'RTN',     # 8-bit opcode
-            0b0011_1110: 'PSHV',    # 8-bit opcode prefix with immediate
-            0b0111_1110: 'CALL',    # 8-bit opcode prefix with address
-            0b1111_1111: 'RST',     # 8-bit opcode
-            0b0001: 'ADD',          # 4-bit opcode
-            0b0010: 'SUB',          # 4-bit opcode
-            0b0110: 'MOV',          # 4-bit opcode
-            0b0111: 'AND',          # 4-bit opcode
-            0b1000: 'OR',           # 4-bit opcode
-            0b1001: 'XOR',          # 4-bit opcode
-            0b1011: 'CMP',          # 4-bit opcode
-            0b1100: 'CMPS',         # 4-bit opcode
-        }
-
-        # Special opcodes with sub-types
+        # Load from centralized config
+        configPath = os.path.join(os.path.dirname(__file__), '..', '..', 'Microcode', 'MicroCodeConfig.yaml')
+        config = ParseConfig(configPath)
+        opcodeDict = GetAllInstructionOpcodes(config)
+        
+        # Build opcode lookup tables from config
+        self.opcodes = {}
         self.specialOpcodes = {
-            0b0011: {  # SHL/SHR/INC/DEC
-                0b00: 'SHL',  # RR00_0011
-                0b01: 'SHR',  # RR01_0011
-                0b10: 'INC',  # RR10_0011
-                0b11: 'DEC'   # RR11_0011
-            },
-            0b0100: {  # LDI/LDM/SAV
-                0b00: 'LDI',  # RR00_0100
-                0b01: 'LDM',  # RR01_0100
-                0b10: 'SAV'   # RR10_0100
-            },
-            0b0101: {  # Jump instructions
-                0b0000: 'JMP', # 0000_0101
-                0b0001: 'JMZ', # 0001_0101
-                0b0010: 'JNZ', # 0010_0101
-                0b0011: 'JMC', # 0011_0101
-                0b0100: 'JME', # 0100_0101
-                0b0101: 'JMG', # 0101_0101
-                0b0110: 'JML'  # 0110_0101
-            },
-            0b1010: {  # NOT
-                0b00: 'NOT'   # RR00_1010
-            },
-            0b1101: {  # CMI/CMIS
-                0b00: 'CMI',   # RR00_1101
-                0b01: 'CMIS'   # RR01_1101
-            },
-            0b1110: {  # PUSH/POP
-                0b00: 'PUSH',  # RR00_1110
-                0b01: 'POP'    # RR01_1110
-            }
+            0b0011: {},  # SHL/SHR/INC/DEC
+            0b0100: {},  # LDI/LDM/SAV
+            0b0101: {},  # Jump instructions
+            0b1010: {},  # NOT
+            0b1101: {},  # CMI/CMIS
+            0b1110: {}   # PUSH/POP
         }
+        
+        # Populate from config
+        for insName, opcode in opcodeDict.items():
+            # 8-bit static opcodes
+            if insName in ['NOP', 'OUT', 'HLT', 'OUTS', 'RTN', 'PSHV', 'CALL', 'RST']:
+                self.opcodes[opcode] = insName
+            # 4-bit opcodes (two-operand instructions)
+            elif insName in ['ADD', 'SUB', 'MOV', 'AND', 'OR', 'XOR', 'CMP', 'CMPS']:
+                self.opcodes[opcode & 0x0F] = insName
+            # Special opcodes with sub-types
+            elif insName in ['SHL', 'SHR', 'INC', 'DEC']:
+                subType = (opcode >> 4) & 0b11
+                self.specialOpcodes[0b0011][subType] = insName
+            elif insName in ['LDI', 'LDM', 'SAV']:
+                subType = (opcode >> 4) & 0b11
+                self.specialOpcodes[0b0100][subType] = insName
+            elif insName in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JMG', 'JML']:
+                subType = (opcode >> 4) & 0x0F
+                self.specialOpcodes[0b0101][subType] = insName
+            elif insName == 'NOT':
+                self.specialOpcodes[0b1010][0b00] = insName
+            elif insName in ['CMI', 'CMIS']:
+                subType = (opcode >> 4) & 0b11
+                self.specialOpcodes[0b1101][subType] = insName
+            elif insName in ['PUSH', 'POP']:
+                subType = (opcode >> 4) & 0b11
+                self.specialOpcodes[0b1110][subType] = insName
 
 
     def decode(self, instruction):
