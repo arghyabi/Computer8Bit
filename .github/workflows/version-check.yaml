@@ -104,7 +104,7 @@ jobs:
             echo "sevensegment=false" >> $GITHUB_OUTPUT
           fi
           
-          if echo "$CHANGED_FILES" | grep -q "^Docs/\|^Datasheets/\|^Images/"; then
+          if echo "$CHANGED_FILES" | grep -q "^Docs/\|^Datasheets/\|^Images/\|^README.md"; then
             echo "document=true" >> $GITHUB_OUTPUT
             echo " Document modified"
           else
@@ -112,7 +112,7 @@ jobs:
           fi
   
   check-config-modified:
-    name: SUCCESS: Config.yaml Modified
+    name: Config.yaml Modified
     runs-on: ubuntu-latest
     needs: setup
     
@@ -120,7 +120,7 @@ jobs:
       - name: Verify Config.yaml was modified
         run: |
           if [ "${{ needs.setup.outputs.config_modified }}" != "true" ]; then
-            echo "ERROR: ERROR: Config.yaml was not modified in this PR!"
+            echo "ERROR: Config.yaml was not modified in this PR!"
             echo "   EVERY PR must update Config.yaml with new version numbers"
             echo ""
             echo "   Required changes:"
