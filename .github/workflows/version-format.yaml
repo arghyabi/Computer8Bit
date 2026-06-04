@@ -1,0 +1,56 @@
+name: Validate Version Format
+
+on:
+  workflow_call:
+
+jobs:
+  validate-format:
+    name: Version Format
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: pip install pyyaml
+      
+      - name: Validate version format
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import yaml
+          import re
+          import sys
+          
+          with open('Config.yaml', 'r') as f:
+              config = yaml.safe_load(f)
+          
+          version_pattern = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
+          errors = []
+          
+          main_version = config['Version']['MainVersion']
+          if not version_pattern.match(main_version):
+              errors.append(f"MainVersion '{main_version}' invalid format")
+          else:
+              print(f"SUCCESS: MainVersion: {main_version}")
+          
+          for component, version in config['Components'].items():
+              if not version_pattern.match(version):
+                  errors.append(f"{component} '{version}' invalid format")
+              else:
+                  print(f"SUCCESS: {component}: {version}")
+          
+          if errors:
+              print("\nERROR: Version format errors:")
+              for error in errors:
+                  print(f"  {error}")
+              print("\nExpected: X.Y.Z.BUILD (e.g., 1.0.0.1074)")
+              sys.exit(1)
+          
+          print("\nSUCCESS: All versions valid")
+          PYTHON_SCRIPT

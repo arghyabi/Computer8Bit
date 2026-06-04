@@ -1,0 +1,52 @@
+name: Build EEPROM Flasher Firmware
+
+on:
+  workflow_call:
+  push:
+    branches: [master]
+    paths:
+      - 'EepromFlasher/Firmware/**'
+      - '.github/workflows/build-eeprom-firmware.yaml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'EepromFlasher/Firmware/**'
+      - '.github/workflows/build-eeprom-firmware.yaml'
+
+jobs:
+  build-firmware:
+    name: Build EEPROM Flasher Firmware
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y arduino-mk make
+          echo "arduino-mk installed"
+      
+      - name: Build firmware
+        run: |
+          cd EepromFlasher/Firmware
+          make clean
+          make
+          echo "Firmware built successfully"
+      
+      - name: Verify firmware output
+        run: |
+          if [ ! -f "EepromFlasher/Firmware/build-EepromFlashFirmware/EepromFlashFirmware.hex" ]; then
+            echo "ERROR: Firmware hex file not found!"
+            exit 1
+          fi
+          echo "SUCCESS: EEPROM Flasher firmware build completed"
+          ls -lh EepromFlasher/Firmware/build-EepromFlashFirmware/*.hex
+      
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eeprom-flasher-firmware
+          path: EepromFlasher/Firmware/*.hex
+          retention-days: 30

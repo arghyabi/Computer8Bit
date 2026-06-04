@@ -1,0 +1,64 @@
+name: Build Microcode
+
+on:
+  workflow_call:
+  push:
+    branches: [master]
+    paths:
+      - 'Microcode/**'
+      - '.github/workflows/build-microcode.yaml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'Microcode/**'
+      - '.github/workflows/build-microcode.yaml'
+
+jobs:
+  build-microcode:
+    name: Generate Microcode
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Generate microcode
+        run: |
+          cd Microcode
+          python3 GenMicrocode.py
+          echo "Microcode generated successfully"
+      
+      - name: Verify microcode output
+        run: |
+          if [ ! -d "Microcode/out" ]; then
+            echo "ERROR: Microcode output directory not found!"
+            exit 1
+          fi
+          
+          # Check for all three microcode binary files
+          MISSING_FILES=0
+          for chip in uCode0 uCode1 uCode2; do
+            if [ ! -f "Microcode/out/${chip}.bin" ]; then
+              echo "ERROR: ${chip}.bin not found!"
+              MISSING_FILES=$((MISSING_FILES + 1))
+            else
+              echo "SUCCESS: ${chip}.bin generated"
+              ls -lh "Microcode/out/${chip}.bin"
+            fi
+          done
+          
+          if [ $MISSING_FILES -gt 0 ]; then
+            echo "ERROR: $MISSING_FILES microcode file(s) missing!"
+            exit 1
+          fi
+          
+          echo "SUCCESS: All microcode files generated successfully"

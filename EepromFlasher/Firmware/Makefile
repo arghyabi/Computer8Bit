@@ -19,7 +19,7 @@ LOCAL_INO_SRCS =
 LOCAL_CPP_SRCS = EepromFlashFirmware.cpp
 
 # Output file
-TARGET = EepromFlashFirmware.hex
+TARGET = EepromFlashFirmware
 
 
 include /usr/share/arduino/Arduino.mk

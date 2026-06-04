@@ -42,7 +42,7 @@ class ParsedInstructionData:
 @dataclass
 class GeneratedMicrocodeResult:
     MicrocodeByChip: Dict[str, List[int]]
-    LastMicroInstructionMatrix: ParsedMicroInstructionMatrix | None
+    LastMicroInstructionMatrix: ParsedMicroInstructionMatrix
 
 
 class ParseInstructions:
