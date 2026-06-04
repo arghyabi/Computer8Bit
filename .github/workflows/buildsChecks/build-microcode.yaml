@@ -1,0 +1,64 @@
+name: Build Microcode
+
+on:
+  workflow_call:
+  push:
+    branches: [master]
+    paths:
+      - 'Microcode/**'
+      - '.github/workflows/buildsChecks/build-microcode.yaml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'Microcode/**'
+      - '.github/workflows/buildsChecks/build-microcode.yaml'
+
+jobs:
+  build-microcode:
+    name: Generate Microcode
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Generate autogen instructions
+        run: |
+          cd Microcode
+          python3 GenerateAutogenInstructions.py
+          echo "Autogen instructions generated"
+      
+      - name: Compile autogen instructions
+        run: |
+          cd Microcode
+          python3 CompileAutogenInstructions.py
+          echo "Autogen instructions compiled"
+      
+      - name: Normalize instructions
+        run: |
+          cd Microcode
+          python3 NormalizeInstructions.py
+          echo "Instructions normalized"
+      
+      - name: Generate microcode
+        run: |
+          cd Microcode
+          python3 GenMicrocode.py
+          echo "Microcode generated successfully"
+      
+      - name: Verify microcode output
+        run: |
+          if [ ! -d "Microcode/output" ]; then
+            echo "ERROR: Microcode output directory not found!"
+            exit 1
+          fi
+          echo "SUCCESS: Microcode build completed"

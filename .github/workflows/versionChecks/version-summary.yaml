@@ -1,0 +1,40 @@
+name: Version Summary
+
+on:
+  workflow_call:
+
+jobs:
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: pip install pyyaml
+      
+      - name: Display summary
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import yaml
+          
+          with open('Config.yaml', 'r') as f:
+              config = yaml.safe_load(f)
+          
+          print("\n" + "="*60)
+          print("VERSION CHECK SUMMARY")
+          print("="*60)
+          print(f"\nMain Version: {config['Version']['MainVersion']}")
+          print("\nComponent Versions:")
+          for component, version in config['Components'].items():
+              print(f"  {component:12} : {version}")
+          print("\nSUCCESS: All version checks completed!")
+          print("="*60)
+          PYTHON_SCRIPT
