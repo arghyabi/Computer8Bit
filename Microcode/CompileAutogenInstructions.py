@@ -159,18 +159,23 @@ class ParseInstructions:
             self.InstructionParsedData[instructionName] = parsedInstruction
 
 
-    def ExpandAddressColumn(self, bitColumn: List[str]) -> List[int]:
+    def ExpandAddressColumn(self, bitColumn: List[str], reverseOrder: bool = False) -> List[int]:
         """
         Expand one address column into all concrete addresses it represents.
         Literal `0` and `1` bits are fixed, while any other symbol is treated
         as a don't-care bit and generates all matching address combinations.
         """
+        if reverseOrder:
+            bitColumnValues = bitColumn[::-1]
+        else:
+            bitColumnValues = bitColumn
+
         possibleValues: List[int] = []
-        maxValue = pow(2, len(bitColumn))
+        maxValue = pow(2, len(bitColumnValues))
 
         for candidateValue in range(maxValue):
             resolvedValue = candidateValue
-            for bitIndex, bitValue in enumerate(bitColumn):
+            for bitIndex, bitValue in enumerate(bitColumnValues):
                 if bitValue in ["1", "0"]:
                     resolvedValue = resolvedValue & ~(1 << bitIndex)
                     resolvedValue = resolvedValue | (int(bitValue) << bitIndex)
@@ -264,14 +269,14 @@ class ParseInstructions:
                     mapFilePointer.write(f"------------------------------------------------------------------------------\n")
                     mapIndex = 1
                     for columnIndex, addressColumn in enumerate(addressColumns):
-                        addresses = self.ExpandAddressColumn(addressColumn)
+                        addresses = self.ExpandAddressColumn(addressColumn, reverseOrder=True)
                         value = self.EncodeDataColumn(dataColumns[columnIndex], chipName)
                         for address in addresses:
                             microcodeMatrix[chipName][address] = value
                             mapFilePointer.write(f"chip_{chipName}_ins_{instruction.lower()}_{mapIndex:04d} :: 0x{address:04x} => 0x{value:02x} //")
                             strAdd = str(f"{address:015b}")
                             strVal = str(f"{value:08b}")
-                            mapFilePointer.write(f" {strAdd[13:15]}_{strAdd[12:13]}_{strAdd[8:12]}_{strAdd[4:8]}.{strAdd[0:4]} :: {strVal[:4]}.{strVal[4:8]}\n")
+                            mapFilePointer.write(f" {strAdd[:2]}_{strAdd[2:3]}_{strAdd[3:7]}_{strAdd[7:11]}.{strAdd[11:15]} :: {strVal[:4]}.{strVal[4:8]}\n")
                             mapIndex += 1
 
                 doneCount += 1
