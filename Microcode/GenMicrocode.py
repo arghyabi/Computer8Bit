@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 
+import NormalizeInstructions
 import GenerateAutogenInstructions
 import CompileAutogenInstructions
 
@@ -20,9 +21,21 @@ def Main():
     if os.path.exists("out"):
         shutil.rmtree("out")
 
+    # Step 1: Normalize instruction files to match YAML configuration
+    LOGGER.info("Step 1: Normalizing instruction files to match YAML configuration...")
+    configPath = os.path.join(os.path.dirname(__file__), "MicroCodeConfig.yaml")
+    normalizer = NormalizeInstructions.InstructionNormalizer(configPath)
+    normalizer.NormalizeAllInstructions(overwriteSource=True)
+    LOGGER.info("")
+
+    # Step 2: Generate autogen instructions from normalized source files
+    LOGGER.info("Step 2: Generating autogen instructions...")
     autoGen = GenerateAutogenInstructions.GenAutoInstructions()
     autoGen.AutogenEachInstruction()
+    LOGGER.info("")
 
+    # Step 3: Compile autogen instructions to microcode
+    LOGGER.info("Step 3: Compiling microcode...")
     insParser = CompileAutogenInstructions.ParseInstructions()
     insParser.ParseEachInstruction()
     generationResult = insParser.GenerateAddressDataMap()

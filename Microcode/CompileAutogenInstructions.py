@@ -14,7 +14,6 @@ UCODE_ORDER = [UCODE_0, UCODE_1, UCODE_2]
 OUTPUT_ROWS_PER_CHIP = 8
 EXPECTED_OUTPUT_ROW_COUNT = len(UCODE_ORDER) * OUTPUT_ROWS_PER_CHIP
 EXPECTED_INPUT_ADDRESS_ROW_COUNT = 15
-PCB_REMAP_ROW_COUNT = 8
 
 MICRO_CODE_MAP_FILE = os.path.join("out", "microCodeMap.txt")
 LOGGER = logging.getLogger(__name__)
@@ -71,24 +70,6 @@ class ParseInstructions:
 
         self.InsObjects.sort(key=lambda item: item.__name__)
         self.InstructionParsedData: Dict[str, ParsedInstructionData] = {}
-
-
-    def RemapInstructionInputRowsForPcbLayout(self, rowList, instructionName, rowType):
-        """
-        Remap only the instruction-register portion of the input rows to match
-        the physical PCB wiring. The full address matrix contains 15 rows, but
-        only the final 8 instruction-select rows need the PCB-specific reversal.
-        """
-        if len(rowList) != EXPECTED_INPUT_ADDRESS_ROW_COUNT:
-            raise Exception(
-                f"ERROR: Instruction '{instructionName}' must contain exactly "
-                f"{EXPECTED_INPUT_ADDRESS_ROW_COUNT} input rows before PCB remapping, "
-                f"found {len(rowList)} in {rowType}."
-            )
-
-        fixedPrefixRows = rowList[:-PCB_REMAP_ROW_COUNT]
-        remappedSuffixRows = list(reversed(rowList[-PCB_REMAP_ROW_COUNT:]))
-        rowList[:] = fixedPrefixRows + remappedSuffixRows
 
 
     def ValidateParsedInstructionShape(self, parsedInstruction: ParsedInstructionData):
@@ -175,28 +156,7 @@ class ParseInstructions:
                         outCount = 0
 
             self.ValidateParsedInstructionShape(parsedInstruction)
-
-            self.RemapInstructionInputRowsForPcbLayout(
-                parsedInstruction.MicroInstructionMatrix.InputSignals,
-                instructionName,
-                "micro instruction input rows"
-            )
-            self.RemapInstructionInputRowsForPcbLayout(
-                parsedInstruction.AddressMatrix,
-                instructionName,
-                "address rows"
-            )
-
             self.InstructionParsedData[instructionName] = parsedInstruction
-
-
-    def ReverseBitColumn(self, bitColumn: List[str]) -> List[str]:
-        """
-        Reverse one instruction bit column so the least-significant bit matches
-        the physical wiring order expected by the EEPROM address and data layout.
-        This keeps the conversion logic centralized in one helper.
-        """
-        return list(reversed(bitColumn))
 
 
     def ExpandAddressColumn(self, bitColumn: List[str]) -> List[int]:
@@ -205,13 +165,12 @@ class ParseInstructions:
         Literal `0` and `1` bits are fixed, while any other symbol is treated
         as a don't-care bit and generates all matching address combinations.
         """
-        reversedBits = self.ReverseBitColumn(bitColumn)
         possibleValues: List[int] = []
-        maxValue = pow(2, len(reversedBits))
+        maxValue = pow(2, len(bitColumn))
 
         for candidateValue in range(maxValue):
             resolvedValue = candidateValue
-            for bitIndex, bitValue in enumerate(reversedBits):
+            for bitIndex, bitValue in enumerate(bitColumn):
                 if bitValue in ["1", "0"]:
                     resolvedValue = resolvedValue & ~(1 << bitIndex)
                     resolvedValue = resolvedValue | (int(bitValue) << bitIndex)
@@ -220,15 +179,17 @@ class ParseInstructions:
         return possibleValues
 
 
-    def EncodeDataColumn(self, bitColumn: List[str]) -> int:
+    def EncodeDataColumn(self, bitColumn: List[str], chipName: str = "") -> int:
         """
         Convert one output bit column into the final byte value written to ROM.
         Only explicit `1` bits contribute to the encoded value; all other
         symbols are treated as inactive for the generated data byte.
+        
+        YAML MicrocodeChipsPinMap defines exact pin order (IO0-IO7), so we use
+        the bit column as-is without any transformation.
         """
-        reversedBits = self.ReverseBitColumn(bitColumn)
         encodedValue = 0
-        for bitIndex, bitValue in enumerate(reversedBits):
+        for bitIndex, bitValue in enumerate(bitColumn):
             if bitValue == "1":
                 encodedValue = encodedValue | (1 << bitIndex)
         return encodedValue
@@ -296,16 +257,21 @@ class ParseInstructions:
                     dataColumns = self.TransposeMatrix(parsedInstruction.OutputMatrixByChip[chipName])
 
                     mapFilePointer.write(f"\n\nInstruction: {instruction}; Chip: {chipName}\n")
+                    mapFilePointer.write(f"------------------------------------------------------------------------------\n")
+                    mapFilePointer.write(f"                                   |       |  uu f ssss iiii iiii |  iiii iiii\n")
+                    mapFilePointer.write(f"                           Address |  Val  |  nn l qqqq nnnn nnnn |  oooo oooo\n")
+                    mapFilePointer.write(f"                                   |       |  10 g 3210 0123 4567 |  7654 3210\n")
+                    mapFilePointer.write(f"------------------------------------------------------------------------------\n")
                     mapIndex = 1
                     for columnIndex, addressColumn in enumerate(addressColumns):
                         addresses = self.ExpandAddressColumn(addressColumn)
-                        value = self.EncodeDataColumn(dataColumns[columnIndex])
+                        value = self.EncodeDataColumn(dataColumns[columnIndex], chipName)
                         for address in addresses:
                             microcodeMatrix[chipName][address] = value
                             mapFilePointer.write(f"chip_{chipName}_ins_{instruction.lower()}_{mapIndex:04d} :: 0x{address:04x} => 0x{value:02x} //")
                             strAdd = str(f"{address:015b}")
                             strVal = str(f"{value:08b}")
-                            mapFilePointer.write(f" {strAdd[:1]}_{strAdd[1:3]}_{strAdd[3:7]}_{strAdd[7:11]}.{strAdd[11:15]} :: {strAdd[:4]}.{strAdd[4:8]}\n")
+                            mapFilePointer.write(f" {strAdd[13:15]}_{strAdd[12:13]}_{strAdd[8:12]}_{strAdd[4:8]}.{strAdd[0:4]} :: {strVal[:4]}.{strVal[4:8]}\n")
                             mapIndex += 1
 
                 doneCount += 1
