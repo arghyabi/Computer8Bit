@@ -98,7 +98,7 @@ jobs:
     name: MainVersion
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-main-version.yaml
+    uses: ./.github/workflows/version-check-main-version.yaml
     with:
       base_ref: ${{ github.base_ref }}
   
@@ -106,7 +106,7 @@ jobs:
     name: Compiler Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-compiler-version.yaml
+    uses: ./.github/workflows/version-check-compiler-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.compiler_modified }}
       base_ref: ${{ github.base_ref }}
@@ -115,7 +115,7 @@ jobs:
     name: Emulator Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-emulator-version.yaml
+    uses: ./.github/workflows/version-check-emulator-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.emulator_modified }}
       base_ref: ${{ github.base_ref }}
@@ -124,7 +124,7 @@ jobs:
     name: Flasher Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-flasher-version.yaml
+    uses: ./.github/workflows/version-check-flasher-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.flasher_modified }}
       base_ref: ${{ github.base_ref }}
@@ -133,7 +133,7 @@ jobs:
     name: ISA Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-isa-version.yaml
+    uses: ./.github/workflows/version-check-isa-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.isa_modified }}
       base_ref: ${{ github.base_ref }}
@@ -142,7 +142,7 @@ jobs:
     name: Inspector Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-inspector-version.yaml
+    uses: ./.github/workflows/version-check-inspector-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.inspector_modified }}
       base_ref: ${{ github.base_ref }}
@@ -151,7 +151,7 @@ jobs:
     name: 7Segment Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-sevensegment-version.yaml
+    uses: ./.github/workflows/version-check-sevensegment-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.sevensegment_modified }}
       base_ref: ${{ github.base_ref }}
@@ -160,7 +160,7 @@ jobs:
     name: Document Version
     if: github.event_name == 'pull_request'
     needs: [setup, check-config-modified]
-    uses: ./.github/workflows/versionChecks/check-document-version.yaml
+    uses: ./.github/workflows/version-check-document-version.yaml
     with:
       component_modified: ${{ needs.setup.outputs.document_modified }}
       base_ref: ${{ github.base_ref }}
@@ -169,7 +169,7 @@ jobs:
     name: Format Validation
     if: github.event_name == 'pull_request'
     needs: setup
-    uses: ./.github/workflows/versionChecks/validate-format.yaml
+    uses: ./.github/workflows/version-format.yaml
   
   version-summary:
     name: Version Summary
@@ -187,22 +187,22 @@ jobs:
       check-document-version,
       validate-format
     ]
-    uses: ./.github/workflows/versionChecks/version-summary.yaml
+    uses: ./.github/workflows/version-check-summary.yaml
   
   # ============================================================================
   # BUILD JOBS (PR and Push)
   # ============================================================================
   build-microcode:
     name: Build Microcode
-    uses: ./.github/workflows/buildsChecks/build-microcode.yaml
+    uses: ./.github/workflows/build-microcode.yaml
   
   build-7segment:
     name: Build 7-Segment Driver
-    uses: ./.github/workflows/buildsChecks/build-7segment-driver.yaml
+    uses: ./.github/workflows/build-7segment-driver.yaml
   
   build-eeprom-firmware:
     name: Build EEPROM Firmware
-    uses: ./.github/workflows/buildsChecks/build-eeprom-firmware.yaml
+    uses: ./.github/workflows/build-eeprom-firmware.yaml
   
   # ============================================================================
   # FINAL STATUS

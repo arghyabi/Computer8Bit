@@ -6,12 +6,12 @@ on:
     branches: [master]
     paths:
       - 'Microcode/**'
-      - '.github/workflows/buildsChecks/build-microcode.yaml'
+      - '.github/workflows/build-microcode.yaml'
   pull_request:
     branches: [master]
     paths:
       - 'Microcode/**'
-      - '.github/workflows/buildsChecks/build-microcode.yaml'
+      - '.github/workflows/build-microcode.yaml'
 
 jobs:
   build-microcode:
@@ -30,25 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pyyaml
-      
-      - name: Generate autogen instructions
-        run: |
-          cd Microcode
-          python3 GenerateAutogenInstructions.py
-          echo "Autogen instructions generated"
-      
-      - name: Compile autogen instructions
-        run: |
-          cd Microcode
-          python3 CompileAutogenInstructions.py
-          echo "Autogen instructions compiled"
-      
-      - name: Normalize instructions
-        run: |
-          cd Microcode
-          python3 NormalizeInstructions.py
-          echo "Instructions normalized"
-      
+
       - name: Generate microcode
         run: |
           cd Microcode
@@ -57,8 +39,26 @@ jobs:
       
       - name: Verify microcode output
         run: |
-          if [ ! -d "Microcode/output" ]; then
+          if [ ! -d "Microcode/out" ]; then
             echo "ERROR: Microcode output directory not found!"
             exit 1
           fi
-          echo "SUCCESS: Microcode build completed"
+          
+          # Check for all three microcode binary files
+          MISSING_FILES=0
+          for chip in uCode0 uCode1 uCode2; do
+            if [ ! -f "Microcode/out/${chip}.bin" ]; then
+              echo "ERROR: ${chip}.bin not found!"
+              MISSING_FILES=$((MISSING_FILES + 1))
+            else
+              echo "SUCCESS: ${chip}.bin generated"
+              ls -lh "Microcode/out/${chip}.bin"
+            fi
+          done
+          
+          if [ $MISSING_FILES -gt 0 ]; then
+            echo "ERROR: $MISSING_FILES microcode file(s) missing!"
+            exit 1
+          fi
+          
+          echo "SUCCESS: All microcode files generated successfully"

@@ -6,12 +6,12 @@ on:
     branches: [master]
     paths:
       - 'EepromFlasher/Firmware/**'
-      - '.github/workflows/buildsChecks/build-eeprom-firmware.yaml'
+      - '.github/workflows/build-eeprom-firmware.yaml'
   pull_request:
     branches: [master]
     paths:
       - 'EepromFlasher/Firmware/**'
-      - '.github/workflows/buildsChecks/build-eeprom-firmware.yaml'
+      - '.github/workflows/build-eeprom-firmware.yaml'
 
 jobs:
   build-firmware:
@@ -45,7 +45,7 @@ jobs:
           ls -lh EepromFlasher/Firmware/build-EepromFlashFirmware/*.hex
       
       - name: Upload firmware artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: eeprom-flasher-firmware
           path: EepromFlasher/Firmware/*.hex

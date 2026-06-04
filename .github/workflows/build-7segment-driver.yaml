@@ -6,12 +6,12 @@ on:
     branches: [master]
     paths:
       - 'Gen7segDriver/**'
-      - '.github/workflows/buildsChecks/build-7segment-driver.yaml'
+      - '.github/workflows/build-7segment-driver.yaml'
   pull_request:
     branches: [master]
     paths:
       - 'Gen7segDriver/**'
-      - '.github/workflows/buildsChecks/build-7segment-driver.yaml'
+      - '.github/workflows/build-7segment-driver.yaml'
 
 jobs:
   build-7segment:
