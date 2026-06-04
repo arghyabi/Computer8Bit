@@ -201,16 +201,16 @@ MicrocodeChipsPinMap:
     A12: Flag
     A11: Seqn3
     A10: Seqn2
-    A9:  Seqn1
-    A8:  Seqn0
-    A7:  InsR0
-    A6:  InsR1
-    A5:  InsR2
-    A4:  InsR3
-    A3:  InsR4
-    A2:  InsR5
-    A1:  InsR6
-    A0:  InsR7
+    A9 : Seqn1
+    A8 : Seqn0
+    A7 : InsR0
+    A6 : InsR1
+    A5 : InsR2
+    A4 : InsR3
+    A3 : InsR4
+    A2 : InsR5
+    A1 : InsR6
+    A0 : InsR7
 
   OutputPinMap:
     uCode0:
