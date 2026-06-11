@@ -119,11 +119,11 @@ will be selected and sent to the Flag signal.
 
 | FlSe2 | FlSe1 | FlSe0 | Flag | Meaning       | Description              |
 | :---: | :---: | :---: | :----| :-------------| :------------------------|
-|   0   |   0   |   0   | Z    | Zero Flag     | Final Output is Zero     |
-|   0   |   0   |   1   | C    | Carry Flag    | Add/Sub have carryout    |
-|   0   |   1   |   0   | N    | Negative Flag | BUS[7]                   |
-|   0   |   1   |   1   | EQ   | Equal Compare | Temp1 and Temp2 Equal    |
-|   1   |   0   |   0   | GT   | Greater Than  | Temp1 > Temp2            |
-|   1   |   0   |   1   | LT   | Less Than     | Temp1 < Temp2            |
-|   1   |   1   |   0   | RSV  | Reserved      | -                        |
+|   0   |   0   |   0   | RSV  | Reserved      | -                        |
+|   0   |   0   |   1   | Z    | Zero Flag     | Final Output is Zero     |
+|   0   |   1   |   0   | C    | Carry Flag    | Add/Sub have carryout    |
+|   0   |   1   |   1   | N    | Negative Flag | BUS[7]                   |
+|   1   |   0   |   0   | EQ   | Equal Compare | Temp1 and Temp2 Equal    |
+|   1   |   0   |   1   | GT   | Greater Than  | Temp1 > Temp2            |
+|   1   |   1   |   0   | LT   | Less Than     | Temp1 < Temp2            |
 |   1   |   1   |   1   | RSV  | Reserved      | -                        |
