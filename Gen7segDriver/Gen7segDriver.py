@@ -18,19 +18,20 @@ dataSize           = 8
 # ' dddd '  ' dddd '  ' dddd '  ' dddd '
 
 segment_map = [
-                 #      g f e d  c b a -
-    0b0111_1110, # 0 => 0 1 1 1  1 1 1 0 // 0x7E
-    0b0000_1100, # 1 => 0 0 0 0  1 1 0 0 // 0x0C
-    0b1011_0110, # 2 => 1 0 1 1  0 1 1 0 // 0xB6
-    0b1001_1110, # 3 => 1 0 0 1  1 1 1 0 // 0x9E
-    0b1100_1100, # 4 => 1 1 0 0  1 1 0 0 // 0xCC
-    0b1101_1010, # 5 => 1 1 0 1  1 0 1 0 // 0xDA
-    0b1111_1010, # 6 => 1 1 1 1  1 0 1 0 // 0xFA
-    0b0000_1110, # 7 => 0 0 0 0  1 1 1 0 // 0x0E
+                 # I/O  7 6 5 4  3 2 1 0
+                 #      a b c d  e f g .
+    0b1111_1100, # 0 => 1 1 1 1  1 1 0 0 // 0x7E
+    0b0110_0000, # 1 => 0 1 1 0  0 0 0 0 // 0x0C
+    0b1101_1010, # 2 => 1 1 0 1  1 0 1 0 // 0xB6
+    0b1111_0010, # 3 => 1 1 1 1  0 0 1 0 // 0x9E
+    0b0110_0110, # 4 => 0 1 1 0  0 1 1 0 // 0xCC
+    0b1011_0110, # 5 => 1 0 1 1  0 1 1 0 // 0xDA
+    0b1011_1110, # 6 => 1 0 1 1  1 1 1 0 // 0xFA
+    0b1110_0000, # 7 => 1 1 1 0  0 0 0 0 // 0x0E
     0b1111_1110, # 8 => 1 1 1 1  1 1 1 0 // 0xFE
-    0b1101_1110, # 9 => 1 1 0 1  1 1 1 0 // 0xDE
+    0b1111_0110, # 9 => 1 1 1 1  0 1 1 0 // 0xDE
 
-    0b1000_0000, # - => 1 0 0 0  0 0 0 0 // 0x80
+    0b0000_0010, # - => 0 0 0 0  0 0 1 0 // 0x80
     0b0000_0000  #   => 0 0 0 0  0 0 0 0 // 0x00
 ]
 
@@ -38,10 +39,10 @@ segment_map = [
 NO_SEGMENT_INDEX   = 11  # No segment lit
 SIGN_SEGMENT_INDEX = 10  # Sign segment lit
 
-THOUSAND_ADD       = 0b000 << dataSize
-HUNDRED_ADD        = 0b010 << dataSize
-TEN_ADD            = 0b001 << dataSize
-UNIT_ADD           = 0b011 << dataSize
+THOUSAND_ADD       = 0b011 << dataSize
+HUNDRED_ADD        = 0b001 << dataSize
+TEN_ADD            = 0b010 << dataSize
+UNIT_ADD           = 0b000 << dataSize
 
 SIGN               = 0b100 << dataSize
 
