@@ -23,10 +23,10 @@ InsConfig:
       opcode: "0b0001_0000"  # No operands
       size: 1
     OUTS:
-      opcode: "0b0011_0000"  # No operands (signed output)
+      opcode: "0b0010_0000"  # No operands (signed output)
       size: 1
     HLT:
-      opcode: "0b0010_0000"  # No operands
+      opcode: "0b0011_0000"  # No operands
       size: 1
     
     # ===== Two-operand instructions (SSDD_XXXX format) =====
