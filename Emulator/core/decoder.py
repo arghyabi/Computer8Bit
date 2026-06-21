@@ -12,52 +12,49 @@ class InstructionDecoder:
         configPath = os.path.join(os.path.dirname(__file__), '..', '..', 'Microcode', 'MicroCodeConfig.yaml')
         config = ParseConfig(configPath)
         opcodeDict = GetAllInstructionOpcodes(config)
-        
+
         # Build opcode lookup tables from config
         self.opcodes = {}
         self.specialOpcodes = {
-            0b0011: {},  # SHL/SHR/INC/DEC
-            0b0100: {},  # LDI/LDM/SAV
-            0b0101: {},  # Jump instructions
-            0b1010: {},  # NOT
-            0b1101: {},  # CMI/CMIS
-            0b1110: {}   # PUSH/POP
+            0b1011: {},  # SHL/SHR/INC/DEC (RRTT_1011)
+            0b1100: {},  # LDI/LDM/SAV/NOT (RRTT_1100)
+            0b1101: {},  # CMI/CMIS/PUSH/POP (RRTT_1101)
+            0b1110: {},  # JMP/JMZ/JNZ/JMC/JME/JMG/JML (0TTT_1110)
+            0b1111: {}   # PSHV/CALL/RTN/OUT/OUTS/HLT/RST (TTTT_1111)
         }
-        
+
         # Populate from config
         for insName, opcode in opcodeDict.items():
-            # 8-bit static opcodes
-            if insName in ['NOP', 'OUT', 'HLT', 'OUTS', 'RTN', 'PSHV', 'CALL', 'RST']:
+            # 8-bit static opcodes (NOP and RST)
+            if insName in ['NOP', 'RST']:
                 self.opcodes[opcode] = insName
             # 4-bit opcodes (two-operand instructions)
-            elif insName in ['ADD', 'SUB', 'MOV', 'AND', 'OR', 'XOR', 'CMP', 'CMPS']:
+            elif insName in ['ADD', 'SUB', 'MOV', 'AND', 'OR', 'XOR', 'LDR', 'STR', 'CMP', 'CMPS']:
                 self.opcodes[opcode & 0x0F] = insName
             # Special opcodes with sub-types
             elif insName in ['SHL', 'SHR', 'INC', 'DEC']:
                 subType = (opcode >> 4) & 0b11
-                self.specialOpcodes[0b0011][subType] = insName
-            elif insName in ['LDI', 'LDM', 'SAV']:
+                self.specialOpcodes[0b1011][subType] = insName
+            elif insName in ['LDI', 'LDM', 'SAV', 'NOT']:
                 subType = (opcode >> 4) & 0b11
-                self.specialOpcodes[0b0100][subType] = insName
-            elif insName in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JMG', 'JML']:
-                subType = (opcode >> 4) & 0x0F
-                self.specialOpcodes[0b0101][subType] = insName
-            elif insName == 'NOT':
-                self.specialOpcodes[0b1010][0b00] = insName
-            elif insName in ['CMI', 'CMIS']:
+                self.specialOpcodes[0b1100][subType] = insName
+            elif insName in ['CMI', 'CMIS', 'PUSH', 'POP']:
                 subType = (opcode >> 4) & 0b11
                 self.specialOpcodes[0b1101][subType] = insName
-            elif insName in ['PUSH', 'POP']:
-                subType = (opcode >> 4) & 0b11
+            elif insName in ['JMP', 'JMZ', 'JNZ', 'JMC', 'JME', 'JMG', 'JML']:
+                subType = (opcode >> 4) & 0x0F
                 self.specialOpcodes[0b1110][subType] = insName
+            elif insName in ['PSHV', 'CALL', 'RTN', 'OUT', 'OUTS', 'HLT']:
+                subType = (opcode >> 4) & 0x0F
+                self.specialOpcodes[0b1111][subType] = insName
 
 
     def decode(self, instruction):
         opcode      = instruction & 0x0F  # Bottom 4 bits
         upperNibble = (instruction >> 4) & 0x0F  # Top 4 bits
 
-        # Check for 8-bit opcodes first
-        if instruction in [0x00, 0x10, 0x20, 0x30, 0x2E, 0x3E, 0x7E, 0xFF]:
+        # Check for 8-bit static opcodes (NOP=0x00, RST=0xFF)
+        if instruction in [0x00, 0xFF]:
             return self._decode8bitOpcode(instruction)
 
         # Check for special opcodes with sub-types
@@ -80,38 +77,47 @@ class InstructionDecoder:
     def _decodeSpecialOpcode(self, instruction, opcode, upperNibble):
         subOpcodes = self.specialOpcodes[opcode]
 
-        if opcode == 0b0011:  # SHL/SHR/INC/DEC: RRTT_0011
+        if opcode == 0b1011:  # SHL/SHR/INC/DEC: RRTT_1011
             subType  = upperNibble & 0b11  # Bottom 2 bits of upper nibble
             register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
             if subType in subOpcodes:
                 return (subOpcodes[subType], {'register': register}, 1)
 
-        elif opcode == 0b0100:  # LDI/LDM/SAV: RRTT_0100
+        elif opcode == 0b1100:  # LDI/LDM/SAV/NOT: RRTT_1100
             subType  = upperNibble & 0b11  # Bottom 2 bits of upper nibble
             register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
             if subType in subOpcodes:
-                return (subOpcodes[subType], {'register': register}, 2)  # Has immediate/address
+                # LDI/LDM/SAV have immediate/address, NOT does not
+                if subOpcodes[subType] == 'NOT':
+                    return (subOpcodes[subType], {'register': register}, 1)
+                else:
+                    return (subOpcodes[subType], {'register': register}, 2)  # Has immediate/address
 
-        elif opcode == 0b0101:  # Jump instructions: TTTT_0101
+        elif opcode == 0b1101:  # CMI/CMIS/PUSH/POP: RRTT_1101
+            subType  = upperNibble & 0b11  # Bottom 2 bits of upper nibble
+            register = (upperNibble >> 2) & 0b11  # Top 2 bits of upper nibble
+            if subType in subOpcodes:
+                # CMI/CMIS have immediate, PUSH/POP do not
+                if subOpcodes[subType] in ['CMI', 'CMIS']:
+                    return (subOpcodes[subType], {'register': register}, 2)  # Has immediate
+                else:
+                    return (subOpcodes[subType], {'register': register}, 1)
+
+        elif opcode == 0b1110:  # JMP/JMZ/JNZ/JMC/JME/JMG/JML: 0TTT_1110
             if upperNibble in subOpcodes:
                 return (subOpcodes[upperNibble], {}, 3)  # 11-bit address (2 bytes)
 
-        elif opcode == 0b1010:  # NOT: RR00_1010
-            register = (upperNibble >> 2) & 0b11
-            subType  = upperNibble & 0b11
+        elif opcode == 0b1111:  # PSHV/CALL/RTN/OUT/OUTS/HLT/RST: TTTT_1111
+            subType = upperNibble  # All 4 bits for type
             if subType in subOpcodes:
-                return (subOpcodes[subType], {'register': register}, 1)
-
-        elif opcode == 0b1101:  # CMI/CMIS: RRTT_1101
-            register = (upperNibble >> 2) & 0b11
-            subType  = upperNibble & 0b11
-            if subType in subOpcodes:
-                return (subOpcodes[subType], {'register': register}, 2)  # Has immediate
-        elif opcode == 0b1110:  # PUSH/POP: RRTT_1110
-            register = (upperNibble >> 2) & 0b11
-            subType  = upperNibble & 0b11
-            if subType in subOpcodes:
-                return (subOpcodes[subType], {'register': register}, 1)
+                insName = subOpcodes[subType]
+                # PSHV and CALL have immediate/address, others don't
+                if insName in ['PSHV']:
+                    return (insName, {}, 2)  # Has immediate
+                elif insName in ['CALL']:
+                    return (insName, {}, 3)  # Has 11-bit address
+                else:
+                    return (insName, {}, 1)  # RTN, OUT, OUTS, HLT, RST have no operands
 
         return ('UNKNOWN', {}, 1)
 

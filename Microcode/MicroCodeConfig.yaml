@@ -14,147 +14,197 @@ InsConfig:
     # - 'x' in binary means "don't care" bit (will be filled by operands)
     # - For SSDD format: SS=source register, DD=destination register
     # - For RRTT format: RR=register, TT=type/subtype
-    
-    # ===== Static instructions (00TT_0000 format) =====
+
     NOP:
-      opcode: "0b0000_0000"  # No operands
+      opcode: "0b0000_0000"
       size: 1
-    OUT:
-      opcode: "0b0001_0000"  # No operands
-      size: 1
-    OUTS:
-      opcode: "0b0010_0000"  # No operands (signed output)
-      size: 1
-    HLT:
-      opcode: "0b0011_0000"  # No operands
-      size: 1
-    
-    # ===== Two-operand instructions (SSDD_XXXX format) =====
-    # Upper 4 bits: SS=source[7:6], DD=dest[5:4]
+      description: "No operation"
+
     ADD:
-      opcode: "0bxxxx_0001"  # SSDD_0001
+      opcode: "0bxxxx_0001"
       size: 1
+      description: "Add 2 registers and update to destination"
+
     SUB:
-      opcode: "0bxxxx_0010"  # SSDD_0010
+      opcode: "0bxxxx_0010"
       size: 1
+      description: "Subtract source from dest. & update to dest."
+
     MOV:
-      opcode: "0bxxxx_0110"  # SSDD_0110
+      opcode: "0bxxxx_0011"
       size: 1
+      description: "Move from source to destination"
+
     AND:
-      opcode: "0bxxxx_0111"  # SSDD_0111
+      opcode: "0bxxxx_0100"
       size: 1
+      description: "Logical AND operation; update to destination"
+
     OR:
-      opcode: "0bxxxx_1000"  # SSDD_1000
+      opcode: "0bxxxx_0101"
       size: 1
+      description: "Logical OR operation; update to destination"
+
     XOR:
-      opcode: "0bxxxx_1001"  # SSDD_1001
+      opcode: "0bxxxx_0110"
       size: 1
+      description: "Logical XOR operation; update to destination"
+
+    LDR:
+      opcode: "0bxxxx_0111"
+      size: 1
+      description: "Load destination from memory address in source"
+
+    STR:
+      opcode: "0bxxxx_1000"
+      size: 1
+      description: "Save register value to memory address in source"
+
     CMP:
-      opcode: "0bxxxx_1011"  # SSDD_1011
+      opcode: "0bxxxx_1001"
       size: 1
+      description: "Compare two register values (unsigned); update the flag"
+
     CMPS:
-      opcode: "0bxxxx_1100"  # SSDD_1100
+      opcode: "0bxxxx_1010"
       size: 1
-    
-    # ===== Single-operand with type (RRTT_0011 format) =====
-    # Upper 4 bits: RR=register[7:6], TT=type[5:4]
+      description: "Compare two register values (signed); update the flag"
+
     SHL:
-      opcode: "0bxx00_0011"  # RR00_0011
+      opcode: "0bxx00_1011"
       size: 1
+      description: "Shift register left by 1 bit"
+
     SHR:
-      opcode: "0bxx01_0011"  # RR01_0011
+      opcode: "0bxx01_1011"
       size: 1
+      description: "Shift register right by 1 bit"
+
     INC:
-      opcode: "0bxx10_0011"  # RR10_0011
+      opcode: "0bxx10_1011"
       size: 1
+      description: "Increment register by 1"
+
     DEC:
-      opcode: "0bxx11_0011"  # RR11_0011
+      opcode: "0bxx11_1011"
       size: 1
-    
-    # ===== Load/Store instructions (RRTT_0100 format) =====
-    # Upper 4 bits: RR=register[7:6], TT=type[5:4]
+      description: "Decrement register by 1"
+
     LDI:
-      opcode: "0bxx00_0100"  # RR00_0100 + immediate byte
+      opcode: "0bxx00_1100"
       size: 2
+      description: "Load the value to register immediately"
+
     LDM:
-      opcode: "0bxx01_0100"  # RR01_0100 + address byte
+      opcode: "0bxx01_1100"
       size: 2
+      description: "Load from value to register from memory"
+
     SAV:
-      opcode: "0bxx10_0100"  # RR10_0100 + address byte
+      opcode: "0bxx10_1100"
       size: 2
-    
-    # ===== Jump instructions (0TTT_0101 format) =====
-    # Upper 4 bits: 0TTT where TTT=jump type[6:4]
-    JMP:
-      opcode: "0b0000_0101"  # Unconditional jump
-      size: 3
-      size_8bit: 2
-    JMZ:
-      opcode: "0b0001_0101"  # Jump if Zero
-      size: 3
-      size_8bit: 2
-    JNZ:
-      opcode: "0b0010_0101"  # Jump if Not Zero
-      size: 3
-      size_8bit: 2
-    JMC:
-      opcode: "0b0011_0101"  # Jump if Carry
-      size: 3
-      size_8bit: 2
-    JME:
-      opcode: "0b0100_0101"  # Jump if Equal
-      size: 3
-      size_8bit: 2
-    JMG:
-      opcode: "0b0101_0101"  # Jump if Greater
-      size: 3
-      size_8bit: 2
-    JML:
-      opcode: "0b0110_0101"  # Jump if Less
-      size: 3
-      size_8bit: 2
-    
-    # ===== Bitwise NOT (RR00_1010 format) =====
+      description: "Save the register value to memory"
+
     NOT:
-      opcode: "0bxx00_1010"  # RR00_1010
+      opcode: "0bxx11_1100"
       size: 1
-    
-    # ===== Compare immediate (RRTT_1101 format) =====
+      description: "Bitwise NOT operation; update same register"
+
     CMI:
-      opcode: "0bxx00_1101"  # RR00_1101 + immediate byte (unsigned)
+      opcode: "0bxx00_1101"
       size: 2
+      description: "Compare register with immediate value (unsigned)"
+
     CMIS:
-      opcode: "0bxx01_1101"  # RR01_1101 + immediate byte (signed)
+      opcode: "0bxx01_1101"
       size: 2
-    
-    # ===== Stack instructions (RRTT_1110 format) =====
+      description: "Compare register with immediate value (signed)"
+
     PUSH:
-      opcode: "0bxx00_1110"  # RR00_1110
+      opcode: "0bxx10_1101"
       size: 1
+      description: "Push register value to stack"
+
     POP:
-      opcode: "0bxx01_1110"  # RR01_1110
+      opcode: "0bxx11_1101"
       size: 1
-    RTN:
-      opcode: "0b0010_1110"  # Return from subroutine
-      size: 1
+      description: "Pop from stack and load to register"
+
+    JMP:
+      opcode: "0b0000_1110"
+      size: 3
+      description: "Jump to address"
+
+    JMZ:
+      opcode: "0b0001_1110"
+      size: 3
+      description: "Jump to address if Zero flag set"
+
+    JNZ:
+      opcode: "0b0010_1110"
+      size: 3
+      description: "Jump to address if Zero flag NOT set"
+
+    JMC:
+      opcode: "0b0011_1110"
+      size: 3
+      description: "Jump to address if Carry flag set"
+
+    JME:
+      opcode: "0b0100_1110"
+      size: 3
+      description: "Jump to address if Eql flag is set"
+
+    JMG:
+      opcode: "0b0101_1110"
+      size: 3
+      description: "Jump to address if Grt flag is set"
+
+    JML:
+      opcode: "0b0110_1110"
+      size: 3
+      description: "Jump to address if Lst flag is set"
+
     PSHV:
-      opcode: "0b0011_1110"  # Push immediate value
+      opcode: "0b0000_1111"
       size: 2
+      description: "Push immediate value to stack"
+
     CALL:
-      opcode: "0b0111_1110"  # Call subroutine
-      size: 2
-      size_8bit: 2
-    
-    # ===== Reset instruction =====
-    RST:
-      opcode: "0b1111_1111"  # System reset
+      opcode: "0b0001_1111"
+      size: 3
+      description: "Push the PC to Stack (PC high & low) & load new address"
+
+    RTN:
+      opcode: "0b0010_1111"
       size: 1
+      description: "Pop the PC address and restore"
+
+    OUT:
+      opcode: "0b0011_1111"
+      size: 1
+      description: "Display unsigned value in 7-Segment"
+
+    OUTS:
+      opcode: "0b0100_1111"
+      size: 1
+      description: "Display signed value in 7-Segment"
+
+    HLT:
+      opcode: "0b0101_1111"
+      size: 1
+      description: "Halt the platform"
+
+    RST:
+      opcode: "0b1111_1111"
+      size: 1
+      description: "Reset it self"
 
 
 VirtualPinConfig:
   InputControl:
     # 4 virtual pins for input control.
-    # format [ViInD, ViInC, ViInB, ViInA] 
+    # format [ViInD, ViInC, ViInB, ViInA]
     #         DCBA
     rAI   : 0b0000
     rBI   : 0b0001
@@ -174,7 +224,7 @@ VirtualPinConfig:
     RESRV4: 0b1111 # Reserved if no Pin need to be enabled
   OutputControl:
     # 4 virtual pins for output control.
-    # format [ViOtD, ViOtC, ViOtB, ViOtA] 
+    # format [ViOtD, ViOtC, ViOtB, ViOtA]
     #         DCBA
     rAO   : 0b0000
     rBO   : 0b0001
