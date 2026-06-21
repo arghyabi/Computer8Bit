@@ -17,7 +17,7 @@ MAX_VAL_SIGNED_8_BIT   = 127
 MIN_VAL_SIGNED_8_BIT   = -128
 MAX_ROM_ADDRESS_8_BIT  = 255
 MAX_ROM_ADDRESS_11_BIT = 2047
-MAX_MEM_ADDRESS_4_BIT  = 16
+MAX_MEM_ADDRESS        = 48
 
 PADDING_CHAR           = 0xFF
 
@@ -430,7 +430,7 @@ class Compiler:
                     errorPrint(index, f"{memAddress} is not a valid value!!")
                     memAddress = 0
 
-                if memAddress >= MAX_MEM_ADDRESS_4_BIT:
+                if memAddress >= MAX_MEM_ADDRESS:
                     errorPrint(index, "Max memory address limit cross!!")
 
                 bitVal = bitVal | self.registerDict[destReg]
@@ -574,8 +574,8 @@ class Compiler:
                 self.addressIndex += 1
 
 
-            ## Parse AND, OR, XOR, CMP, CMPS command | Format: SSDD_0111, SSDD_1000, SSDD_1001, SSDD_1011, SSDD_1100
-            elif opcode == "AND" or opcode == "OR" or opcode == "XOR" or opcode == "CMP" or opcode == "CMPS":
+            ## Parse AND, OR, XOR, CMP, CMPS, LDR, STR command | Format: SSDD_0111, SSDD_1000, SSDD_1001, SSDD_1011, SSDD_1100
+            elif opcode == "AND" or opcode == "OR" or opcode == "XOR" or opcode == "CMP" or opcode == "CMPS" or opcode == "LDR" or opcode == "STR":
                 if payloadLen != 2:
                     errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
 

@@ -1,16 +1,16 @@
 Project:
   Name: "Computer8Bit"
   Description: "8-bit Computer From Scratch using Logic Gates"
-  
+
 Version:
   # Main version; any change requires a new version
-  MainVersion: "1.71.0.1083"
-  
+  MainVersion: "1.72.0.1084"
+
 Components:
-  Compiler  : "1.20.0.1023"
-  Emulator  : "1.5.0.1005"
+  Compiler  : "1.21.0.1024"
+  Emulator  : "1.6.0.1006"
   Inspector : "1.1.0.1001"
   Flasher   : "1.8.1.1009"
   7Segment  : "1.4.0.1005"
-  ISA       : "1.34.1.1040"
-  Document  : "1.26.0.1033"
+  ISA       : "1.35.0.1041"
+  Document  : "1.27.0.1034"
