@@ -48,9 +48,9 @@
 |    55    |    26    |  [rBO](SignalInfo.md#signal-rbo)     | \| |  [AndO](SignalInfo.md#signal-ando)   |    55    |    26    |
 |    54    |    27    |  [rCO](SignalInfo.md#signal-rco)     | \| |  [XorO](SignalInfo.md#signal-xoro)   |    54    |    27    |
 |    53    |    28    |  [rDO](SignalInfo.md#signal-rdo)     | \| |  [NtO](SignalInfo.md#signal-nto)     |    53    |    28    |
-|    52    |    29    |  [RomO](SignalInfo.md#signal-romo)   | \| |  [PCO](SignalInfo.md#signal-pco)     |    52    |    29    |
+|    52    |    29    |  [RomO](SignalInfo.md#signal-romo)   | \| |  [PCHO](SignalInfo.md#signal-pcho)   |    52    |    29    |
 |    51    |    30    |  [SpO](SignalInfo.md#signal-spo)     | \| |  [SqR](SignalInfo.md#signal-sqr)     |    51    |    30    |
-|    50    |    31    |  [MeO](SignalInfo.md#signal-meo)     | \| |   -                                  |    50    |    31    |
+|    50    |    31    |  [MeO](SignalInfo.md#signal-meo)     | \| |  [PCLO](SignalInfo.md#signal-pclo)   |    50    |    31    |
 |    49    |    32    |  [AdSuO](SignalInfo.md#signal-adsuo) | \| |   -                                  |    49    |    32    |
 
 

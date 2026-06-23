@@ -238,9 +238,9 @@ VirtualPinConfig:
     AndO  : 0b1001
     XorO  : 0b1010
     NtO   : 0b1011
-    PCO   : 0b1100
+    PCHO  : 0b1100
     SqR   : 0b1101
-    RESRV1: 0b1110
+    PCLO  : 0b1110
     RESRV2: 0b1111 # Reserved if no Pin need to be enabled
 
 

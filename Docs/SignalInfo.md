@@ -81,7 +81,9 @@ loaded in the counter until the PCL is high.
 
 * <a id="signal-pcc"></a>`PCC`: The PCC signal enables the Program Counter to count. If PCC is high, the counter increments on each clock cycle.
 
-* <a id="signal-pco"></a>`PCO`: The PCO signal load the value from the PC register to the bus.
+* <a id="signal-pcho"></a>`PCHO`: The PCHO signal load the value from the higher 3 bit of PC register to the bus.
+
+* <a id="signal-pclo"></a>`PCLO`: The PCLO signal load the value from the lower 8 bit of PC register to the bus.
 
 * <a id="signal-romo"></a>`RomO`: The RomO signal loads the current instruction from ROM onto the bus.
 
