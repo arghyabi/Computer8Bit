@@ -4,7 +4,7 @@ Project:
 
 Version:
   # Main version; any change requires a new version
-  MainVersion: "1.73.0.1085"
+  MainVersion: "1.74.0.1086"
 
 Components:
   Compiler  : "1.21.0.1024"
@@ -12,5 +12,5 @@ Components:
   Inspector : "1.1.0.1001"
   Flasher   : "1.8.1.1009"
   7Segment  : "1.4.0.1005"
-  ISA       : "1.36.0.1042"
-  Document  : "1.28.0.1035"
+  ISA       : "1.37.0.1043"
+  Document  : "1.28.1.1036"

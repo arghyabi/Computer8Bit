@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import MicrocodeConfig
 
@@ -39,6 +39,57 @@ class InstructionNormalizer:
         inputSignals = [sig for sig, _ in sorted(self.parsedConfig.InputControlSignals.items(), key=lambda x: x[1])]
         outputSignals = [sig for sig, _ in sorted(self.parsedConfig.OutputControlSignals.items(), key=lambda x: x[1])]
         return inputSignals, outputSignals
+
+    def _GetInstructionOpcodeBitsByInsR(self, instructionName: str) -> Dict[str, Optional[str]]:
+        """Return opcode bits mapped to InsR rows (InsR0=LSB), preserving x as don't-care."""
+        instructions = self.config.get(MicrocodeConfig.CFG_INS_CONFIG, {}).get(MicrocodeConfig.CFG_INSTRUCTIONS, {})
+        insData = instructions.get(instructionName, {}) if isinstance(instructions, dict) else {}
+        opcode = insData.get('opcode') if isinstance(insData, dict) else None
+
+        if isinstance(opcode, int):
+            bitPattern = f"{opcode & 0xFF:08b}"
+        elif isinstance(opcode, str) and opcode.startswith('0b'):
+            bitPattern = opcode[2:].replace('_', '').lower()
+        else:
+            return {}
+
+        if len(bitPattern) != 8:
+            return {}
+
+        bitsByInsR: Dict[str, Optional[str]] = {}
+        for bitIndex in range(8):
+            # bitPattern is MSB->LSB while InsR0 is LSB.
+            bitChar = bitPattern[7 - bitIndex]
+            if bitChar == 'x':
+                bitsByInsR[f"InsR{bitIndex}"] = None
+            else:
+                bitsByInsR[f"InsR{bitIndex}"] = bitChar
+
+        return bitsByInsR
+
+    def _GetNormalizedInsRValues(
+        self,
+        signalName: str,
+        columnCount: int,
+        signals: Dict[str, Dict[str, List[str]]],
+        opcodeBitsByInsR: Dict[str, Optional[str]],
+    ) -> List[str]:
+        """Normalize InsR row values using YAML opcode for columns >= 2."""
+        existingValues = list(signals.get(signalName, {}).get('values', []))
+        if len(existingValues) < columnCount:
+            existingValues.extend(['-'] * (columnCount - len(existingValues)))
+        elif len(existingValues) > columnCount:
+            existingValues = existingValues[:columnCount]
+
+        normalizedValues = list(existingValues)
+
+        # First two columns are intentionally don't-care placeholders.
+        for columnIndex in range(2, columnCount):
+            opcodeBit = opcodeBitsByInsR.get(signalName)
+            if opcodeBit in ('0', '1'):
+                normalizedValues[columnIndex] = opcodeBit
+
+        return normalizedValues
     
     def ParseInstructionFile(self, filePath: str) -> Dict:
         """Parse an instruction file and extract signal data using MicrocodeConfig.ParseTableRow()."""
@@ -94,6 +145,7 @@ class InstructionNormalizer:
         signals = parsedData['signals']
         columnCount = parsedData['columnCount']
         headerLines = parsedData['headerLines']
+        opcodeBitsByInsR = self._GetInstructionOpcodeBitsByInsR(instructionName)
         
         # Use preserved header lines from original file
         lines = ["INS = '''"]
@@ -149,12 +201,14 @@ class InstructionNormalizer:
         
         # Section 4: Instruction register signals (InsR0-7) - from YAML order
         for signalName in insrSignals:
-            if signalName in signals:
-                values = ' | '.join(signals[signalName]['values'])
-                lines.append(f"| I | {signalName:<5} | {values} |")
-            else:
-                values = ' | '.join(['-'] * columnCount)
-                lines.append(f"| I | {signalName:<5} | {values} |")
+            normalizedValues = self._GetNormalizedInsRValues(
+                signalName=signalName,
+                columnCount=columnCount,
+                signals=signals,
+                opcodeBitsByInsR=opcodeBitsByInsR,
+            )
+            values = ' | '.join(normalizedValues)
+            lines.append(f"| I | {signalName:<5} | {values} |")
         
         lines.append('|===|=======|' + '===|' * columnCount)
         

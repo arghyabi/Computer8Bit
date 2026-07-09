@@ -27,7 +27,7 @@
 |    68    |    13    |  [PCLI](SignalInfo.md#signal-pcli)   | \| |  [SpI](SignalInfo.md#signal-spi)     |    68    |    13    |
 |    67    |    14    |  [PCHI](SignalInfo.md#signal-pchi)   | \| |   -                                  |    67    |    14    |
 |    66    |    15    |  [MdI](SignalInfo.md#signal-mdi)     | \| |   -                                  |    66    |    15    |
-|    65    |    16    |  [MeI](SignalInfo.md#signal-mei)     | \| |   -                                  |    65    |    16    |
+|    65    |    16    |  [MeI](SignalInfo.md#signal-mei)     | \| |   - NA -                             |    65    |    16    |
 
 
  |Card Pin | Base Pin |  Signal                              | \| |  Signal                              | Base Pin | Card Pin |
@@ -51,7 +51,7 @@
 |    52    |    29    |  [RomO](SignalInfo.md#signal-romo)   | \| |  [PCHO](SignalInfo.md#signal-pcho)   |    52    |    29    |
 |    51    |    30    |  [SpO](SignalInfo.md#signal-spo)     | \| |  [SqR](SignalInfo.md#signal-sqr)     |    51    |    30    |
 |    50    |    31    |  [MeO](SignalInfo.md#signal-meo)     | \| |  [PCLO](SignalInfo.md#signal-pclo)   |    50    |    31    |
-|    49    |    32    |  [AdSuO](SignalInfo.md#signal-adsuo) | \| |   -                                  |    49    |    32    |
+|    49    |    32    |  [AdSuO](SignalInfo.md#signal-adsuo) | \| |  - NA -                              |    49    |    32    |
 
 
 | Card Pin | Base Pin |  Signal                              | \| |  Signal                              | Base Pin | Card Pin |
