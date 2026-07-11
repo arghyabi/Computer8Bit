@@ -46,6 +46,7 @@ XOR B, C ; Logical XOR in B and C and keep in B
 | **T**        | Instruction Type   |
 | **V**        | Value              |
 | **A**        | Address            |
+| **SR**       | Special Register   |
 
 
 ### Instruction Table
@@ -68,6 +69,15 @@ XOR B, C ; Logical XOR in B and C and keep in B
             </td>
             <td valign="top">1 Byte</td>
             <td valign="top">No Operation</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SR01_0000</strong></td>
+            <td valign="top">SR01_0000</td>
+            <td valign="top">
+                <a href="#-instruction-nop">LDSR SR VV</a>
+            </td>
+            <td valign="top">2 Byte</td>
+            <td valign="top">Load value immediately to Special Register</td>
         </tr>
         <tr>
             <td valign="top"><strong>SSDD_0001</strong></td>
@@ -243,6 +253,20 @@ This `NOP` instruction does nothing. It's kind of a blank instruction.
 
 ---------------
 
+### ✅ Instruction: LDSR
+This `LDSR` instruction load the value imediatly to the Spacial Register.
+
+#### `Ins. Format: LDSR SR VV`
+#### `Bin. Format: SR01_0000`
+
+| Instruction  | Binary Value          |
+| :---         |    :---:              |
+| LDSR SP 0xXX | 0001_0000 xxxx_xxxx   |
+
+* 0101_0000, 1001_0000, 1101_0000, are Reserved for future use
+
+---------------
+
 ### ✅ Instruction: ADD
 This `ADD` instruction is used to add two numbers and save the output in the destination register.
 
@@ -251,18 +275,22 @@ This `ADD` instruction is used to add two numbers and save the output in the des
 
 | Instruction  | Binary Value |
 | :---         |    :---:     |
+| ADD A A      | 0000_0001    |
 | ADD A B      | 0001_0001    |
 | ADD A C      | 0010_0001    |
 | ADD A D      | 0011_0001    |
 | ADD B A      | 0100_0001    |
+| ADD B B      | 0101_0001    |
 | ADD B C      | 0110_0001    |
 | ADD B D      | 0111_0001    |
 | ADD C A      | 1000_0001    |
 | ADD C B      | 1001_0001    |
+| ADD C C      | 1010_0001    |
 | ADD C D      | 1011_0001    |
 | ADD D A      | 1100_0001    |
 | ADD D B      | 1101_0001    |
 | ADD D C      | 1110_0001    |
+| ADD D D      | 1111_0001    |
 
 ---------------
 

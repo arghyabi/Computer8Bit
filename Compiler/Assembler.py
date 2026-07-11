@@ -11,6 +11,10 @@ try:
 except ModuleNotFoundError:
     hexdump = None
 
+
+startupCode =  os.path.join(os.path.dirname(__file__), "..", "Bootloader", "Init.S")
+programEntry = "__app_main"
+
 MAX_VAL_UNSIGNED_8_BIT = 255
 MIN_VAL_UNSIGNED_8_BIT = 0
 MAX_VAL_SIGNED_8_BIT   = 127
@@ -52,7 +56,7 @@ def get2sComplement(value):
 
 
 class Compiler:
-    def __init__(self, assemblyFile, outFile, silent, support8, padding, unsigned):
+    def __init__(self, assemblyFile, outFile, silent, support8, padding, unsigned, noBootloader):
         if not os.path.exists(assemblyFile):
             print(f"{assemblyFile} not found!!!")
             exit(-1)
@@ -65,13 +69,27 @@ class Compiler:
             print(f"Not able to open the {assemblyFile}!!!")
             exit(-1)
 
+        if not noBootloader:
+            try:
+                f = open(startupCode, 'r')
+                startup = f.read()
+                self.bootloaderLineNum = len(startup.split("\n"))
+                f.close()
+            except Exception as e:
+                print(f"Not able to open the {startupCode}!!!")
+                exit(-1)
+
+            self.assemblyMain       = str(startup) + f"\n{programEntry}:\n" + str(assembly)
+        else:
+            self.assemblyMain       = assembly
+
         self.assemblyFile       = assemblyFile
-        self.assemblyMain       = assembly
         self.outFile            = outFile
         self.silent             = silent
         self.support8BitAddress = support8
         self.paddingEnabled     = padding
         self.unsigned           = unsigned
+        self.noBootloader       = noBootloader
         self.tagDict            = dict()
         self.binArr             = bytearray()
         self.sourceMaxLength    = 0
@@ -84,6 +102,10 @@ class Compiler:
             'B': 0b01,
             'C': 0b10,
             'D': 0b11
+        }
+        self.specialRegisterList= ['SP']
+        self.specialRegisterDict= {
+            'SP': 0b00
         }
 
         # Load instruction opcodes and sizes from centralized config
@@ -147,7 +169,7 @@ class Compiler:
         # make all upper case
         self.assemblyLine = [line.upper() for line in self.assemblyLine]
 
-        # get mex size of lines
+        # get max size of lines
         for line in self.assemblyLine:
             length = len(line)
             if length > self.sourceMaxLength:
@@ -174,14 +196,20 @@ class Compiler:
 
     def printCompiledLine(self, line, instruc, value1 = None, value2 = None):
         binary  = f"{instruc:08b}"
-        tag     = next((key for key, instruc in self.tagDict.items() if instruc == self.addressIndex), None)
-        if tag == None:
-            tag = " "*self.tagMaxLength
-        else:
-            tag = f"{tag:{self.tagMaxLength}}"
+        tags    = [key for key, instruc in self.tagDict.items() if instruc == self.addressIndex]
 
-        printLine = ""
-        printLine += f"{tag} 0x{self.addressIndex:04X}: "
+        if not tags:
+            tagStr = " "*(self.tagMaxLength + 1)
+            printLine = ""
+        elif len(tags) == 1:
+            tagStr = f"{tags[0]+':':>{self.tagMaxLength + 1}}"
+            printLine = ""
+        else:
+            # Multiple tags - add all but last with newlines (right-aligned)
+            printLine = "\n".join(f"{tag+':':>{self.tagMaxLength + 1}}" for tag in tags[:-1]) + "\n"
+            tagStr = f"{tags[-1]+':':>{self.tagMaxLength + 1}}"
+
+        printLine += f"{tagStr} 0x{self.addressIndex:04X}: "
         printLine += f"{line:{self.sourceMaxLength}} | Code: "
         printLine += f"{binary[:4]}_{binary[4:]} "
 
@@ -210,12 +238,17 @@ class Compiler:
 
 
     def compile(self):
-        def errorPrint(index, error = None):
+        def errorPrint(index, error=None):
+            isInsideBootloader = not self.noBootloader and index < self.bootloaderLineNum
             errorLine = self.assemblyMain[index]
-            if error != None:
-                errorString = f"'{errorLine}' at line no {index + 1} is not able to compile!!!\nERROR: {error}"
-            else:
-                errorString = f"'{errorLine}' at line no {index + 1} is not able to compile!!!"
+
+            if not self.noBootloader and not isInsideBootloader:
+                index -= self.bootloaderLineNum + 1
+
+            location = "bootloader" if isInsideBootloader else self.assemblyFile
+            errorString = f"'{errorLine}' at line no {index + 1} of {location} is not able to compile!!!"
+            if error is not None:
+                errorString += f"\nERROR: {error}"
 
             print(errorString)
             exit(-1)
@@ -233,6 +266,8 @@ class Compiler:
 
             if len(splitData) == 1 and line[-1] == ":":
                 tag = line[:-1].upper()
+                if tag in self.tagDict:
+                    errorPrint(index, f"Tag '{tag}' is already defined at address 0x{self.tagDict[tag]:04X}")
                 self.tagDict[tag] = self.addressIndex
                 if len(tag) > self.tagMaxLength:
                     self.tagMaxLength = len(tag)
@@ -398,6 +433,56 @@ class Compiler:
                 bitVal = bitVal | self.registerDict[destReg]
 
                 bitVal = bitVal << 6 # LDI, CMI, CMIS are 6 bit
+                bitVal = bitVal | self.instructionDict[opcode]
+
+                if not self.silent:
+                    self.printCompiledLine(line, bitVal, immediateVal)
+
+                self.binArr.append(bitVal)
+                self.addressIndex += 1
+
+                self.binArr.append(immediateVal)
+                self.addressIndex += 1
+
+            ## Parse LDSR command | Format: SR01_0000
+            elif opcode == "LDSR":
+                if payloadLen != 2:
+                    errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
+
+                destReg = payloadList[0]
+                if destReg not in self.specialRegisterList:
+                        errorPrint(index, "Destination register not found!!")
+
+                immediateVal = payloadList[1]
+                if isInt(immediateVal):
+                    immediateVal = int(immediateVal)
+                elif isBinary(immediateVal):
+                    immediateVal = int(immediateVal, 2)
+                elif isHex(immediateVal):
+                    immediateVal = int(immediateVal, 16)
+                else:
+                    errorPrint(index, f"{immediateVal} is not a valid value!!")
+                    immediateVal = 0
+
+                if self.unsigned:
+                    if not (MIN_VAL_UNSIGNED_8_BIT <= immediateVal <= MAX_VAL_UNSIGNED_8_BIT):
+                        errorPrint(index, "Value out of unsigned 8-bit range!")
+                    if immediateVal < 0:
+                        errorPrint(index, "Negative value not allowed in unsigned mode!")
+                else:
+                    if immediateVal < 0: # if negative value then check if must be greater than or equal to -128
+                        if immediateVal < MIN_VAL_SIGNED_8_BIT:
+                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
+                        else:
+                            immediateVal = get2sComplement(immediateVal)
+                    else:
+                        # if positive value then user might want as 2's complement value; but still is <= 255
+                        if immediateVal > MAX_VAL_UNSIGNED_8_BIT:
+                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
+
+                bitVal = bitVal | self.specialRegisterDict[destReg]
+
+                bitVal = bitVal << 6 # LDSR 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
@@ -655,6 +740,13 @@ def main():
         help   = "Use unsigned 8 bit integers"
     )
 
+    parser.add_argument(
+        "-nb",
+        "--no_bootloader",
+        action = 'store_true',
+        help   = "Do not include bootloader"
+    )
+
     args = parser.parse_args()
     assemblyFile = args.assemblyFile
     outFile      = args.out
@@ -662,8 +754,9 @@ def main():
     support8     = args.support8
     padding      = args.padding
     unsigned     = args.unsigned
+    noBootloader = args.no_bootloader
 
-    compile = Compiler(assemblyFile, outFile, silent, support8, padding, unsigned)
+    compile = Compiler(assemblyFile, outFile, silent, support8, padding, unsigned, noBootloader)
 
 if __name__ == "__main__":
     main()
