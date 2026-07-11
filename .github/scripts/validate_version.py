@@ -36,6 +36,9 @@ def get_old_version(base_ref, component_name=None):
         old_data = yaml.safe_load(old_config)
         
         if component_name:
+            if component_name not in old_data['Components']:
+                print(f"INFO: '{component_name}' is a new component — verifying initial version is 1.0.0.1000")
+                return "NEW_COMPONENT"
             return old_data['Components'][component_name]
         else:
             return old_data['Version']['MainVersion']
@@ -142,6 +145,16 @@ def main():
     else:
         old_version = get_old_version(base_ref, component_name)
         new_version = get_new_version(component_name)
+
+    # Handle brand-new component: enforce initial version must be 1.0.0.1000
+    if old_version == "NEW_COMPONENT":
+        if new_version == "1.0.0.1000":
+            print(f"SUCCESS: '{component_name}' is a new component with correct initial version 1.0.0.1000")
+            sys.exit(0)
+        else:
+            print(f"ERROR: '{component_name}' is a new component but initial version is '{new_version}'")
+            print(f"  New components must start at version 1.0.0.1000")
+            sys.exit(1)
     
     # Validate
     if validate_version_change(old_version, new_version, component_name):

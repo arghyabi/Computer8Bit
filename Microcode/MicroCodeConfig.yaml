@@ -20,6 +20,11 @@ InsConfig:
       size: 1
       description: "No operation"
 
+    LDSR:
+      opcode: "0bxx01_0000"
+      size: 2
+      description: "Load immediate value into special register"
+
     ADD:
       opcode: "0bxxxx_0001"
       size: 1

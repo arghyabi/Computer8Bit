@@ -5,3 +5,5 @@ Microcode/out/
 Gen7segDriver/*.bin
 __pycache__
 .vscode
+BootLoader/*.bin
+BootLoader/*.i

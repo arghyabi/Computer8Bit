@@ -25,6 +25,7 @@ jobs:
       inspector_modified: ${{ steps.analyze.outputs.inspector }}
       sevensegment_modified: ${{ steps.analyze.outputs.sevensegment }}
       document_modified: ${{ steps.analyze.outputs.document }}
+      bootloader_modified: ${{ steps.analyze.outputs.bootloader }}
     
     steps:
       - name: Checkout code
@@ -70,10 +71,11 @@ jobs:
           echo "$CHANGED_FILES" | grep -q "^Compiler/" && echo "compiler=true" >> $GITHUB_OUTPUT || echo "compiler=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Emulator/" && echo "emulator=true" >> $GITHUB_OUTPUT || echo "emulator=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^EepromFlasher/" && echo "flasher=true" >> $GITHUB_OUTPUT || echo "flasher=false" >> $GITHUB_OUTPUT
-          echo "$CHANGED_FILES" | grep -q "^Microcode/Instructions/" && echo "isa=true" >> $GITHUB_OUTPUT || echo "isa=false" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" | grep -qE "^Microcode/Instructions/|^Microcode/[^/]+\.(py|yaml)$" && echo "isa=true" >> $GITHUB_OUTPUT || echo "isa=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Microcode/Verify/\|^Microcode/Inspector/" && echo "inspector=true" >> $GITHUB_OUTPUT || echo "inspector=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Gen7segDriver/" && echo "sevensegment=true" >> $GITHUB_OUTPUT || echo "sevensegment=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Docs/\|^Datasheets/\|^Images/\|^README.md" && echo "document=true" >> $GITHUB_OUTPUT || echo "document=false" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" | grep -q "^Bootloader/" && echo "bootloader=true" >> $GITHUB_OUTPUT || echo "bootloader=false" >> $GITHUB_OUTPUT
   
   # ============================================================================
   # VERSION CHECKS (PR only)
@@ -164,6 +166,15 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.document_modified }}
       base_ref: ${{ github.base_ref }}
+
+  check-bootloader-version:
+    name: BootLoader Version
+    if: github.event_name == 'pull_request'
+    needs: [setup, check-config-modified]
+    uses: ./.github/workflows/version-check-bootloader-version.yaml
+    with:
+      component_modified: ${{ needs.setup.outputs.bootloader_modified }}
+      base_ref: ${{ github.base_ref }}
   
   validate-format:
     name: Format Validation
@@ -185,6 +196,7 @@ jobs:
       check-inspector-version,
       check-sevensegment-version,
       check-document-version,
+      check-bootloader-version,
       validate-format
     ]
     uses: ./.github/workflows/version-check-summary.yaml
@@ -221,6 +233,7 @@ jobs:
       check-inspector-version,
       check-sevensegment-version,
       check-document-version,
+      check-bootloader-version,
       validate-format
     ]
     
@@ -237,6 +250,7 @@ jobs:
             "${{ needs.check-inspector-version.result }}"
             "${{ needs.check-sevensegment-version.result }}"
             "${{ needs.check-document-version.result }}"
+            "${{ needs.check-bootloader-version.result }}"
             "${{ needs.validate-format.result }}"
           )
           
