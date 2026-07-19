@@ -74,10 +74,19 @@ XOR B, C ; Logical XOR in B and C and keep in B
             <td valign="top"><strong>SR01_0000</strong></td>
             <td valign="top">SR01_0000</td>
             <td valign="top">
-                <a href="#-instruction-nop">LDSR SR VV</a>
+                <a href="#-instruction-wtsr">WTSR SR</a>
             </td>
-            <td valign="top">2 Byte</td>
-            <td valign="top">Load value immediately to Special Register</td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Write the value of register A to Special Register</td>
+        </tr>
+        <tr>
+            <td valign="top"><strong>SR10_0000</strong></td>
+            <td valign="top">SR10_0000</td>
+            <td valign="top">
+                <a href="#-instruction-rdsr">RDSR SR</a>
+            </td>
+            <td valign="top">1 Byte</td>
+            <td valign="top">Read the value of the Special Register into register A</td>
         </tr>
         <tr>
             <td valign="top"><strong>SSDD_0001</strong></td>
@@ -253,17 +262,33 @@ This `NOP` instruction does nothing. It's kind of a blank instruction.
 
 ---------------
 
-### ✅ Instruction: LDSR
-This `LDSR` instruction load the value imediatly to the Spacial Register.
+### ✅ Instruction: WTSR
+This `WTSR` instruction write the value of regiister A to the Special Register.
 
-#### `Ins. Format: LDSR SR VV`
+#### `Ins. Format: WTSR SR`
 #### `Bin. Format: SR01_0000`
 
-| Instruction  | Binary Value          |
-| :---         |    :---:              |
-| LDSR SP 0xXX | 0001_0000 xxxx_xxxx   |
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| WTSR SP      | 0001_0000    |
+| WTSR MD      | 0101_0000    |
 
-* 0101_0000, 1001_0000, 1101_0000, are Reserved for future use
+* 1001_0000, 1101_0000, are Reserved for future use
+
+---------------
+
+### ✅ Instruction: RDSR
+This `RDSR` instruction read back the value of Special Register to the register A.
+
+#### `Ins. Format: RDSR SR`
+#### `Bin. Format: SR10_0000`
+
+| Instruction  | Binary Value |
+| :---         |    :---:     |
+| RDSR SP      | 0010_0000    |
+| RDSR SP      | 0110_0000    |
+
+* 1010_0000, 1110_0000, are Reserved for future use
 
 ---------------
 
