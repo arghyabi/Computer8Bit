@@ -199,6 +199,7 @@ class Compiler:
 
     def printCompiledLine(self, line, instruc, value1 = None, value2 = None):
         binary  = f"{instruc:08b}"
+        addr_binary = f"{self.addressIndex:011b}"
         tags    = [key for key, instruc in self.tagDict.items() if instruc == self.addressIndex]
 
         if not tags:
@@ -212,7 +213,7 @@ class Compiler:
             printLine = "\n".join(f"{tag+':':>{self.tagMaxLength + 1}}" for tag in tags[:-1]) + "\n"
             tagStr = f"{tags[-1]+':':>{self.tagMaxLength + 1}}"
 
-        printLine += f"{tagStr} 0x{self.addressIndex:04X}: "
+        printLine += f"{tagStr} 0x{self.addressIndex:04X} [{addr_binary[:3]}_{addr_binary[3:7]}_{addr_binary[7:]}]: "
         printLine += f"{line:{self.sourceMaxLength}} | Code: "
         printLine += f"{binary[:4]}_{binary[4:]} "
 

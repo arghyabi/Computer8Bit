@@ -57,3 +57,9 @@ __bl_start:
     ; Transfer control to the user application.
     ; ------------------------------------------------------------
     JMP __app_main
+
+    ; ------------------------------------------------------------
+    ; This instruction should never be reached.
+    ; Halt the CPU if control unexpectedly falls through.
+    ; ------------------------------------------------------------
+    HLT
