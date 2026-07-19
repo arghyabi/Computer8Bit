@@ -20,10 +20,15 @@ InsConfig:
       size: 1
       description: "No operation"
 
-    LDSR:
+    WTSR:
       opcode: "0bxx01_0000"
-      size: 2
-      description: "Load immediate value into special register"
+      size: 1
+      description: "write reg A value into special register"
+
+    RDSR:
+      opcode: "0bxx10_0000"
+      size: 1
+      description: "read special register value into reg A"
 
     ADD:
       opcode: "0bxxxx_0001"
@@ -275,7 +280,7 @@ MicrocodeChipsPinMap:
       IO3: T2IS0
       IO4: T2IS1
       IO5: FlgU
-      IO6: RESRV4
+      IO6: MdO
       IO7: RESRV5
 
     uCode1:

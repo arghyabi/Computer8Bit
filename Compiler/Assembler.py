@@ -103,10 +103,13 @@ class Compiler:
             'C': 0b10,
             'D': 0b11
         }
-        self.specialRegisterList= ['SP']
+        self.specialRegisterList= ['SP', 'MDR']
         self.specialRegisterDict= {
-            'SP': 0b00
+            'SP' : 0b00,
+            'MDR': 0b01
         }
+        self.allowedGpRegStr    = ', '.join(self.registerList)
+        self.allowedSpRegStr    = ', '.join(self.specialRegisterList)
 
         # Load instruction opcodes and sizes from centralized config
         configPath = os.path.join(os.path.dirname(__file__), '..', 'Microcode', 'MicroCodeConfig.yaml')
@@ -301,7 +304,7 @@ class Compiler:
 
                 for payload in payloadList:
                     if payload not in self.registerList:
-                        errorPrint(index, f"'{payload}' is not a register!!")
+                        errorPrint(index, f"'{payload}' is not a register!! allowed registers are {self.allowedGpRegStr}")
 
                 if payloadList[0] == payloadList[1]: # Ignore the 'mov a a' or 'mov b b'; its NOP ..
                     pass
@@ -328,7 +331,7 @@ class Compiler:
 
                 for payload in payloadList:
                     if payload not in self.registerList:
-                        errorPrint(index, f"'{payload}' is not a register!!")
+                        errorPrint(index, f"'{payload}' is not a register!! allowed registers are {self.allowedGpRegStr}")
 
                 payload = payloadList[0]
                 bitVal = bitVal | self.registerDict[payload]
@@ -401,7 +404,7 @@ class Compiler:
 
                 destReg = payloadList[0]
                 if destReg not in self.registerList:
-                        errorPrint(index, "Destination register not found!!")
+                        errorPrint(index, f"Destination register not found!! allowed registers are {self.allowedGpRegStr}")
 
                 immediateVal = payloadList[1]
                 if isInt(immediateVal):
@@ -444,54 +447,26 @@ class Compiler:
                 self.binArr.append(immediateVal)
                 self.addressIndex += 1
 
-            ## Parse LDSR command | Format: SR01_0000
-            elif opcode == "LDSR":
-                if payloadLen != 2:
-                    errorPrint(index, f"2 payload expected!!, but found {payloadLen}")
 
-                destReg = payloadList[0]
-                if destReg not in self.specialRegisterList:
-                        errorPrint(index, "Destination register not found!!")
+            ## Parse WTSR, RDSR command | Format: SR01_0000, SR10_0000
+            elif opcode == "WTSR" or opcode == "RDSR":
+                if payloadLen != 1:
+                    errorPrint(index, f"1 payload expected!!, but found {payloadLen}")
 
-                immediateVal = payloadList[1]
-                if isInt(immediateVal):
-                    immediateVal = int(immediateVal)
-                elif isBinary(immediateVal):
-                    immediateVal = int(immediateVal, 2)
-                elif isHex(immediateVal):
-                    immediateVal = int(immediateVal, 16)
-                else:
-                    errorPrint(index, f"{immediateVal} is not a valid value!!")
-                    immediateVal = 0
+                for payload in payloadList:
+                    if payload not in self.specialRegisterList:
+                        errorPrint(index, f"'{payload}' is not a register!! allowed registers are {self.allowedSpRegStr}")
 
-                if self.unsigned:
-                    if not (MIN_VAL_UNSIGNED_8_BIT <= immediateVal <= MAX_VAL_UNSIGNED_8_BIT):
-                        errorPrint(index, "Value out of unsigned 8-bit range!")
-                    if immediateVal < 0:
-                        errorPrint(index, "Negative value not allowed in unsigned mode!")
-                else:
-                    if immediateVal < 0: # if negative value then check if must be greater than or equal to -128
-                        if immediateVal < MIN_VAL_SIGNED_8_BIT:
-                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
-                        else:
-                            immediateVal = get2sComplement(immediateVal)
-                    else:
-                        # if positive value then user might want as 2's complement value; but still is <= 255
-                        if immediateVal > MAX_VAL_UNSIGNED_8_BIT:
-                            errorPrint(index, f"Value '{immediateVal}' out of signed 8-bit range!")
+                payload = payloadList[0]
+                bitVal = bitVal | self.specialRegisterDict[payload]
 
-                bitVal = bitVal | self.specialRegisterDict[destReg]
-
-                bitVal = bitVal << 6 # LDSR 6 bit
+                bitVal = bitVal << 6 # WTSR, RDSR are 6 bit
                 bitVal = bitVal | self.instructionDict[opcode]
 
                 if not self.silent:
-                    self.printCompiledLine(line, bitVal, immediateVal)
+                    self.printCompiledLine(line, bitVal)
 
                 self.binArr.append(bitVal)
-                self.addressIndex += 1
-
-                self.binArr.append(immediateVal)
                 self.addressIndex += 1
 
 
@@ -502,7 +477,7 @@ class Compiler:
 
                 destReg = payloadList[0]
                 if destReg not in self.registerList:
-                        errorPrint(index, "Destination register not found!!")
+                        errorPrint(index, f"Destination register not found!! allowed registers are {self.allowedGpRegStr}")
 
                 memAddress = payloadList[1]
                 if isInt(memAddress):
@@ -540,7 +515,7 @@ class Compiler:
 
                 reg = payloadList[0]
                 if reg not in self.registerList:
-                    errorPrint(index, f"'{reg}' is not a register!!")
+                    errorPrint(index, f"'{reg}' is not a register!! allowed registers are {self.allowedGpRegStr}")
 
                 bitVal = bitVal | self.registerDict[reg]
                 bitVal = bitVal << 6
@@ -666,7 +641,7 @@ class Compiler:
 
                 for payload in payloadList:
                     if payload not in self.registerList:
-                        errorPrint(index, f"'{payload}' is not a register!!")
+                        errorPrint(index, f"'{payload}' is not a register!! allowed registers are {self.allowedGpRegStr}")
 
                 for payload in payloadList:
                     bitVal = bitVal << 2
