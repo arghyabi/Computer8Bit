@@ -71,22 +71,14 @@ XOR B, C ; Logical XOR in B and C and keep in B
             <td valign="top">No Operation</td>
         </tr>
         <tr>
-            <td valign="top"><strong>SR01_0000</strong></td>
-            <td valign="top">SR01_0000</td>
+            <td valign="top"><strong>SRTT_0000</strong></td>
+            <td valign="top">SR01_0000<br>SR10_0000</td>
             <td valign="top">
-                <a href="#-instruction-wtsr">WTSR SR</a>
-            </td>
-            <td valign="top">1 Byte</td>
-            <td valign="top">Write the value of register A to Special Register</td>
-        </tr>
-        <tr>
-            <td valign="top"><strong>SR10_0000</strong></td>
-            <td valign="top">SR10_0000</td>
-            <td valign="top">
+                <a href="#-instruction-wtsr">WTSR SR</a><br>
                 <a href="#-instruction-rdsr">RDSR SR</a>
             </td>
-            <td valign="top">1 Byte</td>
-            <td valign="top">Read the value of the Special Register into register A</td>
+            <td valign="top">1 Byte<br>1 Byte</td>
+            <td valign="top">Write the value of register A to Special Register<br>Read the value of the Special Register into register A</td>
         </tr>
         <tr>
             <td valign="top"><strong>SSDD_0001</strong></td>
