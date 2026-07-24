@@ -4,14 +4,14 @@ Project:
 
 Version:
   # Main version; any change requires a new version
-  MainVersion: "1.77.0.1090"
+  MainVersion: "1.78.0.1091"
 
 Components:
-  Compiler  : "1.24.0.1027"
+  Compiler  : "1.25.0.1028"
   Emulator  : "1.6.0.1006"
   Inspector : "1.1.0.1001"
   Flasher   : "1.8.1.1009"
   7Segment  : "1.4.0.1005"
-  ISA       : "1.39.0.1046"
+  ISA       : "1.40.0.1047"
   Document  : "1.30.0.1038"
   BootLoader: "1.2.0.1002"
