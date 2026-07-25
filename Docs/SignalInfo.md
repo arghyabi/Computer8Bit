@@ -94,6 +94,8 @@ RAM module.
 
 * <a id="signal-meo"></a>`MeO`: The MeO (Memory Output) signal is used to copy the value from memory onto the bus.
 
+* <a id="signal-mdo"></a>`MdO`: The MdO (Memory Decoder Output) signal is used to copy the value from memory decoder onto the bus.
+
 ## Control Unit Signals
 * <a id="signal-iri"></a>`IRI`: The IRI (Instruction Register Input) signal is used to load the instruction from the Program ROM into the
 Instruction Register.
@@ -113,7 +115,7 @@ Instruction Register.
 * <a id="signal-flse2"></a>`FlSe2`: Flag Select Signal 2; FlSe0, FlSe1, and FlSe2 combined point to a maximum of 8 flag bits.
 
 ## Flag Signal
-* <a id="signal-flg"></a>`Flg`: This is the common output to the flag register. Based on the combination of FlSe0, FlSe1, and FlSe2, one flag 
+* <a id="signal-flg"></a>`Flg`: This is the common output to the flag register. Based on the combination of FlSe0, FlSe1, and FlSe2, one flag
 will be selected and sent to the Flag signal.
 
 ## Sign Signals

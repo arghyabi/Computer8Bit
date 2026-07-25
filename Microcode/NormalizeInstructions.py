@@ -14,26 +14,26 @@ class InstructionNormalizer:
         self.parsedConfig = MicrocodeConfig.GetParsedConfigView(self.config)
         self.inputPinMap = self._GetInputPinMap()
         self.outputPinMap = self._GetOutputPinMap()
-        
+
     def _GetInputPinMap(self) -> List[str]:
         """Get ordered list of input signals from A14 to A0 (top to bottom in instruction files)."""
         pinMap = self.config.get(MicrocodeConfig.CFG_MICROCODE_CHIPS_PIN_MAP, {}).get(MicrocodeConfig.CFG_INPUT_PIN_MAP, {})
         # Sort by address in reverse (A14, A13, ..., A0) for top-to-bottom display order
         sortedPins = sorted(pinMap.items(), key=lambda x: int(x[0][1:]), reverse=True)
         return [signal for _, signal in sortedPins]
-    
+
     def _GetOutputPinMap(self) -> Dict[str, List[str]]:
         """Get ordered list of output signals for each chip preserving YAML order."""
         outputMap = self.config.get(MicrocodeConfig.CFG_MICROCODE_CHIPS_PIN_MAP, {}).get(MicrocodeConfig.CFG_OUTPUT_PIN_MAP, {})
         result = {}
-        
+
         for chipName in [MicrocodeConfig.UCODE_0, MicrocodeConfig.UCODE_1, MicrocodeConfig.UCODE_2]:
             chipPins = outputMap.get(chipName, {})
             # Preserve the order as written in YAML (don't sort)
             result[chipName] = list(chipPins.values())
-        
+
         return result
-    
+
     def _GetVirtualPinSignals(self) -> Tuple[List[str], List[str]]:
         """Get InputControl and OutputControl signals sorted by encoding value."""
         inputSignals = [sig for sig, _ in sorted(self.parsedConfig.InputControlSignals.items(), key=lambda x: x[1])]
@@ -84,25 +84,25 @@ class InstructionNormalizer:
         normalizedValues = list(existingValues)
 
         # First two columns are intentionally don't-care placeholders.
-        for columnIndex in range(2, columnCount):
+        for columnIndex in range(3, columnCount):
             opcodeBit = opcodeBitsByInsR.get(signalName)
             if opcodeBit in ('0', '1'):
                 normalizedValues[columnIndex] = opcodeBit
 
         return normalizedValues
-    
+
     def ParseInstructionFile(self, filePath: str) -> Dict:
         """Parse an instruction file and extract signal data using MicrocodeConfig.ParseTableRow()."""
         with open(filePath, 'r') as f:
             content = f.read()
-        
+
         lines = content.split('\n')
-        
+
         # Find and preserve header lines (INSTRUCTION, separator, CLOCK header)
         instructionName = None
         headerLines = []
         inHeader = True
-        
+
         for line in lines:
             if 'INSTRUCTION:' in line:
                 instructionName = line.split(':')[-1].strip()
@@ -111,10 +111,10 @@ class InstructionNormalizer:
                 headerLines.append(line)
             elif line.strip().startswith('| I |') or line.strip().startswith('| O |'):
                 inHeader = False
-        
+
         if not instructionName:
             raise Exception(f"No INSTRUCTION found in {filePath}")
-        
+
         # Parse signal rows using MicrocodeConfig.ParseTableRow()
         signalData = {}
         columnCount = 0
@@ -122,23 +122,23 @@ class InstructionNormalizer:
             row = MicrocodeConfig.ParseTableRow(line)
             if row.IsEmpty or not row.HasMinimumCells:
                 continue
-            
+
             if row.SignalType not in ['I', 'O']:
                 continue
-            
+
             signalData[row.SignalName] = {
                 'type': row.SignalType,
                 'values': row.Values
             }
             columnCount = len(row.Values)
-        
+
         return {
             'name': instructionName,
             'signals': signalData,
             'columnCount': columnCount,
             'headerLines': headerLines
         }
-    
+
     def GenerateNormalizedTable(self, parsedData: Dict) -> str:
         """Generate normalized instruction table according to YAML order."""
         instructionName = parsedData['name']
@@ -146,32 +146,33 @@ class InstructionNormalizer:
         columnCount = parsedData['columnCount']
         headerLines = parsedData['headerLines']
         opcodeBitsByInsR = self._GetInstructionOpcodeBitsByInsR(instructionName)
-        
+
         # Use preserved header lines from original file
         lines = ["INS = '''"]
         lines.extend(headerLines)
-        
+
         # INPUT SECTION
         # Get input signals from YAML InputPinMap in order (A14 to A0, already correct)
         inputSignals = self.inputPinMap
-        
+
         # Group signals by type for proper separator placement, preserving order
-        unknownSignals = [s for s in inputSignals if s.startswith('Ukwn')]
+        extraSignals = [s for s in inputSignals if s.startswith('Ukwn')]
+        extraSignals.append('Reset')
         flagSignals = [s for s in inputSignals if s == 'Flag']
         seqnSignals = [s for s in inputSignals if s.startswith('Seqn')]
         insrSignals = [s for s in inputSignals if s.startswith('InsR')]
-        
+
         # Section 1: Unknown signals (Ukwn0, Ukwn1)
-        for signalName in unknownSignals:
+        for signalName in extraSignals:
             if signalName in signals:
                 values = ' | '.join(signals[signalName]['values'])
                 lines.append(f"| I | {signalName:<5} | {values} |")
             else:
                 values = ' | '.join(['0'] * columnCount)
                 lines.append(f"| I | {signalName:<5} | {values} |")
-        
+
         lines.append('|---|-------|' + '---|' * columnCount)
-        
+
         # Section 2: Flag signal
         for signalName in flagSignals:
             if signalName in signals:
@@ -180,9 +181,9 @@ class InstructionNormalizer:
             else:
                 values = ' | '.join(['-'] * columnCount)
                 lines.append(f"| I | {signalName:<5} | {values} |")
-        
+
         lines.append('|---|-------|' + '---|' * columnCount)
-        
+
         # Section 3: Sequence signals (Seqn0-3)
         for signalName in seqnSignals:
             if signalName in signals:
@@ -196,9 +197,9 @@ class InstructionNormalizer:
                     values.append('1' if (col >> seqBit) & 1 else '0')
                 valuesStr = ' | '.join(values)
                 lines.append(f"| I | {signalName:<5} | {valuesStr} |")
-        
+
         lines.append('|---|-------|' + '---|' * columnCount)
-        
+
         # Section 4: Instruction register signals (InsR0-7) - from YAML order
         for signalName in insrSignals:
             normalizedValues = self._GetNormalizedInsRValues(
@@ -209,13 +210,13 @@ class InstructionNormalizer:
             )
             values = ' | '.join(normalizedValues)
             lines.append(f"| I | {signalName:<5} | {values} |")
-        
+
         lines.append('|===|=======|' + '===|' * columnCount)
-        
+
         # OUTPUT SECTION
         # Get virtual pin signals using helper method
         inputControlSignals, outputControlSignals = self._GetVirtualPinSignals()
-        
+
         # Section 1: uCode0 (8 signals) - read from YAML OutputPinMap in IO0-IO7 order
         ucode0Pins = self.outputPinMap.get(MicrocodeConfig.UCODE_0, [])
         for signalName in ucode0Pins:
@@ -228,14 +229,14 @@ class InstructionNormalizer:
             else:
                 values = ' | '.join(['0'] * columnCount)
                 lines.append(f"| O | {signalName:<5} | {values} |")
-        
+
         lines.append('|---|-------|' + '---|' * columnCount)
-        
+
         # Section 2 & 3: InputControl (16 signals split into 8+8)
         for i, signalName in enumerate(inputControlSignals):
             if i == 8:
                 lines.append('|---|-------|' + '---|' * columnCount)
-            
+
             if signalName in signals:
                 values = ' | '.join(signals[signalName]['values'])
                 lines.append(f"| O | {signalName:<5} | {values} |")
@@ -245,14 +246,14 @@ class InstructionNormalizer:
             else:
                 values = ' | '.join(['0'] * columnCount)
                 lines.append(f"| O | {signalName:<5} | {values} |")
-        
+
         lines.append('|---|-------|' + '---|' * columnCount)
-        
+
         # Section 4 & 5: OutputControl (16 signals split into 8+8)
         for i, signalName in enumerate(outputControlSignals):
             if i == 8:
                 lines.append('|---|-------|' + '---|' * columnCount)
-            
+
             if signalName in signals:
                 values = ' | '.join(signals[signalName]['values'])
                 lines.append(f"| O | {signalName:<5} | {values} |")
@@ -262,9 +263,9 @@ class InstructionNormalizer:
             else:
                 values = ' | '.join(['0'] * columnCount)
                 lines.append(f"| O | {signalName:<5} | {values} |")
-        
+
         lines.append('|---|-------|' + '---|' * columnCount)
-        
+
         # Section 6: uCode2 (8 signals) - read from YAML OutputPinMap in IO0-IO7 order
         ucode2Pins = self.outputPinMap.get(MicrocodeConfig.UCODE_2, [])
         for signalName in ucode2Pins:
@@ -277,60 +278,60 @@ class InstructionNormalizer:
             else:
                 values = ' | '.join(['0'] * columnCount)
                 lines.append(f"| O | {signalName:<5} | {values} |")
-        
+
         # Add closing separator (same as opening separator from header)
         closingSeparator = [line for line in headerLines if '===' in line]
         if closingSeparator:
             lines.append(closingSeparator[0])
         lines.append("'''")
-        
+
         return '\n'.join(lines)
-    
+
     def NormalizeAllInstructions(self, outputDir: str = "", overwriteSource: bool = False):
         """Normalize all instruction files in YAML order.
-        
+
         Args:
             outputDir: Output directory for normalized files. If empty, uses out/normalized.
             overwriteSource: If True, overwrites source files in Instructions/ directory.
         """
         instructionDir = os.path.join(os.path.dirname(__file__), "Instructions")
-        
+
         if overwriteSource:
             outputDir = instructionDir
             LOGGER.info("OVERWRITE MODE: Will update source files in Instructions/")
         else:
             if not outputDir:
                 outputDir = os.path.join(os.path.dirname(__file__), "out", "normalized")
-            
+
             if not os.path.exists(outputDir):
                 os.makedirs(outputDir)
-        
+
         # Get instruction order from YAML config using MicrocodeConfig helper
         instructionOrder = MicrocodeConfig.GetAllInstructions(self.config)
-        
+
         LOGGER.info(f"Normalizing {len(instructionOrder)} instruction files in YAML order...")
-        
+
         for instructionName in instructionOrder:
             filePath = os.path.join(instructionDir, f"Ins{instructionName}.py")
             if not os.path.exists(filePath):
                 LOGGER.warning(f"File not found: Ins{instructionName}.py")
                 continue
-            
+
             fileName = f"Ins{instructionName}.py"
             LOGGER.info(f"  Processing: {fileName}")
-            
+
             try:
                 parsedData = self.ParseInstructionFile(filePath)
                 normalizedContent = self.GenerateNormalizedTable(parsedData)
-                
+
                 outputPath = os.path.join(outputDir, fileName)
                 with open(outputPath, 'w') as f:
                     f.write(normalizedContent + '\n')
-                
+
                 LOGGER.info(f"    ✓ Normalized: {fileName}")
             except Exception as e:
                 LOGGER.error(f"    ✗ Failed to normalize {fileName}: {e}")
-        
+
         LOGGER.info(f"Normalization complete. Output in: {outputDir}")
 
 
@@ -338,10 +339,10 @@ def Main():
     """Main entry point for normalization."""
     import sys
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    
+
     # Check for --overwrite flag
     overwriteSource = "--overwrite" in sys.argv
-    
+
     configPath = os.path.join(os.path.dirname(__file__), "MicroCodeConfig.yaml")
     normalizer = InstructionNormalizer(configPath)
     normalizer.NormalizeAllInstructions(overwriteSource=overwriteSource)
@@ -349,5 +350,3 @@ def Main():
 
 if __name__ == "__main__":
     Main()
-
-# Made with Bob
