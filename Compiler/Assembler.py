@@ -19,7 +19,6 @@ MAX_VAL_UNSIGNED_8_BIT = 255
 MIN_VAL_UNSIGNED_8_BIT = 0
 MAX_VAL_SIGNED_8_BIT   = 127
 MIN_VAL_SIGNED_8_BIT   = -128
-MAX_ROM_ADDRESS_8_BIT  = 255
 MAX_ROM_ADDRESS_11_BIT = 2047
 MAX_MEM_ADDRESS        = 0x80
 
@@ -56,7 +55,7 @@ def get2sComplement(value):
 
 
 class Compiler:
-    def __init__(self, assemblyFile, outFile, silent, support8, padding, unsigned, noBootloader):
+    def __init__(self, assemblyFile, outFile, silent, padding, unsigned, noBootloader):
         if not os.path.exists(assemblyFile):
             print(f"{assemblyFile} not found!!!")
             exit(-1)
@@ -86,7 +85,6 @@ class Compiler:
         self.assemblyFile       = assemblyFile
         self.outFile            = outFile
         self.silent             = silent
-        self.support8BitAddress = support8
         self.paddingEnabled     = padding
         self.unsigned           = unsigned
         self.noBootloader       = noBootloader
@@ -115,7 +113,7 @@ class Compiler:
         configPath = os.path.join(os.path.dirname(__file__), '..', 'Microcode', 'MicroCodeConfig.yaml')
         config = ParseConfig(configPath)
         self.instructionDict = GetAllInstructionOpcodes(config)
-        self.instructionSizeDict = GetAllInstructionSizes(config, self.support8BitAddress)
+        self.instructionSizeDict = GetAllInstructionSizes(config)
 
         self.preProcess()
         self.compile()
@@ -218,19 +216,13 @@ class Compiler:
         printLine += f"{binary[:4]}_{binary[4:]} "
 
         if value1 == None: # Value2 ofcourse null
-            if self.support8BitAddress:
-                printLine += f"            // 0x{instruc:02X}"
-            else:
-                printLine += f"                     // 0x{instruc:02X}"
+            printLine += f"                     // 0x{instruc:02X}"
 
 
         if value1 != None and value2 == None: # Only one value send
             binary = f"{value1:08b}"
             printLine += f" {binary[:4]}_{binary[4:]} "
-            if self.support8BitAddress:
-                printLine += f" // 0x{instruc:02X} 0x{value1:02X}"
-            else:
-                printLine += f"          // 0x{instruc:02X} 0x{value1:02X}"
+            printLine += f"          // 0x{instruc:02X} 0x{value1:02X}"
 
         if value1 != None and value2 != None: # Both high and low address send
             binary1 = f"{value1:08b}"
@@ -366,36 +358,25 @@ class Compiler:
                 else:
                     errorPrint(index, f"'{payload}' is not a proper address")
 
-                if self.support8BitAddress:
-                    if address > MAX_ROM_ADDRESS_8_BIT:
-                        errorPrint(index, "Max ROM address limit cross!!")
-                else:
-                    if address > MAX_ROM_ADDRESS_11_BIT:
+                if address > MAX_ROM_ADDRESS_11_BIT:
                         errorPrint(index, "Max ROM address limit cross!!")
 
                 bitVal = self.instructionDict[opcode] # JMP, JMZ, JNZ are 8 bit
 
                 if not self.silent:
-                    if self.support8BitAddress:
-                        self.printCompiledLine(line, bitVal, address)
-                    else:
-                        highAddress = address >> 8
-                        lowAddress = address & 0xff
-                        self.printCompiledLine(line, bitVal, highAddress, lowAddress)
+                    highAddress = address >> 8
+                    lowAddress = address & 0xff
+                    self.printCompiledLine(line, bitVal, highAddress, lowAddress)
 
 
                 self.binArr.append(bitVal)
                 self.addressIndex += 1
 
-                if self.support8BitAddress:
-                    self.binArr.append(address)
-                    self.addressIndex += 1
-                else:
-                    highAddress = address >> 8
-                    lowAddress = address & 0xff
-                    self.binArr.append(highAddress)
-                    self.binArr.append(lowAddress)
-                    self.addressIndex += 2
+                highAddress = address >> 8
+                lowAddress = address & 0xff
+                self.binArr.append(highAddress)
+                self.binArr.append(lowAddress)
+                self.addressIndex += 2
 
 
             ## Parse LDI, CMI, CMIS command | Format: RRTT_0100, RRTT_1101
@@ -590,35 +571,24 @@ class Compiler:
                 else:
                     errorPrint(index, f"'{payload}' is not a proper address")
 
-                if self.support8BitAddress:
-                    if address > MAX_ROM_ADDRESS_8_BIT:
-                        errorPrint(index, "Max ROM address limit cross!!")
-                else:
-                    if address > MAX_ROM_ADDRESS_11_BIT:
-                        errorPrint(index, "Max ROM address limit cross!!")
+                if address > MAX_ROM_ADDRESS_11_BIT:
+                    errorPrint(index, "Max ROM address limit cross!!")
 
                 bitVal = self.instructionDict[opcode]
 
                 if not self.silent:
-                    if self.support8BitAddress:
-                        self.printCompiledLine(line, bitVal, address)
-                    else:
-                        highAddress = address >> 8
-                        lowAddress = address & 0xff
-                        self.printCompiledLine(line, bitVal, highAddress, lowAddress)
+                    highAddress = address >> 8
+                    lowAddress = address & 0xff
+                    self.printCompiledLine(line, bitVal, highAddress, lowAddress)
 
                 self.binArr.append(bitVal)
                 self.addressIndex += 1
 
-                if self.support8BitAddress:
-                    self.binArr.append(address)
-                    self.addressIndex += 1
-                else:
-                    highAddress = address >> 8
-                    lowAddress = address & 0xff
-                    self.binArr.append(highAddress)
-                    self.binArr.append(lowAddress)
-                    self.addressIndex += 2
+                highAddress = address >> 8
+                lowAddress = address & 0xff
+                self.binArr.append(highAddress)
+                self.binArr.append(lowAddress)
+                self.addressIndex += 2
 
 
             ## Parse HLT, NOP, OUT, OUTS, RTN, RST commands | Format: 00TT_0000, 00TT_1110, 1111_1111
@@ -696,13 +666,6 @@ def main():
     )
 
     parser.add_argument(
-        "-s8",
-        "--support8",
-        action = 'store_true',
-        help   = "Support only 8 bit ROM address"
-    )
-
-    parser.add_argument(
         "-p",
         "--padding",
         action = 'store_true',
@@ -727,12 +690,11 @@ def main():
     assemblyFile = args.assemblyFile
     outFile      = args.out
     silent       = args.silent
-    support8     = args.support8
     padding      = args.padding
     unsigned     = args.unsigned
     noBootloader = args.no_bootloader
 
-    compile = Compiler(assemblyFile, outFile, silent, support8, padding, unsigned, noBootloader)
+    compile = Compiler(assemblyFile, outFile, silent, padding, unsigned, noBootloader)
 
 if __name__ == "__main__":
     main()
