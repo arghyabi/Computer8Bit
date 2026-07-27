@@ -35,7 +35,9 @@ def isInt(s):
 def isHex(s):
     try:
         int(s, 16)
-        return True
+        if s.startswith("0x") or s.startswith("0X"):
+            return True
+        return False
     except ValueError:
         return False
 
@@ -43,7 +45,9 @@ def isHex(s):
 def isBinary(s):
     try:
         int(s, 2)
-        return True
+        if s.startswith("0b") or s.startswith("0B"):
+            return True
+        return False
     except ValueError:
         return False
 
@@ -356,7 +360,7 @@ class Compiler:
                 elif payload in self.tagDict:
                     address = self.tagDict[payload]
                 else:
-                    errorPrint(index, f"'{payload}' is not a proper address")
+                    errorPrint(index, f"'{payload}' is not a proper address!! for Binary or Hex, use 0b or 0x prefix respectively.")
 
                 if address > MAX_ROM_ADDRESS_11_BIT:
                         errorPrint(index, "Max ROM address limit cross!!")
@@ -396,7 +400,7 @@ class Compiler:
                 elif isHex(immediateVal):
                     immediateVal = int(immediateVal, 16)
                 else:
-                    errorPrint(index, f"{immediateVal} is not a valid value!!")
+                    errorPrint(index, f"{immediateVal} is not a valid value!! for Binary or Hex, use 0b or 0x prefix respectively.")
                     immediateVal = 0
 
                 if self.unsigned:
@@ -469,7 +473,7 @@ class Compiler:
                 elif isHex(memAddress):
                     memAddress = int(memAddress, 16)
                 else:
-                    errorPrint(index, f"{memAddress} is not a valid value!!")
+                    errorPrint(index, f"{memAddress} is not a valid value!! for Binary or Hex, use 0b or 0x prefix respectively.")
                     memAddress = 0
 
                 if memAddress >= MAX_MEM_ADDRESS:
@@ -523,7 +527,7 @@ class Compiler:
                 elif isHex(immediateVal):
                     immediateVal = int(immediateVal, 16)
                 else:
-                    errorPrint(index, f"{immediateVal} is not a valid value!!")
+                    errorPrint(index, f"{immediateVal} is not a valid value!! for Binary or Hex, use 0b or 0x prefix respectively.")
                     immediateVal = 0
 
                 if self.unsigned:
@@ -569,7 +573,7 @@ class Compiler:
                 elif payload in self.tagDict:
                     address = self.tagDict[payload]
                 else:
-                    errorPrint(index, f"'{payload}' is not a proper address")
+                    errorPrint(index, f"'{payload}' is not a proper address!! for Binary or Hex, use 0b or 0x prefix respectively.")
 
                 if address > MAX_ROM_ADDRESS_11_BIT:
                     errorPrint(index, "Max ROM address limit cross!!")
