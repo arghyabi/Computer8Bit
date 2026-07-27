@@ -4,10 +4,10 @@ Project:
 
 Version:
   # Main version; any change requires a new version
-  MainVersion: "1.80.0.1094"
+  MainVersion: "1.81.0.1095"
 
 Components:
-  Compiler  : "1.26.0.1029"
+  Compiler  : "1.27.0.1030"
   Emulator  : "1.6.0.1006"
   Inspector : "1.1.0.1001"
   Flasher   : "1.8.1.1009"
