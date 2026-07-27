@@ -97,7 +97,7 @@ def GetParsedConfigView(config: Dict[str, Any]) -> ParsedConfigView:
         CFG_INPUT_CONTROL: [],
         CFG_OUTPUT_CONTROL: []
     }
-    
+
     # Virtual pins are in the output pin map for uCode1
     # ViInA-D are input control, ViOtA-D are output control
     for pinName in uCode1Pins.values():
@@ -197,13 +197,13 @@ def GetAllInstructions(config: Dict[str, Any]) -> List[str]:
 
 def GetInstructionOpcode(instructionName: str, config: Dict[str, Any]) -> int:
     """Get the opcode value for a specific instruction
-    
+
     Handles both numeric opcodes and string masks with 'x' for operand bits.
     For masks like '0bxxxx_0001', returns the base opcode (lower bits).
     """
     insConfig = config.get(CFG_INS_CONFIG, {})
     instructions = insConfig.get(CFG_INSTRUCTIONS, {})
-    
+
     if isinstance(instructions, dict):
         insData = instructions.get(instructionName, {})
         if isinstance(insData, dict):
@@ -220,28 +220,26 @@ def GetInstructionOpcode(instructionName: str, config: Dict[str, Any]) -> int:
     return -1
 
 
-def GetInstructionSize(instructionName: str, config: Dict[str, Any], support8BitAddress: bool = False) -> int:
+def GetInstructionSize(instructionName: str, config: Dict[str, Any]) -> int:
     """Get the size in bytes for a specific instruction"""
     insConfig = config.get(CFG_INS_CONFIG, {})
     instructions = insConfig.get(CFG_INSTRUCTIONS, {})
-    
+
     if isinstance(instructions, dict):
         insData = instructions.get(instructionName, {})
         if isinstance(insData, dict):
-            if support8BitAddress and 'size_8bit' in insData:
-                return insData.get('size_8bit', 1)
             return insData.get('size', 1)
     return 1
 
 
 def GetAllInstructionOpcodes(config: Dict[str, Any]) -> Dict[str, int]:
     """Get a dictionary mapping instruction names to their base opcodes
-    
+
     For masks like '0bxxxx_0001', returns the base opcode with 'x' bits as 0.
     """
     insConfig = config.get(CFG_INS_CONFIG, {})
     instructions = insConfig.get(CFG_INSTRUCTIONS, {})
-    
+
     opcodeDict = {}
     if isinstance(instructions, dict):
         for insName, insData in instructions.items():
@@ -259,19 +257,16 @@ def GetAllInstructionOpcodes(config: Dict[str, Any]) -> Dict[str, int]:
     return opcodeDict
 
 
-def GetAllInstructionSizes(config: Dict[str, Any], support8BitAddress: bool = False) -> Dict[str, int]:
+def GetAllInstructionSizes(config: Dict[str, Any]) -> Dict[str, int]:
     """Get a dictionary mapping instruction names to their sizes in bytes"""
     insConfig = config.get(CFG_INS_CONFIG, {})
     instructions = insConfig.get(CFG_INSTRUCTIONS, {})
-    
+
     sizeDict = {}
     if isinstance(instructions, dict):
         for insName, insData in instructions.items():
             if isinstance(insData, dict):
-                if support8BitAddress and 'size_8bit' in insData:
-                    sizeDict[insName] = insData.get('size_8bit', 1)
-                else:
-                    sizeDict[insName] = insData.get('size', 1)
+                sizeDict[insName] = insData.get('size', 1)
     return sizeDict
 
 
@@ -281,28 +276,23 @@ if __name__ == "__main__":
     try:
         configData = ParseConfig(configPath)
         print("=== Configuration loaded successfully ===\n")
-        
+
         print("Signal Index for PCHI:", GetSignalIndex("PCHI", configData))
         print("\nAll Instructions:", GetAllInstructions(configData))
         print("\nAll Virtual Pins:", GetAllVirtualPins(configData))
         print("\nInput Control Signals:", GetAllSignalIndex("InputControl", configData))
         print("\nAll Virtual Signal List:", GetAllVirtualSignaList(configData))
-        
+
         print("\n=== Instruction Opcodes ===")
         opcodes = GetAllInstructionOpcodes(configData)
         for ins, opcode in sorted(opcodes.items()):
             print(f"{ins:6s}: 0x{opcode:02X} (0b{opcode:08b})")
-        
+
         print("\n=== Instruction Sizes ===")
-        sizes = GetAllInstructionSizes(configData, support8BitAddress=False)
+        sizes = GetAllInstructionSizes(configData)
         for ins, size in sorted(sizes.items()):
             print(f"{ins:6s}: {size} byte(s)")
-        
-        print("\n=== Instruction Sizes (8-bit address mode) ===")
-        sizes_8bit = GetAllInstructionSizes(configData, support8BitAddress=True)
-        for ins, size in sorted(sizes_8bit.items()):
-            print(f"{ins:6s}: {size} byte(s)")
-            
+
     except Exception as error:
         print(f"Error: {error}")
         import traceback
