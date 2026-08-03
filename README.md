@@ -33,7 +33,7 @@ This project is about understanding and constructing the fundamental building bl
 
 ## 📁 Repository Structure
 
-```
+```text
 .
 ├── Compiler/                        # Assembler for the custom ISA
 │   └── Assembler.py                 # Main assembler (uses YAML config)
@@ -80,20 +80,20 @@ This project is about understanding and constructing the fundamental building bl
 - **Software emulator**: Test programs without hardware
 - **Professional toolchain**: Assembler, emulator, flasher, and inspector
 
-
 ## 🧾 Instruction Set
 
 Documentation about the supported instructions (ADD, SUB, AND, OR, MOV, JMP, etc.) is available in the
 **[`ISA.md`](Docs/ISA.md)** file.
 
 Each instruction is defined with:
+
 - Opcode
 - Control signal sequences
 - Clock cycles
 - Examples
 
-
 ## 🛠 Control Signals
+
 Documentation about all the control signal is available in the **[`SignalInfo.md`](Docs/SignalInfo.md)** file.
 
 In the **[`HwDesign.md`](Docs/HwDesign.md)** file, placement of the signals ins the bus is shown visually.
@@ -101,31 +101,37 @@ In the **[`HwDesign.md`](Docs/HwDesign.md)** file, placement of the signals ins 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Python 3.9+
 - PyYAML (`pip install pyyaml`)
 - Optional: hexdump (`pip install hexdump`)
 
 ### Compile Assembly Code
+
 ```bash
 python Compiler/Assembler.py program.S -o program.bin
 ```
 
 ### Run in Emulator
+
 ```bash
 python main.py                          # Start GUI without program (signed mode default)
 python main.py program.bin              # Start GUI, load program (signed mode default)
 python main.py program.bin -u           # Start GUI, load program (unsigned mode)
 python main.py program.bin -m hardware  # Start GUI, load program, use hardware mode
 ```
+
 **Note**: The `-m hardware` flag enables hardware mode, which uses the actual hardware instead of the emulator. This is useful for testing the hardware implementation. The default mode is software mode.
 
 ### Generate Microcode
+
 ```bash
 cd Microcode
 python GenMicrocode.py
 ```
 
 ### Flash to EEPROM
+
 ```bash
 python EepromFlasher/App/Main.py
 ```
@@ -160,10 +166,16 @@ This is a personal learning project, but contributions, discussions, and feedbac
 issue or pull request if you'd like to contribute.
 
 ### Contributing Guidelines
+
 1. Update `Config.yaml` with new version numbers
 2. Ensure all CI checks pass
 3. Follow existing code style
 4. Document new features
+
+## Details Documentation
+
+For more details documentation please visite the page
+[https://arghyabi.in/projects/8bit-computer-with-logic-gates/](https://arghyabi.in/projects/8bit-computer-with-logic-gates/)
 
 ---
 
