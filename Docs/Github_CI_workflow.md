@@ -21,6 +21,7 @@ This directory contains all CI/CD workflows for the Computer8Bit project, organi
     │   ├── check-inspector-version.yaml
     │   ├── check-sevensegment-version.yaml
     │   ├── check-document-version.yaml
+    │   ├── check-samplecode-version.yaml
     │   ├── validate-format.yaml
     │   └── version-summary.yaml
     │
@@ -76,6 +77,7 @@ Located in `versionChecks/` folder. These are called by `ci.yaml`:
 | `check-inspector-version.yaml`    | Validates Inspector version            |
 | `check-sevensegment-version.yaml` | Validates 7Segment version             |
 | `check-document-version.yaml`     | Validates Document version             |
+| `check-samplecode-version.yaml`   | Validates SampleCode version           |
 | `validate-format.yaml`            | Validates version format (X.Y.Z.BUILD) |
 | `version-summary.yaml`            | Displays version summary               |
 
