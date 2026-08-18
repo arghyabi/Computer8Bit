@@ -1,5 +1,6 @@
 Compiler/*.i
 Compiler/*.s
+sampleCode/*.i
 Compiler/*.bin
 Microcode/out/
 Gen7segDriver/*.bin

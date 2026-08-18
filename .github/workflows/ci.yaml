@@ -26,13 +26,14 @@ jobs:
       sevensegment_modified: ${{ steps.analyze.outputs.sevensegment }}
       document_modified: ${{ steps.analyze.outputs.document }}
       bootloader_modified: ${{ steps.analyze.outputs.bootloader }}
-    
+      samplecode_modified: ${{ steps.analyze.outputs.samplecode }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Check if Config.yaml exists
         run: |
           if [ ! -f "Config.yaml" ]; then
@@ -40,7 +41,7 @@ jobs:
             exit 1
           fi
           echo "SUCCESS: Config.yaml found"
-      
+
       - name: Get changed files
         id: changed-files
         run: |
@@ -51,7 +52,7 @@ jobs:
           echo "changed_files<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      
+
       - name: Check if Config.yaml modified
         id: check-config
         run: |
@@ -62,12 +63,12 @@ jobs:
             echo "modified=false" >> $GITHUB_OUTPUT
             echo "WARNING: Config.yaml was NOT modified"
           fi
-      
+
       - name: Analyze modified components
         id: analyze
         run: |
           CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
-          
+
           echo "$CHANGED_FILES" | grep -q "^Compiler/" && echo "compiler=true" >> $GITHUB_OUTPUT || echo "compiler=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Emulator/" && echo "emulator=true" >> $GITHUB_OUTPUT || echo "emulator=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^EepromFlasher/" && echo "flasher=true" >> $GITHUB_OUTPUT || echo "flasher=false" >> $GITHUB_OUTPUT
@@ -76,7 +77,8 @@ jobs:
           echo "$CHANGED_FILES" | grep -q "^Gen7segDriver/" && echo "sevensegment=true" >> $GITHUB_OUTPUT || echo "sevensegment=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Docs/\|^Datasheets/\|^Images/\|^README.md" && echo "document=true" >> $GITHUB_OUTPUT || echo "document=false" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" | grep -q "^Bootloader/" && echo "bootloader=true" >> $GITHUB_OUTPUT || echo "bootloader=false" >> $GITHUB_OUTPUT
-  
+          echo "$CHANGED_FILES" | grep -q "^sampleCode/" && echo "samplecode=true" >> $GITHUB_OUTPUT || echo "samplecode=false" >> $GITHUB_OUTPUT
+
   # ============================================================================
   # VERSION CHECKS (PR only)
   # ============================================================================
@@ -85,7 +87,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: setup
-    
+
     steps:
       - name: Verify Config.yaml was modified
         run: |
@@ -95,7 +97,7 @@ jobs:
             exit 1
           fi
           echo "SUCCESS: Config.yaml was modified"
-  
+
   check-main-version:
     name: MainVersion
     if: github.event_name == 'pull_request'
@@ -103,7 +105,7 @@ jobs:
     uses: ./.github/workflows/version-check-main-version.yaml
     with:
       base_ref: ${{ github.base_ref }}
-  
+
   check-compiler-version:
     name: Compiler Version
     if: github.event_name == 'pull_request'
@@ -112,7 +114,7 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.compiler_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
   check-emulator-version:
     name: Emulator Version
     if: github.event_name == 'pull_request'
@@ -121,7 +123,7 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.emulator_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
   check-flasher-version:
     name: Flasher Version
     if: github.event_name == 'pull_request'
@@ -130,7 +132,7 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.flasher_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
   check-isa-version:
     name: ISA Version
     if: github.event_name == 'pull_request'
@@ -139,7 +141,7 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.isa_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
   check-inspector-version:
     name: Inspector Version
     if: github.event_name == 'pull_request'
@@ -148,7 +150,7 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.inspector_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
   check-sevensegment-version:
     name: 7Segment Version
     if: github.event_name == 'pull_request'
@@ -157,7 +159,7 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.sevensegment_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
   check-document-version:
     name: Document Version
     if: github.event_name == 'pull_request'
@@ -175,13 +177,22 @@ jobs:
     with:
       component_modified: ${{ needs.setup.outputs.bootloader_modified }}
       base_ref: ${{ github.base_ref }}
-  
+
+  check-samplecode-version:
+    name: SampleCode Version
+    if: github.event_name == 'pull_request'
+    needs: [setup, check-config-modified]
+    uses: ./.github/workflows/version-check-samplecode-version.yaml
+    with:
+      component_modified: ${{ needs.setup.outputs.samplecode_modified }}
+      base_ref: ${{ github.base_ref }}
+
   validate-format:
     name: Format Validation
     if: github.event_name == 'pull_request'
     needs: setup
     uses: ./.github/workflows/version-format.yaml
-  
+
   version-summary:
     name: Version Summary
     if: github.event_name == 'pull_request' && always()
@@ -197,25 +208,26 @@ jobs:
       check-sevensegment-version,
       check-document-version,
       check-bootloader-version,
+      check-samplecode-version,
       validate-format
     ]
     uses: ./.github/workflows/version-check-summary.yaml
-  
+
   # ============================================================================
   # BUILD JOBS (PR and Push)
   # ============================================================================
   build-microcode:
     name: Build Microcode
     uses: ./.github/workflows/build-microcode.yaml
-  
+
   build-7segment:
     name: Build 7-Segment Driver
     uses: ./.github/workflows/build-7segment-driver.yaml
-  
+
   build-eeprom-firmware:
     name: Build EEPROM Firmware
     uses: ./.github/workflows/build-eeprom-firmware.yaml
-  
+
   # ============================================================================
   # FINAL STATUS
   # ============================================================================
@@ -234,9 +246,10 @@ jobs:
       check-sevensegment-version,
       check-document-version,
       check-bootloader-version,
+      check-samplecode-version,
       validate-format
     ]
-    
+
     steps:
       - name: Check version validation status
         run: |
@@ -251,24 +264,25 @@ jobs:
             "${{ needs.check-sevensegment-version.result }}"
             "${{ needs.check-document-version.result }}"
             "${{ needs.check-bootloader-version.result }}"
+            "${{ needs.check-samplecode-version.result }}"
             "${{ needs.validate-format.result }}"
           )
-          
+
           for result in "${RESULTS[@]}"; do
             if [ "$result" == "failure" ]; then
               echo "ERROR: Some version checks failed!"
               exit 1
             fi
           done
-          
+
           echo "SUCCESS: All version checks passed!"
-  
+
   build-status:
     name: Build Status
     if: always()
     runs-on: ubuntu-latest
     needs: [build-microcode, build-7segment, build-eeprom-firmware]
-    
+
     steps:
       - name: Check build status
         run: |
@@ -277,16 +291,16 @@ jobs:
             "${{ needs.build-7segment.result }}"
             "${{ needs.build-eeprom-firmware.result }}"
           )
-          
+
           for result in "${RESULTS[@]}"; do
             if [ "$result" == "failure" ]; then
               echo "ERROR: Some builds failed!"
               exit 1
             fi
           done
-          
+
           echo "SUCCESS: All builds passed!"
-      
+
       - name: CI Summary
         run: |
           echo "================================"
