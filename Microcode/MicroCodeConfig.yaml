@@ -305,6 +305,19 @@ MicrocodeChipsPinMap:
       IO6: Cin
       IO7: Sgn
 
+    # uCode3 carries the additional direct control signals added in the
+    # latest hardware update. All pins are reserved until the new signals are
+    # defined: replace a RESRV_U3_IOx name with the real signal name to use it.
+    uCode3:
+      IO0: ShO
+      IO1: RESRV_U3_IO1
+      IO2: RESRV_U3_IO2
+      IO3: RESRV_U3_IO3
+      IO4: RESRV_U3_IO4
+      IO5: RESRV_U3_IO5
+      IO6: RESRV_U3_IO6
+      IO7: RESRV_U3_IO7
+
     # This pin map is aligned with v1.1 Ucode PCB;
     # Uncomment it if you are using v1.1 Ucode PCB
     # uCode0:
