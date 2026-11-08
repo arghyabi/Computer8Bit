@@ -23,6 +23,7 @@ MICROCODE_CHIP_NAMES = [
     CompileAutogenInstructions.UCODE_0,
     CompileAutogenInstructions.UCODE_1,
     CompileAutogenInstructions.UCODE_2,
+    CompileAutogenInstructions.UCODE_3,
 ]
 
 

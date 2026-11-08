@@ -8,3 +8,4 @@ __pycache__
 .vscode
 BootLoader/*.bin
 BootLoader/*.i
+.DS_Store

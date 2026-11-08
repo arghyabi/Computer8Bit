@@ -226,7 +226,7 @@ VirtualPinConfig:
     MeI   : 0b0111
     IRI   : 0b1000
     T1I   : 0b1001
-    RESRV2: 0b1010
+    T2I   : 0b1010
     Seg7E : 0b1011
     SpL   : 0b1100
     RESRV3: 0b1101
@@ -249,8 +249,8 @@ VirtualPinConfig:
     XorO  : 0b1010
     NtO   : 0b1011
     PCHO  : 0b1100
-    PCLO  : 0b1101
-    SqR   : 0b1110
+    SqR   : 0b1101
+    PCLO  : 0b1110
     RESRV2: 0b1111 # Reserved if no Pin need to be enabled
 
 
@@ -275,42 +275,10 @@ MicrocodeChipsPinMap:
   OutputPinMap:
     # This pin map is aligned with v1.0 Ucode PCB;
     # Uncomment it if you want to use the v1.0 Ucode PCB
-    uCode0:
-      IO0: FlSe2
-      IO1: FlSe1
-      IO2: FlSe0
-      IO3: T2IS0
-      IO4: T2IS1
-      IO5: FlgU
-      IO6: MdO
-      IO7: PCHI
-
-    uCode1:
-      IO0: ViInA
-      IO1: ViInB
-      IO2: ViInC
-      IO3: ViInD
-      IO4: ViOtA
-      IO5: ViOtB
-      IO6: ViOtC
-      IO7: ViOtD
-
-    uCode2:
-      IO0: PCL
-      IO1: PCLI
-      IO2: AdSu
-      IO3: HLT
-      IO4: SpUd
-      IO5: SpC
-      IO6: Cin
-      IO7: Sgn
-
-    # This pin map is aligned with v1.1 Ucode PCB;
-    # Uncomment it if you are using v1.1 Ucode PCB
     # uCode0:
-    #   IO0: FlSe0
+    #   IO0: FlSe2
     #   IO1: FlSe1
-    #   IO2: FlSe2
+    #   IO2: FlSe0
     #   IO3: T2IS0
     #   IO4: T2IS1
     #   IO5: FlgU
@@ -331,8 +299,50 @@ MicrocodeChipsPinMap:
     #   IO0: PCL
     #   IO1: PCLI
     #   IO2: AdSu
-    #   IO6: Cin
-    #   IO5: SpC
-    #   IO4: SpUd
     #   IO3: HLT
+    #   IO4: SpUd
+    #   IO5: SpC
+    #   IO6: Cin
     #   IO7: Sgn
+
+    # This pin map is aligned with v1.1 Ucode PCB;
+    # Uncomment it if you are using v1.1 Ucode PCB
+    uCode0:
+      IO0: FlSe0
+      IO1: FlSe1
+      IO2: FlSe2
+      IO3: ShS0
+      IO4: ShS1
+      IO5: FlgU
+      IO6: MdO
+      IO7: PCHI
+
+    uCode1:
+      IO0: ViInA
+      IO1: ViInB
+      IO2: ViInC
+      IO3: ViInD
+      IO4: ViOtA
+      IO5: ViOtB
+      IO6: ViOtC
+      IO7: ViOtD
+
+    uCode2:
+      IO0: PCL
+      IO1: PCLI
+      IO2: AdSu
+      IO6: Cin
+      IO5: SpC
+      IO4: SpUd
+      IO3: HLT
+      IO7: Sgn
+
+    uCode3:
+      IO0: ShO
+      IO1: RESRV_U3_IO1
+      IO2: RESRV_U3_IO2
+      IO3: RESRV_U3_IO3
+      IO4: RESRV_U3_IO4
+      IO5: RESRV_U3_IO5
+      IO6: RESRV_U3_IO6
+      IO7: RESRV_U3_IO7
