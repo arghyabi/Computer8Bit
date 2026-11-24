@@ -27,7 +27,7 @@ class InstructionNormalizer:
         outputMap = self.config.get(MicrocodeConfig.CFG_MICROCODE_CHIPS_PIN_MAP, {}).get(MicrocodeConfig.CFG_OUTPUT_PIN_MAP, {})
         result = {}
 
-        for chipName in [MicrocodeConfig.UCODE_0, MicrocodeConfig.UCODE_1, MicrocodeConfig.UCODE_2]:
+        for chipName in [MicrocodeConfig.UCODE_0, MicrocodeConfig.UCODE_1, MicrocodeConfig.UCODE_2, MicrocodeConfig.UCODE_3]:
             chipPins = outputMap.get(chipName, {})
             # Preserve the order as written in YAML (don't sort)
             result[chipName] = list(chipPins.values())
@@ -269,6 +269,21 @@ class InstructionNormalizer:
         # Section 6: uCode2 (8 signals) - read from YAML OutputPinMap in IO0-IO7 order
         ucode2Pins = self.outputPinMap.get(MicrocodeConfig.UCODE_2, [])
         for signalName in ucode2Pins:
+            if signalName in signals:
+                values = ' | '.join(signals[signalName]['values'])
+                lines.append(f"| O | {signalName:<5} | {values} |")
+            elif MicrocodeConfig.IsReservedSignal(signalName):
+                values = ' | '.join(['-'] * columnCount)
+                lines.append(f"| O |  -    | {values} |")
+            else:
+                values = ' | '.join(['0'] * columnCount)
+                lines.append(f"| O | {signalName:<5} | {values} |")
+
+        lines.append('|---|-------|' + '---|' * columnCount)
+
+        # Section 7: uCode3 (8 signals) - read from YAML OutputPinMap in IO0-IO7 order
+        ucode3Pins = self.outputPinMap.get(MicrocodeConfig.UCODE_3, [])
+        for signalName in ucode3Pins:
             if signalName in signals:
                 values = ' | '.join(signals[signalName]['values'])
                 lines.append(f"| O | {signalName:<5} | {values} |")

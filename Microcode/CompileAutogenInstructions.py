@@ -10,7 +10,8 @@ import MicrocodeConfig
 UCODE_0 = MicrocodeConfig.UCODE_0
 UCODE_1 = MicrocodeConfig.UCODE_1
 UCODE_2 = MicrocodeConfig.UCODE_2
-UCODE_ORDER = [UCODE_0, UCODE_1, UCODE_2]
+UCODE_3 = MicrocodeConfig.UCODE_3
+UCODE_ORDER = [UCODE_0, UCODE_1, UCODE_2, UCODE_3]
 OUTPUT_ROWS_PER_CHIP = 8
 EXPECTED_OUTPUT_ROW_COUNT = len(UCODE_ORDER) * OUTPUT_ROWS_PER_CHIP
 EXPECTED_INPUT_ADDRESS_ROW_COUNT = 15
@@ -217,7 +218,7 @@ class ParseInstructions:
 
     def CreateEmptyMicrocodeMatrix(self) -> Dict[str, List[int]]:
         """Create zero-filled EEPROM images for all configured microcode chips."""
-        microcodeMatrix = {UCODE_0: [], UCODE_1: [], UCODE_2: []}
+        microcodeMatrix = {chipName: [] for chipName in UCODE_ORDER}
         microcodeSize = 32768
         for chipName in microcodeMatrix:
             for _ in range(microcodeSize):

@@ -18,6 +18,11 @@ CFG_RESERVED_SIGNAL = "RESRV"
 UCODE_0 = "uCode0"
 UCODE_1 = "uCode1"
 UCODE_2 = "uCode2"
+UCODE_3 = "uCode3"
+
+# Chips that carry direct (non-virtual) control signals. uCode1 is excluded
+# because it only carries the encoded virtual input/output pins.
+EXTRA_SIGNAL_CHIPS = [UCODE_0, UCODE_2, UCODE_3]
 
 
 @dataclass
@@ -106,10 +111,9 @@ def GetParsedConfigView(config: Dict[str, Any]) -> ParsedConfigView:
         elif pinName.startswith('ViOt'):
             virtualPinsByGroup[CFG_OUTPUT_CONTROL].append(pinName)
 
-    # Get extra signals from uCode0 and uCode2 output pin maps
+    # Get extra signals from the direct-signal chips' output pin maps
     extraSignalsByChip = {
-        UCODE_0: outputPinMap.get(UCODE_0, {}),
-        UCODE_2: outputPinMap.get(UCODE_2, {}),
+        chipName: outputPinMap.get(chipName, {}) for chipName in EXTRA_SIGNAL_CHIPS
     }
 
     return ParsedConfigView(
@@ -141,8 +145,8 @@ def GetSignalIndex(signalName: str, config: Dict[str, Any]) -> Tuple[Any, Option
     if lookupResult.SignalIndex != -1:
         return lookupResult.SignalIndex, lookupResult.SectionType
 
-    # Check extra signals from OutputPinMap (uCode0 and uCode2)
-    for chipName in [UCODE_0, UCODE_2]:
+    # Check extra signals from OutputPinMap (uCode0, uCode2 and uCode3)
+    for chipName in EXTRA_SIGNAL_CHIPS:
         chipPins = parsedConfig.ExtraSignalsByChip.get(chipName, {})
         for pinName, signalNameInMap in chipPins.items():
             if signalNameInMap == signalName:

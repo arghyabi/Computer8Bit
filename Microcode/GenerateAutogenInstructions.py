@@ -26,6 +26,8 @@ SIGNAL_CFG_EXTRA  = "Extra"
 UCODE_0 = MicrocodeConfig.UCODE_0
 UCODE_1 = MicrocodeConfig.UCODE_1
 UCODE_2 = MicrocodeConfig.UCODE_2
+UCODE_3 = MicrocodeConfig.UCODE_3
+EXTRA_SIGNAL_CHIPS = MicrocodeConfig.EXTRA_SIGNAL_CHIPS
 CFG_MICROCODE_CHIPS_PIN_MAP = MicrocodeConfig.CFG_MICROCODE_CHIPS_PIN_MAP
 CFG_OUTPUT_PIN_MAP = MicrocodeConfig.CFG_OUTPUT_PIN_MAP
 CFG_INPUT_CONTROL = MicrocodeConfig.CFG_INPUT_CONTROL
@@ -45,7 +47,7 @@ class ParsedInstructionRows:
     InputSignalRows: List[List[str]] = field(default_factory=list)
     OutputSignalRows: List[List[str]] = field(default_factory=list)
     ExtraSignalLinesByChip: Dict[str, List[str]] = field(
-        default_factory=lambda: {UCODE_0: [], UCODE_2: []}
+        default_factory=lambda: {chipName: [] for chipName in EXTRA_SIGNAL_CHIPS}
     )
     ExtraSignalLineMap: Dict[str, str] = field(default_factory=dict)
     SeenSignals: set[str] = field(default_factory=set)
@@ -175,7 +177,7 @@ class GenAutoInstructions:
     def PopulateOrderedExtraSignalLines(self, parsedRows: ParsedInstructionRows):
         microcodeChipsPinMap = self.UCodeConfig.get(CFG_MICROCODE_CHIPS_PIN_MAP, {})
         outputPinMap = microcodeChipsPinMap.get(CFG_OUTPUT_PIN_MAP, {})
-        for chipName in [UCODE_0, UCODE_2]:
+        for chipName in EXTRA_SIGNAL_CHIPS:
             chipPins = outputPinMap.get(chipName, {})
             for signalName in chipPins.values():
                 if MicrocodeConfig.IsReservedSignal(signalName):
@@ -258,7 +260,7 @@ class GenAutoInstructions:
         microcodeChipsPinMap = self.UCodeConfig.get(CFG_MICROCODE_CHIPS_PIN_MAP, {})
         outputPinMap = microcodeChipsPinMap.get(CFG_OUTPUT_PIN_MAP, {})
         extraSignals = []
-        for chipName in [UCODE_0, UCODE_2]:
+        for chipName in EXTRA_SIGNAL_CHIPS:
             chipPins = outputPinMap.get(chipName, {})
             for signalName in chipPins.values():
                 if MicrocodeConfig.IsReservedSignal(signalName):
@@ -345,6 +347,7 @@ class GenAutoInstructions:
             outSignalLineList,
             extraSignalLineDict[UCODE_0],
             extraSignalLineDict[UCODE_2],
+            extraSignalLineDict[UCODE_3],
         ]
 
         for rowList in candidateRowLists:
@@ -470,6 +473,7 @@ class GenAutoInstructions:
 
             uCode0ExtraLines = insExtSignalLineDict[UCODE_0]
             uCode2ExtraLines = insExtSignalLineDict[UCODE_2]
+            uCode3ExtraLines = insExtSignalLineDict[UCODE_3]
 
             for line in uCode0ExtraLines:
                 filePointer.write(f"{line}\n")
@@ -492,6 +496,12 @@ class GenAutoInstructions:
                 filePointer.write(f"{line}\n")
 
             for _ in range(8 - len(uCode2ExtraLines)):
+                filePointer.write(f"| O |  -    | " + " | ".join(["-"] * totalColumnNo) + " |\n")
+            filePointer.write(f"|---|-------|" + "|".join(["---"] * totalColumnNo) + "|\n")
+
+            for line in uCode3ExtraLines:
+                filePointer.write(f"{line}\n")
+            for _ in range(8 - len(uCode3ExtraLines)):
                 filePointer.write(f"| O |  -    | " + " | ".join(["-"] * totalColumnNo) + " |\n")
 
             for (line, index) in insOtherLineList[-2:]:

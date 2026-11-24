@@ -44,9 +44,9 @@ jobs:
             exit 1
           fi
           
-          # Check for all three microcode binary files
+          # Check for all four microcode binary files
           MISSING_FILES=0
-          for chip in uCode0 uCode1 uCode2; do
+          for chip in uCode0 uCode1 uCode2 uCode3; do
             if [ ! -f "Microcode/out/${chip}.bin" ]; then
               echo "ERROR: ${chip}.bin not found!"
               MISSING_FILES=$((MISSING_FILES + 1))

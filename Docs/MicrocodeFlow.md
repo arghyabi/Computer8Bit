@@ -6,7 +6,7 @@ This document explains how the microcode in this project is compiled, what files
 
 ## 1. Purpose
 
-The `Microcode/` directory contains the tooling that converts human-written instruction descriptions into binary ROM images for the three microcode EEPROMs used by the CPU.
+The `Microcode/` directory contains the tooling that converts human-written instruction descriptions into binary ROM images for the four microcode EEPROMs (`uCode0`..`uCode3`) used by the CPU.
 
 The pipeline does **not** directly compile assembly programs. Instead, it compiles the **control logic tables** that define how each CPU instruction behaves cycle by cycle.
 
@@ -69,6 +69,7 @@ When `python3 GenMicrocode.py` is run inside `Microcode/`, the `out/` directory 
 - `out/uCode0.bin`
 - `out/uCode1.bin`
 - `out/uCode2.bin`
+- `out/uCode3.bin`
 
 ### Meaning of each output
 
@@ -79,8 +80,8 @@ This file is arranged in the exact physical chip grouping expected by the parser
 #### `microCodeMap.txt`
 A human-readable address-to-byte map showing what value is written to each EEPROM address.
 
-#### `uCode0.bin`, `uCode1.bin`, `uCode2.bin`
-Final binary images for the three microcode EEPROM chips.
+#### `uCode0.bin`, `uCode1.bin`, `uCode2.bin`, `uCode3.bin`
+Final binary images for the four microcode EEPROM chips.
 
 ---
 
@@ -200,6 +201,13 @@ That means:
 - reserved placeholder rows may still exist in the physical layout to preserve EEPROM bit positions
 
 Unused rows are still required so every instruction table stays complete and uniform.
+
+### uCode3 (additional direct-signal chip)
+`uCode3` is a fourth microcode EEPROM that carries additional direct control signals. Its eight pins
+(`IO0`..`IO7`) are listed under `MicrocodeChipsPinMap.OutputPinMap.uCode3` in `MicroCodeConfig.yaml`. All eight are
+currently reserved (`RESRV_U3_IOx`). To add a new signal, replace a `RESRV_U3_IOx` name with the real signal name,
+run `python3 GenMicrocode.py`, and set the signal's row in the affected `Ins*.py` files (the normalizer adds the row,
+filled with `0`, to every instruction file automatically). It shares the same address inputs as the other chips.
 
 ### Reserved-slot note
 Some configured names beginning with `RESRV` are intentionally reserved placeholders. They exist to keep the physical
@@ -322,6 +330,7 @@ It checks the first available row from:
 - output rows
 - `uCode0` extra rows such as `FlSe*` and `T2IS*`
 - `uCode2` extra rows
+- `uCode3` extra rows
 
 The returned width is used for:
 - virtual signal generation
@@ -389,7 +398,10 @@ The emitted output is arranged in physical EEPROM order:
 7. separator
 8. `uCode2` rows
 9. filler rows to make `uCode2` exactly 8 rows
-10. final footer lines
+10. separator
+11. `uCode3` rows
+12. filler rows to make `uCode3` exactly 8 rows
+13. final footer lines
 
 ### Why this matters
 `CompileAutogenInstructions.py` assumes:
@@ -397,6 +409,7 @@ The emitted output is arranged in physical EEPROM order:
 - then 8 rows for `uCode0`
 - then 8 rows for `uCode1`
 - then 8 rows for `uCode2`
+- then 8 rows for `uCode3`
 
 So the autogen stage is effectively a normalization stage that converts handwritten instruction tables into a parser-friendly physical layout.
 
@@ -602,6 +615,7 @@ This writes:
 - `out/uCode0.bin`
 - `out/uCode1.bin`
 - `out/uCode2.bin`
+- `out/uCode3.bin`
 
 Each file contains the final EEPROM contents for one chip.
 
@@ -710,7 +724,7 @@ python3 GenMicrocode.py
 Expected successful output includes:
 - imported instruction count
 - per-instruction processing progress
-- creation of `uCode0`, `uCode1`, `uCode2`
+- creation of `uCode0`, `uCode1`, `uCode2`, `uCode3`
 - final success message
 
 ---
@@ -743,6 +757,7 @@ Check whether generated `ViIn*` and `ViOt*` rows have the same number of columns
 Check whether extra/direct signals are still assigned to the correct chip:
 - `uCode0`
 - `uCode2`
+- `uCode3`
 
 ---
 

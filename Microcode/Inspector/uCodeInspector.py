@@ -42,7 +42,7 @@ class VerifyWindow(QWidget):
         self.resize(1800, 950)
 
         self.yamlConfig = {}
-        self.microcodeData = [[], [], []]
+        self.microcodeData = [[], [], [], []]
 
         self.inputSignalMap = {}
         self.outputSignalMap = {}
@@ -173,12 +173,16 @@ class VerifyWindow(QWidget):
         ucode2Button = QPushButton("Load uCode2")
         ucode2Button.clicked.connect(lambda: self.LoadMicrocode(2))
 
+        ucode3Button = QPushButton("Load uCode3")
+        ucode3Button.clicked.connect(lambda: self.LoadMicrocode(3))
+
         self.addressLabel = QLabel("Address: 0")
 
         fileLayout.addWidget(yamlButton)
         fileLayout.addWidget(ucode0Button)
         fileLayout.addWidget(ucode1Button)
         fileLayout.addWidget(ucode2Button)
+        fileLayout.addWidget(ucode3Button)
         fileLayout.addStretch()
         fileLayout.addWidget(self.addressLabel)
 
@@ -200,7 +204,7 @@ class VerifyWindow(QWidget):
 
         self.microcodeViews = []
 
-        for index in range(3):
+        for index in range(4):
 
             group = QGroupBox(f"uCode{index}")
 
@@ -305,6 +309,10 @@ class VerifyWindow(QWidget):
                 self.allSignals.append(signal)
 
         for signal in outputPinMap["uCode2"].values():
+            if "RESRV" not in signal:
+                self.allSignals.append(signal)
+
+        for signal in outputPinMap.get("uCode3", {}).values():
             if "RESRV" not in signal:
                 self.allSignals.append(signal)
 
@@ -560,6 +568,27 @@ class VerifyWindow(QWidget):
                 if value & (1 << bit):
 
                     signal = ucode2Signals[bit]
+
+                    if "RESRV" not in signal:
+                        activeSignals.add(signal)
+
+        # ====================================================
+        # uCode3
+        # ====================================================
+
+        if len(self.microcodeData[3]) > address:
+
+            value = self.microcodeData[3][address]
+
+            # Get signal names from OutputPinMap in order IO0-IO7
+            ucode3Pins = outputPinMap.get("uCode3", {})
+            ucode3Signals = [ucode3Pins.get(f"IO{i}", "RESRV") for i in range(8)]
+
+            for bit in range(8):
+
+                if value & (1 << bit):
+
+                    signal = ucode3Signals[bit]
 
                     if "RESRV" not in signal:
                         activeSignals.add(signal)
